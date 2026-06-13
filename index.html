@@ -58,8 +58,8 @@
       <h1 class="text-xl font-bold text-slate-800">ระบบบันทึกผลการเรียน ม.1-3</h1>
       <p class="text-sm text-slate-500">หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พ.ศ. 2551</p>
     </div>
-    <label class="text-sm text-slate-600 font-medium">ชื่อครู (ไม่ต้องใส่คำนำหน้าก็ได้)</label>
-    <input id="loginName" class="inp mb-3 mt-1" placeholder="เช่น รุ่งนิรันดร์ ใจดี">
+    <label class="text-sm text-slate-600 font-medium">ชื่อครู (ใช้ ครู/นาย/นาง/นางสาว หรือไม่ใส่คำนำหน้าก็ได้)</label>
+    <input id="loginName" class="inp mb-3 mt-1" placeholder="ขอแค่ชื่อ-นามสกุลตรงกัน เช่น รุ่งนิรันดร์ โพธิ์เพชรเล็บ">
     <label class="text-sm text-slate-600 font-medium">รหัส PIN</label>
     <input id="loginPin" type="password" inputmode="numeric" class="inp mb-4 mt-1" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()" class="btn w-full bg-indigo-600 text-white py-2.5">🔐 เข้าสู่ระบบ</button>
@@ -122,6 +122,7 @@
     <button data-tab="attrs"    data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🎓 คุณลักษณะ/อ่านคิดฯ</button>
     <button data-tab="acts"     data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🎯 กิจกรรมพัฒนาผู้เรียน</button>
     <button data-tab="attend"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">✅ เช็คชื่อ</button>
+    <button data-tab="schedule" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🗓️ ตารางสอน</button>
     <button data-tab="fix"      data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🔧 แก้ ร/0/มส</button>
     <button data-tab="report"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🖨️ พิมพ์รายงาน</button>
     <button data-tab="summary"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📋 สรุปผล/Export</button>
@@ -238,6 +239,15 @@
   </div>
 </section>
 
+<!-- ══════════ TAB: SCHEDULE ══════════ -->
+<section id="tab-schedule" class="tabpane hidden">
+  <div class="card p-5 mb-4 flex flex-wrap items-end gap-3">
+    <div><label class="text-xs text-slate-500">ครูผู้สอน</label><select id="sdTeacher" class="inp min-w-[14rem]" onchange="loadSchedule()"></select></div>
+    <div class="text-xs text-slate-400 pb-2">นำเข้าตารางสอนทั้งโรงเรียนได้ที่เมนู 🛠️ แอดมิน</div>
+  </div>
+  <div class="card p-4 overflow-x-auto"><div id="sdWrap"><p class="text-center text-slate-400 py-6">ยังไม่มีข้อมูลตารางสอน</p></div></div>
+</section>
+
 <!-- ══════════ TAB: FIX ร/0/มส ══════════ -->
 <section id="tab-fix" class="tabpane hidden">
   <div class="card p-5 mb-4">
@@ -317,6 +327,10 @@
   <div class="grid lg:grid-cols-2 gap-4">
     <div class="card p-5">
       <h3 class="font-bold text-slate-700 mb-3">👩‍🏫 บัญชีครู</h3>
+      <div class="mb-3 p-3 bg-violet-50 rounded-lg">
+        <label class="btn bg-violet-600 text-white px-3 py-1.5 text-sm cursor-pointer inline-block">🗓️ นำเข้าตารางสอน + รายชื่อครู (.xlsx)<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importScheduleFile(this)"></label>
+        <p class="text-[11px] text-slate-500 mt-1.5">รองรับไฟล์ "ตารางครู" ของโรงเรียน (ชีตสรุปภาระงานสอน + ชีตรายครู) — ระบบจะสร้างบัญชีครูใหม่อัตโนมัติ (PIN เริ่มต้น 1234, ข้ามคนที่มีแล้ว) และแทนที่ตารางสอนเดิมทั้งหมด</p>
+      </div>
       <div class="flex flex-wrap gap-2 mb-3">
         <input id="tName" class="inp flex-1 min-w-[10rem]" placeholder="ชื่อครู">
         <input id="tPin" class="inp w-24" placeholder="PIN">
@@ -432,7 +446,7 @@
 
 <!-- ══════════ FOOTER ══════════ -->
 <footer class="bg-slate-800 text-slate-300 text-center text-xs py-4 mt-6">
-  Copyright © เพจครูพร้อมสอน. All Rights Reserved. สำหรับใช้ในโรงเรียนเท่านั้น ไม่อนุญาตให้ดัดแปลง แก้ไข ทำซ้ำ เพื่อการพาณิชย์ หรือแอบอ้างเป็นผลงานของตนเอง
+  พัฒนาโดย: ครูรุ่งนิรันดร์ • All Rights Reserved. สำหรับใช้ในโรงเรียนหนองสำโรงวิทยาเท่านั้น ไม่อนุญาตให้ดัดแปลง แก้ไข ทำซ้ำ เพื่อการพาณิชย์ หรือแอบอ้างเป็นผลงานของตนเอง
 </footer>
 
 <!-- ══════════ LOADING + TOAST ══════════ -->
@@ -667,7 +681,7 @@ function applySettingsToUI(){
 /* ════════════════ TABS ════════════════ */
 const TAB_LOADERS = {
   home: loadHome, subjects: loadSubjects, scores: initScores, attrs: initAttrs, acts: initActs,
-  attend: loadAttendance, fix: loadFixList, report: fillReportStudents, summary: loadSummary,
+  attend: loadAttendance, schedule: initSchedule, fix: loadFixList, report: fillReportStudents, summary: loadSummary,
   stats: ()=>{}, risk: ()=>{}, calendar: loadCalendar, admin: loadAdmin, settings: loadSettingsTab, manual: ()=>{}
 };
 function switchTab(name){
@@ -989,6 +1003,91 @@ async function loadAttendSummary(){
       <td class="text-center font-semibold ${a.risk?'text-red-600':'text-emerald-700'}">${a.percent}%</td></tr>`;
   });
   $('#adSumWrap').innerHTML = h+'</tbody></table>';
+}
+
+/* ════════════════ SCHEDULE (ตารางสอน) ════════════════ */
+const SD_DAYS = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์'];
+async function initSchedule(){
+  const ts = await api('getTeachers',{},true);
+  const meCore = coreName(STATE.teacher.name);
+  let opts = ts.map(t=>`<option value="${esc(t.name)}" ${coreName(t.name)===meCore?'selected':''}>${esc(t.name)}</option>`).join('');
+  $('#sdTeacher').innerHTML = opts || `<option value="${esc(STATE.teacher.name)}">${esc(STATE.teacher.name)}</option>`;
+  if(!isAdmin()) $('#sdTeacher').disabled = true; else $('#sdTeacher').disabled = false;
+  loadSchedule();
+}
+function coreName(n){ return String(n||'').replace(/^(ว่าที่ร้อยตรีหญิง|ว่าที่ร้อยตรี|นางสาว|นาง|นาย|ครู|ดร\.)\s*/,'').replace(/\s+/g,' ').trim(); }
+async function loadSchedule(){
+  const t = $('#sdTeacher').value;
+  const rows = await api('getSchedule',{teacher:t});
+  if(!rows.length){ $('#sdWrap').innerHTML='<p class="text-center text-slate-400 py-6">ยังไม่มีตารางสอนของครูท่านนี้ — แอดมินนำเข้าไฟล์ได้ที่เมนู 🛠️ แอดมิน</p>'; return; }
+  const map = {}; rows.forEach(r=>map[r.day+'|'+r.period]=r);
+  let h = `<div class="font-bold text-slate-700 mb-2">🗓️ ตารางสอน ${esc(t)} (รวม ${rows.length} คาบ/สัปดาห์)</div>
+  <table class="tbl w-full text-sm"><thead><tr><th>วัน/คาบ</th>${[1,2,3,4,5,6].map(p=>`<th>คาบ ${p}</th>`).join('')}</tr></thead><tbody>`;
+  SD_DAYS.forEach(d=>{
+    h+=`<tr><th>${d}</th>`;
+    for(let p=1;p<=6;p++){
+      const c = map[d+'|'+p];
+      h += c ? `<td class="text-center"><div class="font-medium text-indigo-700">${esc(c.subjectName)}</div><div class="text-xs text-slate-500">${esc(c.classLevel)}</div></td>` : '<td></td>';
+    }
+    h+='</tr>';
+  });
+  $('#sdWrap').innerHTML = h+'</tbody></table>';
+}
+/* นำเข้าไฟล์ตารางครูทั้งโรงเรียน (.xlsx): สร้างบัญชีครู + ตารางสอน */
+function importScheduleFile(input){
+  const f = input.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = async e=>{
+    try{
+      showLoading(true);
+      const wb = XLSX.read(e.target.result,{type:'array'});
+      // 1) รายชื่อครูจากชีต "สรุปภาระงานสอน" (คอลัมน์ B แถวที่คอลัมน์ A เป็นตัวเลข)
+      const names = [];
+      const sum = wb.Sheets['สรุปภาระงานสอน'];
+      if(sum){
+        XLSX.utils.sheet_to_json(sum,{header:1}).forEach(r=>{
+          if(typeof r[0]==='number' && r[1]) names.push(String(r[1]).trim());
+        });
+      }
+      // map ชื่อหน้าชีต (ครู+ชื่อ) → ชื่อเต็ม
+      const fullMap = {};
+      names.forEach(n=>{ fullMap[coreName(n).split(' ')[0]] = n; });
+      // 2) ตารางสอนจากชีตรายครู
+      const schedRows = [];
+      wb.SheetNames.forEach(sn=>{
+        if(!sn.startsWith('ครู')) return;
+        const data = XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1});
+        // หาแถว header ที่ขึ้นต้น "วัน/คาบ" แล้ว map คอลัมน์ → เลขคาบ
+        const hi = data.findIndex(r=>String(r[0]||'').includes('วัน/คาบ'));
+        if(hi<0) return;
+        const colPeriod = {};
+        data[hi].forEach((cell,ci)=>{
+          const m = String(cell||'').match(/คาบ\s*(\d+)/);
+          if(m) colPeriod[ci] = Number(m[1]);
+        });
+        const teacher = fullMap[sn.replace(/^ครู/,'').trim()] || sn;
+        for(let ri=hi+1; ri<data.length; ri++){
+          const day = String(data[ri][0]||'').trim();
+          if(!SD_DAYS.includes(day)) { if(day && !SD_DAYS.includes(day)) break; continue; }
+          Object.keys(colPeriod).forEach(ci=>{
+            const cell = String(data[ri][ci]||'').trim();
+            if(!cell || cell==='พัก') return;
+            const lines = cell.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+            schedRows.push({teacher, day, period:colPeriod[ci], subjectName:lines[0]||'', classLevel:lines[1]||''});
+          });
+        }
+      });
+      showLoading(false);
+      if(!schedRows.length && !names.length) return toast('ไม่พบข้อมูลตารางสอนในไฟล์ (ต้องมีชีต "สรุปภาระงานสอน" และชีตรายครู)',false);
+      if(!confirm(`พบครู ${names.length} คน และตารางสอน ${schedRows.length} คาบ\n\n• สร้างบัญชีครูใหม่อัตโนมัติ (PIN 1234, ข้ามคนที่มีแล้ว)\n• ตารางสอนเดิมจะถูกแทนที่ทั้งหมด\n\nดำเนินการต่อ?`)){ input.value=''; return; }
+      const rT = names.length ? await api('importTeachersFromSchedule',{names}) : {added:0,skipped:0};
+      const rS = await api('importSchedule',{rows:schedRows});
+      toast(`นำเข้าสำเร็จ: ครูใหม่ ${rT.added} คน (ซ้ำ ${rT.skipped}) | ตารางสอน ${rS.count} คาบ`);
+      loadTeachers();
+    }catch(err){ showLoading(false); toast('อ่านไฟล์ไม่สำเร็จ: '+err.message,false); }
+    input.value='';
+  };
+  reader.readAsArrayBuffer(f);
 }
 
 /* ════════════════ FIX ร/0/มส ════════════════ */
