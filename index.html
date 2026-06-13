@@ -13,7 +13,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ระบบบันทึกผลการเรียน ม.1-3 | หลักสูตรแกนกลางฯ 2551</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -58,8 +58,8 @@
       <h1 class="text-xl font-bold text-slate-800">ระบบบันทึกผลการเรียน ม.1-3</h1>
       <p class="text-sm text-slate-500">หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พ.ศ. 2551</p>
     </div>
-    <label class="text-sm text-slate-600 font-medium">ชื่อครู (ใช้ ครู/นาย/นาง/นางสาว หรือไม่ใส่คำนำหน้าก็ได้)</label>
-    <input id="loginName" class="inp mb-3 mt-1" placeholder="ขอแค่ชื่อ-นามสกุลตรงกัน เช่น รุ่งนิรันดร์ โพธิ์เพชรเล็บ">
+    <label class="text-sm text-slate-600 font-medium">เลือกชื่อครู</label>
+    <select id="loginName" class="inp mb-3 mt-1"><option value="">— กำลังโหลดรายชื่อ... —</option></select>
     <label class="text-sm text-slate-600 font-medium">รหัส PIN</label>
     <input id="loginPin" type="password" inputmode="numeric" class="inp mb-4 mt-1" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()" class="btn w-full bg-indigo-600 text-white py-2.5">🔐 เข้าสู่ระบบ</button>
@@ -347,10 +347,11 @@
     </div>
     <div class="card p-5">
       <h3 class="font-bold text-slate-700 mb-1">🧑‍🎓 จัดการรายชื่อนักเรียน</h3>
-      <div class="flex flex-wrap gap-2 mb-3 mt-2">
+      <div class="flex flex-wrap gap-2 mb-1 mt-2">
         <button onclick="downloadStudentTemplate()" class="btn bg-slate-100 text-slate-700 px-3 py-1.5 text-sm">📥 ดาวน์โหลดฟอร์มตัวอย่าง (.xlsx)</button>
         <label class="btn bg-sky-600 text-white px-3 py-1.5 text-sm cursor-pointer">📤 นำเข้ารายชื่อ (.xlsx/.csv)<input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importStudents(this)"></label>
       </div>
+      <p class="text-[11px] text-rose-500 mb-3">⚠️ การนำเข้าไฟล์จะลบรายชื่อเดิมทั้งหมดแล้วแทนที่ด้วยรายชื่อใหม่ | ฟอร์ม: ชั้น, เลขที่, เลขประจำตัว, คำนำหน้า, ชื่อ, นามสกุล | หรือใช้เมนู NSR → 📋/📥 ในหน้า Google Sheets ก็ได้</p>
       <div class="flex flex-wrap gap-2 mb-3">
         <input id="nsCode" class="inp w-28" placeholder="เลขประจำตัว">
         <input id="nsNo" class="inp w-20" placeholder="เลขที่">
@@ -609,9 +610,25 @@ function subjectsOf(cls, sem){
 }
 
 /* ════════════════ LOGIN ════════════════ */
+async function loadLoginNames(){
+  const sel = $('#loginName');
+  try{
+    const ts = await api('getTeachers',{},true);
+    if(ts.length){
+      sel.innerHTML = '<option value="">— เลือกชื่อ —</option>' +
+        ts.map(t=>`<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
+    }else{
+      // ระบบใหม่ยังไม่มีครู → ให้เข้าด้วย admin ครั้งแรก
+      sel.innerHTML = '<option value="admin">admin (ผู้ดูแลระบบครั้งแรก)</option>';
+    }
+  }catch(e){
+    sel.innerHTML = '<option value="admin">admin (ผู้ดูแลระบบครั้งแรก)</option>';
+  }
+}
 async function doLogin(){
   const name = $('#loginName').value.trim(), pin = $('#loginPin').value.trim();
-  if(!name||!pin){ return showLoginErr('กรอกชื่อและ PIN ก่อนครับ'); }
+  if(!name){ return showLoginErr('เลือกชื่อครูก่อนครับ'); }
+  if(!pin){ return showLoginErr('กรอก PIN ก่อนครับ'); }
   try{
     const r = await api('login',{name,pin});
     STATE.teacher = r.teacher;
@@ -619,7 +636,7 @@ async function doLogin(){
     $('#loginOverlay').classList.add('hidden');
     applyRole(); boot();
   }catch(e){
-    // กรณีระบบใหม่ยังไม่มีครู: ให้เข้าแบบ admin/1234 ครั้งแรก
+    // กรณีระบบใหม่ยังไม่มีครู: สร้างบัญชี admin/1234 อัตโนมัติแล้วล็อกอินซ้ำ
     if(name==='admin'&&pin==='1234'){
       try{
         const ts = await api('getTeachers');
@@ -676,6 +693,28 @@ function applySettingsToUI(){
   $('#hdSlogan').textContent = st.slogan || '';
   $('#hdYear').textContent = st.academicYear || '-';
   if(st.logoURL){ $('#hdLogo').src=st.logoURL; $('#hdLogo').classList.remove('hidden'); }
+  applyFavicon();
+}
+// Favicon ตามโลโก้โรงเรียน: วาดลงครอบวงกลม 64x64 แล้วฝังเป็น data URI (กันปัญหา cache/CORS)
+function applyFavicon(){
+  const url = STATE.settings.logoURL;
+  if(!url) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = ()=>{
+    try{
+      const cv = document.createElement('canvas');
+      cv.width = 64; cv.height = 64;
+      const ctx = cv.getContext('2d');
+      ctx.beginPath(); ctx.arc(32,32,32,0,Math.PI*2); ctx.clip(); // ครอบวงกลมให้ดูเป็นไอคอน
+      const sc = Math.min(64/img.width, 64/img.height);
+      const w = img.width*sc, h = img.height*sc;
+      ctx.drawImage(img,(64-w)/2,(64-h)/2,w,h);
+      $('#favicon').href = cv.toDataURL('image/png');
+    }catch(e){ $('#favicon').href = url; } // ถ้าวาดไม่ได้ (CORS) ใช้ URL ตรง
+  };
+  img.onerror = ()=>{ $('#favicon').href = url; };
+  img.src = url;
 }
 
 /* ════════════════ TABS ════════════════ */
@@ -1335,10 +1374,14 @@ async function delStudent(id){
   catch(e){ toast(e.message,false); }
 }
 function downloadStudentTemplate(){
-  const ws = XLSX.utils.aoa_to_sheet([['เลขประจำตัว','เลขที่','ชื่อ-นามสกุล','ระดับชั้น/ห้อง'],['12345','1','เด็กชายตัวอย่าง ใจดี','ม.1/1']]);
-  ws['!cols']=[{wch:12},{wch:8},{wch:28},{wch:14}];
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['ชั้น','เลขที่','เลขประจำตัว','คำนำหน้า','ชื่อ','นามสกุล'],
+    ['ม.1/1','1','17554','เด็กชาย','สมชาย','ใจดี'],
+    ['ม.1/1','2','17555','เด็กหญิง','สมหญิง','รักเรียน']
+  ]);
+  ws['!cols']=[{wch:10},{wch:8},{wch:12},{wch:10},{wch:16},{wch:16}];
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'รายชื่อ');
-  XLSX.writeFile(wb,'ฟอร์มรายชื่อนักเรียน.xlsx');
+  XLSX.writeFile(wb,'ฟอร์มนำเข้ารายชื่อ.xlsx');
 }
 function importStudents(input){
   const f = input.files[0]; if(!f) return;
@@ -1347,11 +1390,15 @@ function importStudents(input){
     try{
       const wb = XLSX.read(e.target.result,{type:'array'});
       const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
-      const rows = data.slice(1).filter(r=>r[2]).map(r=>({studentCode:String(r[0]||''),number:r[1]||'',fullName:String(r[2]),classLevel:String(r[3]||'')}));
-      if(!rows.length) return toast('ไม่พบข้อมูลในไฟล์',false);
-      const r = await api('bulkImportStudents',{rows});
+      // ฟอร์มมาตรฐาน: ชั้น | เลขที่ | เลขประจำตัว | คำนำหน้า | ชื่อ | นามสกุล
+      const rows = data.slice(1).filter(r=>String(r[4]||'').trim()!=='').map(r=>({
+        classLevel:String(r[0]||'').trim(), number:r[1]!=null?r[1]:'', studentCode:String(r[2]||'').trim(),
+        prefix:String(r[3]||'').trim(), firstName:String(r[4]||'').trim(), lastName:String(r[5]||'').trim() }));
+      if(!rows.length) return toast('ไม่พบข้อมูลในไฟล์ (ตรวจหัวคอลัมน์: ชั้น เลขที่ เลขประจำตัว คำนำหน้า ชื่อ นามสกุล)',false);
+      if(!confirm(`พบรายชื่อ ${rows.length} คน\n\n⚠️ การนำเข้าจะ "ลบรายชื่อเดิมทั้งหมด" พร้อมคะแนน/เกรด/คุณลักษณะ/กิจกรรม/เช็คชื่อที่ผูกอยู่ แล้วแทนที่ด้วยรายชื่อใหม่\n\nดำเนินการต่อ?`)){ input.value=''; return; }
+      const r = await api('replaceAllStudents',{rows});
       STATE.students = await api('getStudents',{},true);
-      toast(`นำเข้า ${r.count} คนเรียบร้อย`); renderStudentTable();
+      toast(`นำเข้ารายชื่อใหม่ ${r.count} คนเรียบร้อย (ลบของเดิมแล้ว)`); renderStudentTable();
     }catch(err){ toast('อ่านไฟล์ไม่สำเร็จ: '+err.message,false); }
     input.value='';
   };
@@ -1485,6 +1532,8 @@ async function doClearAll(){
     STATE.teacher = JSON.parse(saved);
     $('#loginOverlay').classList.add('hidden');
     applyRole(); boot();
+  }else{
+    loadLoginNames();
   }
 })();
 </script>
