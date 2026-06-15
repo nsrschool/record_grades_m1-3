@@ -396,12 +396,45 @@
         <div><label class="text-xs text-slate-500">ชื่อผู้อำนวยการ</label><input id="sgDirector" class="inp"></div>
         <div><label class="text-xs text-slate-500">ชื่อรอง ผอ. (วิชาการ)</label><input id="sgDeputy" class="inp"></div>
       </div>
-      <div class="grid grid-cols-3 gap-3 mt-4">
-        <div class="text-center"><label class="text-xs text-slate-500">ตราโรงเรียน</label><img id="imgLogo" class="h-16 mx-auto my-1 object-contain bg-slate-50 rounded border w-full"><label class="btn bg-slate-100 text-xs px-2 py-1 cursor-pointer block">อัปโหลด<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'logoURL','imgLogo')"></label></div>
-        <div class="text-center"><label class="text-xs text-slate-500">ลายเซ็น ผอ.</label><img id="imgDirSign" class="h-16 mx-auto my-1 object-contain bg-slate-50 rounded border w-full"><label class="btn bg-slate-100 text-xs px-2 py-1 cursor-pointer block">อัปโหลด<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'directorSignURL','imgDirSign')"></label></div>
-        <div class="text-center"><label class="text-xs text-slate-500">ลายเซ็นรอง ผอ.</label><img id="imgDepSign" class="h-16 mx-auto my-1 object-contain bg-slate-50 rounded border w-full"><label class="btn bg-slate-100 text-xs px-2 py-1 cursor-pointer block">อัปโหลด<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'deputySignURL','imgDepSign')"></label></div>
+      <div class="mt-5 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+        <h4 class="font-bold text-indigo-700 mb-1">🖼️ ตราโรงเรียน & ลายเซ็น (สำหรับหัวเว็บ ใบรายงาน และ favicon)</h4>
+        <p class="text-[11px] text-slate-500 mb-3">อัปโหลดไฟล์รูป (.png แนะนำให้พื้นหลังโปร่งใส) ระบบบีบอัด/ย่อขนาดและอัปขึ้น Google Drive ให้อัตโนมัติ — ตราโรงเรียนจะแสดงบนหัวเว็บ บนใบรายงาน และเป็นไอคอนแท็บเบราว์เซอร์ทันที</p>
+        <div class="grid grid-cols-3 gap-3">
+          <div class="text-center bg-white rounded-lg p-2 border">
+            <label class="text-xs font-medium text-slate-600">ตราโรงเรียน (โลโก้)</label>
+            <div class="h-24 my-2 flex items-center justify-center bg-slate-50 rounded border overflow-hidden">
+              <img id="imgLogo" class="max-h-full max-w-full object-contain hidden" onload="this.classList.remove('hidden');this.nextElementSibling.classList.add('hidden')" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+              <span class="text-[11px] text-slate-400">ยังไม่มีรูป</span>
+            </div>
+            <div class="flex gap-1">
+              <label class="btn bg-indigo-600 text-white text-xs px-2 py-1 cursor-pointer flex-1">📤 อัปโหลด<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'logoURL','imgLogo')"></label>
+              <button onclick="removeImg('logoURL','imgLogo')" class="btn bg-slate-100 text-slate-500 text-xs px-2 py-1">ลบ</button>
+            </div>
+          </div>
+          <div class="text-center bg-white rounded-lg p-2 border">
+            <label class="text-xs font-medium text-slate-600">ลายเซ็น ผอ.</label>
+            <div class="h-24 my-2 flex items-center justify-center bg-slate-50 rounded border overflow-hidden">
+              <img id="imgDirSign" class="max-h-full max-w-full object-contain hidden" onload="this.classList.remove('hidden');this.nextElementSibling.classList.add('hidden')" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+              <span class="text-[11px] text-slate-400">ยังไม่มีรูป</span>
+            </div>
+            <div class="flex gap-1">
+              <label class="btn bg-indigo-600 text-white text-xs px-2 py-1 cursor-pointer flex-1">📤 อัปโหลด<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'directorSignURL','imgDirSign')"></label>
+              <button onclick="removeImg('directorSignURL','imgDirSign')" class="btn bg-slate-100 text-slate-500 text-xs px-2 py-1">ลบ</button>
+            </div>
+          </div>
+          <div class="text-center bg-white rounded-lg p-2 border">
+            <label class="text-xs font-medium text-slate-600">ลายเซ็นรอง ผอ.</label>
+            <div class="h-24 my-2 flex items-center justify-center bg-slate-50 rounded border overflow-hidden">
+              <img id="imgDepSign" class="max-h-full max-w-full object-contain hidden" onload="this.classList.remove('hidden');this.nextElementSibling.classList.add('hidden')" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">
+              <span class="text-[11px] text-slate-400">ยังไม่มีรูป</span>
+            </div>
+            <div class="flex gap-1">
+              <label class="btn bg-indigo-600 text-white text-xs px-2 py-1 cursor-pointer flex-1">📤 อัปโหลด<input type="file" accept="image/*" class="hidden" onchange="uploadImg(this,'deputySignURL','imgDepSign')"></label>
+              <button onclick="removeImg('deputySignURL','imgDepSign')" class="btn bg-slate-100 text-slate-500 text-xs px-2 py-1">ลบ</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <p class="text-[11px] text-slate-400 mt-2">* รูปจะถูกบีบอัด/ย่อขนาดอัตโนมัติ แล้วอัปขึ้น Google Drive เก็บเฉพาะ URL ในชีต (กัน cell limit 50,000 อักขระ)</p>
     </div>
     <div class="card p-5">
       <h3 class="font-bold text-slate-700 mb-3">📅 ภาคเรียน & สัดส่วนคะแนน</h3>
@@ -412,10 +445,12 @@
         <div><label class="text-xs text-slate-500">ภาค 1 สิ้นสุด</label><input id="sgS1b" type="date" class="inp"></div>
         <div><label class="text-xs text-slate-500">ภาค 2 เริ่ม</label><input id="sgS2a" type="date" class="inp"></div>
         <div><label class="text-xs text-slate-500">ภาค 2 สิ้นสุด</label><input id="sgS2b" type="date" class="inp"></div>
+        <div><label class="text-xs text-slate-500">📋 วันที่อนุมัติผล ภาค 1</label><input id="sgAp1" type="date" class="inp"></div>
+        <div><label class="text-xs text-slate-500">📋 วันที่อนุมัติผล ภาค 2</label><input id="sgAp2" type="date" class="inp"></div>
         <div><label class="text-xs text-slate-500">สัดส่วนกลาง: ระหว่างภาค (%)</label><input id="sgRMid" type="number" class="inp"></div>
         <div><label class="text-xs text-slate-500">สัดส่วนกลาง: ปลายภาค (%)</label><input id="sgRFin" type="number" class="inp"></div>
       </div>
-      <p class="text-[11px] text-slate-400 mt-2">* สัดส่วนกลางคือค่าตั้งต้นเมื่อสร้างวิชาใหม่ — ครูแก้สัดส่วนรายวิชาเองได้ที่เมนูรายวิชา (รวมต้องเท่ากับ 100)</p>
+      <p class="text-[11px] text-slate-400 mt-2">* สัดส่วนกลางคือค่าตั้งต้นเมื่อสร้างวิชาใหม่ — ครูแก้สัดส่วนรายวิชาเองได้ที่เมนูรายวิชา (รวมต้องเท่ากับ 100)<br>* วันที่อนุมัติผล จะพิมพ์เป็น "ให้ไว้ ณ วันที่ ..." บนใบรายงานผลการเรียนของนักเรียน</p>
       <button onclick="saveSettingsForm()" class="btn bg-indigo-600 text-white px-5 py-2 mt-4 w-full">💾 บันทึกการตั้งค่า</button>
       <h3 class="font-bold text-slate-700 mt-6 mb-2">🎚️ ตารางตัดเกรด 8 ระดับ (แก้ช่วงคะแนนได้)</h3>
       <table class="tbl w-full text-sm"><thead><tr><th>คะแนนต่ำสุด</th><th>คะแนนสูงสุด</th><th>เกรด</th><th>ความหมาย</th></tr></thead><tbody id="gmRows"></tbody></table>
@@ -1206,15 +1241,25 @@ async function buildReport(){
     <div class="border rounded p-2 text-center">อ่าน คิดวิเคราะห์ เขียน<br><b>${rwAvg===null?'-':meanTxt[Math.round(rwAvg)]}</b></div>
     <div class="border rounded p-2 text-center">กิจกรรมพัฒนาผู้เรียน<br><b>${r.activities.length? (r.activities.every(a=>a.result==='ผ')?'ผ่าน':'มีกิจกรรมไม่ผ่าน') : '-'}</b></div>
   </div>`;
-  h += signBlock(s);
+  h += signBlock(s, r.homeroomTeacher, SEM==='1'?s.approveDate1:s.approveDate2);
   $('#printArea').innerHTML = h;
 }
 function avgOf(rows){ if(!rows.length) return null; return rows.reduce((a,r)=>a+Number(r.value||0),0)/rows.length; }
-function signBlock(s){
-  return `<div class="grid grid-cols-2 gap-8 mt-10 text-center text-sm">
-    <div>${s.deputySignURL?`<img src="${s.deputySignURL}" class="h-12 mx-auto object-contain">`:'<div class="h-12"></div>'}
+const THAI_MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function thaiDate(d){
+  if(!d) return '..............................';
+  const dt=new Date(d); if(isNaN(dt.getTime())) return d;
+  return dt.getDate()+' '+THAI_MONTHS[dt.getMonth()]+' พ.ศ. '+(dt.getFullYear()+543);
+}
+function signBlock(s, homeroom, dateStr){
+  const sigImg = url => url?`<img src="${url}" class="h-12 mx-auto object-contain">`:'<div class="h-12"></div>';
+  return `<div class="text-right text-sm mt-8 mb-3">ให้ไว้ ณ วันที่ ${thaiDate(dateStr)}</div>
+  <div class="grid grid-cols-3 gap-6 text-center text-sm">
+    <div><div class="h-12"></div>
+      <div>(${esc(homeroom||'.................................')})</div><div>ครูประจำชั้น</div></div>
+    <div>${sigImg(s.deputySignURL)}
       <div>(${esc(s.deputyName||'.................................')})</div><div>รองผู้อำนวยการฝ่ายวิชาการ</div></div>
-    <div>${s.directorSignURL?`<img src="${s.directorSignURL}" class="h-12 mx-auto object-contain">`:'<div class="h-12"></div>'}
+    <div>${sigImg(s.directorSignURL)}
       <div>(${esc(s.directorName||'.................................')})</div><div>ผู้อำนวยการโรงเรียน</div></div>
   </div>`;
 }
@@ -1233,7 +1278,7 @@ async function buildTranscript(){
   h += `</tbody></table>
   <div class="text-right mt-3 text-sm">หน่วยกิตสะสม: <b>${r.totalCredits}</b> &nbsp;&nbsp; ผลการเรียนเฉลี่ยสะสม (GPAX): <b class="text-violet-700 text-lg">${r.gpax===null?'-':r.gpax.toFixed(2)}</b></div>`;
   if(!r.terms.some(t=>t.source==='history')) h += '<p class="text-xs text-slate-400 mt-2">* หากต้องการรวมผลภาคเรียนของปีก่อนหน้า ให้แอดมินกรอกที่เมนู 🛠️ แอดมิน → ประวัติ GPA</p>';
-  h += signBlock(s);
+  h += signBlock(s, r.homeroomTeacher, s.approveDate2||s.approveDate1);
   $('#printArea').innerHTML = h;
 }
 
@@ -1456,9 +1501,11 @@ function loadSettingsTab(){
   $('#sgSem').value=s.currentSemester||'1'; $('#sgAttMin').value=s.attendMinPercent||80;
   $('#sgS1a').value=s.semester1Start||''; $('#sgS1b').value=s.semester1End||'';
   $('#sgS2a').value=s.semester2Start||''; $('#sgS2b').value=s.semester2End||'';
+  $('#sgAp1').value=s.approveDate1||''; $('#sgAp2').value=s.approveDate2||'';
   $('#sgRMid').value=s.defaultRatioMid||70; $('#sgRFin').value=s.defaultRatioFinal||30;
   ['logoURL|imgLogo','directorSignURL|imgDirSign','deputySignURL|imgDepSign'].forEach(x=>{
-    const [k,id]=x.split('|'); if(s[k]) $('#'+id).src=s[k];
+    const [k,id]=x.split('|'); const img=$('#'+id);
+    if(s[k]){ img.src=s[k]; } else { img.removeAttribute('src'); img.classList.add('hidden'); if(img.nextElementSibling) img.nextElementSibling.classList.remove('hidden'); }
   });
   $('#gmRows').innerHTML = STATE.mapping.map(m=>`<tr>
     <td><input class="inp !py-1 gmMin" type="number" value="${m.minPercent}"></td>
@@ -1476,6 +1523,7 @@ async function saveSettingsForm(){
       currentSemester:$('#sgSem').value, attendMinPercent:$('#sgAttMin').value,
       semester1Start:$('#sgS1a').value, semester1End:$('#sgS1b').value,
       semester2Start:$('#sgS2a').value, semester2End:$('#sgS2b').value,
+      approveDate1:$('#sgAp1').value, approveDate2:$('#sgAp2').value,
       defaultRatioMid:rm, defaultRatioFinal:rf });
     applySettingsToUI(); toast('บันทึกการตั้งค่าแล้ว');
   }catch(e){ toast(e.message,false); }
@@ -1494,22 +1542,38 @@ function uploadImg(input, key, imgId){
   reader.onload = e=>{
     const img = new Image();
     img.onload = async ()=>{
-      const maxW = 500, scale = Math.min(1, maxW/img.width);
+      // โลโก้ย่อ ~400px (ใช้ทำ favicon ด้วย) | ลายเซ็นย่อ ~600px
+      const maxW = key==='logoURL' ? 400 : 600;
+      const scale = Math.min(1, maxW/img.width);
       const cv = document.createElement('canvas');
-      cv.width = img.width*scale; cv.height = img.height*scale;
+      cv.width = Math.round(img.width*scale); cv.height = Math.round(img.height*scale);
       cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
       const b64 = cv.toDataURL('image/png');
       try{
-        const r = await api('uploadImage',{base64:b64,filename:key+'_'+Date.now()+'.png'});
-        STATE.settings = await api('saveSettings',{[key]:r.url});
-        $('#'+imgId).src = r.url; applySettingsToUI();
+        showLoading(true);
+        const r = await api('uploadImage',{base64:b64,filename:key+'_'+Date.now()+'.png'},true);
+        STATE.settings = await api('saveSettings',{[key]:r.url},true);
+        const el = $('#'+imgId); el.src = r.url + '&t=' + Date.now(); // กัน cache
+        applySettingsToUI();
+        showLoading(false);
         toast('อัปโหลดรูปขึ้น Drive แล้ว');
-      }catch(err){ toast(err.message,false); }
+      }catch(err){ showLoading(false); toast(err.message,false); }
     };
+    img.onerror = ()=>toast('ไฟล์รูปไม่ถูกต้อง',false);
     img.src = e.target.result;
   };
   reader.readAsDataURL(f);
   input.value='';
+}
+// ลบรูป (เคลียร์ URL ในชีต)
+async function removeImg(key, imgId){
+  if(!confirm('ลบรูปนี้?')) return;
+  try{
+    STATE.settings = await api('saveSettings',{[key]:''},true);
+    const el = $('#'+imgId); el.removeAttribute('src'); el.classList.add('hidden');
+    if(el.nextElementSibling) el.nextElementSibling.classList.remove('hidden');
+    applySettingsToUI(); toast('ลบรูปแล้ว');
+  }catch(e){ toast(e.message,false); }
 }
 
 /* ════════════════ BACKUP / IMPORT / CLEAR ════════════════ */
