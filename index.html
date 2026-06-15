@@ -39,6 +39,21 @@
   .scorecell{width:4.2rem;text-align:center;border:1px solid #cbd5e1;border-radius:.4rem;padding:.25rem}
   .scorecell:focus{outline:2px solid #6366f1}
   dialog::backdrop{background:rgba(15,23,42,.55)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-cell{min-height:84px;border:1px solid #e2e8f0;border-radius:10px;padding:5px 6px;background:#fff;display:flex;flex-direction:column;gap:3px;transition:.15s}
+  .cal-cell.dim{background:#f8fafc}
+  .cal-cell.today{outline:2px solid #6366f1}
+  .cal-cell.sun .cal-d{color:#ef4444}
+  .cal-cell.sat .cal-d{color:#3b82f6}
+  .cal-cell.holiday{background:#fef2f2;border-color:#fecaca}
+  .cal-cell.makeup{background:#fffbeb;border-color:#fde68a}
+  .cal-cell.clickable{cursor:pointer}
+  .cal-cell.clickable:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);transform:translateY(-1px)}
+  .cal-d{font-size:13px;font-weight:700;color:#334155}
+  .cal-chip{font-size:10px;border-radius:6px;padding:1px 5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip-holiday{background:#fee2e2;color:#b91c1c}
+  .chip-event{background:#d1fae5;color:#047857}
+  .chip-makeup{background:#fef3c7;color:#b45309}
   dialog{border:none;border-radius:1rem;padding:0;max-height:92vh}
   @media print{
     body *{visibility:hidden}
@@ -312,15 +327,46 @@
   </div>
 </section>
 
-<!-- ══════════ TAB: CALENDAR ══════════ -->
+<!-- ══════════ TAB: CALENDAR (ปฏิทินวิชาการ แบบเดือน) ══════════ -->
 <section id="tab-calendar" class="tabpane hidden">
-  <div class="card p-5 mb-4 flex flex-wrap items-end gap-3" data-admin>
-    <div><label class="text-xs text-slate-500">วันที่</label><input id="clDate" type="date" class="inp"></div>
-    <div><label class="text-xs text-slate-500">ประเภท</label><select id="clType" class="inp"><option>สอบ</option><option>กิจกรรม</option><option>วันหยุด</option><option>ทั่วไป</option></select></div>
-    <div class="flex-1 min-w-[12rem]"><label class="text-xs text-slate-500">หัวข้อ</label><input id="clTitle" class="inp" placeholder="เช่น สอบกลางภาค 1/2569"></div>
-    <button onclick="addCal()" class="btn bg-indigo-600 text-white px-4 py-2 text-sm">➕ เพิ่ม</button>
+  <div class="card p-4 mb-4">
+    <div class="flex items-center justify-between gap-2 flex-wrap">
+      <div class="flex items-center gap-2">
+        <button onclick="calMove(-1)" class="btn bg-slate-100 px-3 py-1.5 text-sm">◀</button>
+        <h3 id="calTitle" class="font-bold text-indigo-700 text-lg min-w-[160px] text-center"></h3>
+        <button onclick="calMove(1)" class="btn bg-slate-100 px-3 py-1.5 text-sm">▶</button>
+        <button onclick="calToday()" class="btn bg-indigo-50 text-indigo-700 px-3 py-1.5 text-xs">วันนี้</button>
+      </div>
+      <div class="flex items-center gap-3 text-xs">
+        <span class="flex items-center gap-1"><span class="cal-chip chip-event">●</span> กิจกรรม/งาน</span>
+        <span class="flex items-center gap-1"><span class="cal-chip chip-holiday">●</span> วันหยุด</span>
+        <span class="flex items-center gap-1"><span class="cal-chip chip-makeup">●</span> สอนชดเชย</span>
+      </div>
+    </div>
+    <p data-admin class="text-[11px] text-slate-400 mt-2">💡 คลิกที่วันเพื่อเพิ่ม/แก้รายการ (เฉพาะแอดมิน) — ครูดูปฏิทินได้อย่างเดียว</p>
+    <p data-teacher-only class="text-[11px] text-slate-400 mt-2 hidden">👀 โหมดดูอย่างเดียว — การเพิ่ม/แก้ไขปฏิทินทำได้โดยแอดมินเท่านั้น</p>
   </div>
-  <div class="card p-4"><div id="clList"></div></div>
+  <div class="card p-4">
+    <div class="grid grid-cols-7 gap-[6px] mb-1 text-center text-xs font-bold text-slate-400">
+      <div class="text-rose-400">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-blue-400">ส</div>
+    </div>
+    <div id="calGrid" class="cal-grid"></div>
+  </div>
+  <!-- แอดมิน: แผงเพิ่ม/รายการของวันที่เลือก (โชว์เมื่อคลิกวัน) -->
+  <div id="calAdmin" class="card p-4 mt-4 hidden">
+    <h4 class="font-bold text-indigo-700 mb-2">รายการของ <span id="calSelDate" class="text-slate-600"></span></h4>
+    <div id="calDayList" class="mb-3"></div>
+    <div class="grid sm:grid-cols-4 gap-2 items-end">
+      <div><label class="text-xs text-slate-500">ประเภท</label>
+        <select id="cal_type" class="inp mt-1">
+          <option value="event">กิจกรรม/งาน</option>
+          <option value="holiday">วันหยุด</option>
+          <option value="makeup">สอนชดเชย</option>
+        </select></div>
+      <div class="sm:col-span-2"><label class="text-xs text-slate-500">ชื่อรายการ</label><input id="cal_title" class="inp mt-1" placeholder="เช่น สอบกลางภาค 1/2569 / หยุดวันเข้าพรรษา"></div>
+      <button onclick="addCalEvent()" class="btn bg-indigo-600 text-white px-4 py-2 text-sm">➕ เพิ่ม</button>
+    </div>
+  </div>
 </section>
 
 <!-- ══════════ TAB: ADMIN ══════════ -->
@@ -1386,21 +1432,85 @@ async function loadRisk(){
     <td>${x.problems.map(p=>`<span class="chip g0 mr-1">${esc(p)}</span>`).join('')}</td></tr>`).join('');
 }
 
-/* ════════════════ CALENDAR ════════════════ */
+/* ════════════════ CALENDAR (ปฏิทินวิชาการ แบบเดือน) ════════════════ */
+const THAI_WD=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const CAL_TYPE={ event:{label:'กิจกรรม/งาน',chip:'chip-event'}, holiday:{label:'วันหยุด',chip:'chip-holiday'}, makeup:{label:'สอนชดเชย',chip:'chip-makeup'} };
+let CAL = { items:[], month:null, sel:null };
+function todayISO(){ return new Date().toISOString().slice(0,10); }
 async function loadCalendar(){
-  const rows = await api('getCalendar');
-  const icon = {'สอบ':'📝','กิจกรรม':'🎉','วันหยุด':'🏖️','ทั่วไป':'📌'};
-  $('#clList').innerHTML = rows.length ? rows.map(r=>`<div class="flex items-center gap-3 border-b py-2 text-sm">
-    <span>${icon[r.type]||'📌'}</span><b class="w-28">${esc(r.date)}</b><span class="flex-1">${esc(r.title)}</span>
-    ${isAdmin()?`<button onclick='delCal(${JSON.stringify(String(r.ID))})' class="btn bg-red-100 text-red-600 px-2 py-1 text-xs">🗑️</button>`:''}
-  </div>`).join('') : '<p class="text-center text-slate-400 py-6">ยังไม่มีรายการ</p>';
+  CAL.items = await api('getCalendar',{},true);
+  showLoading(false);
+  if(!CAL.month) CAL.month = todayISO().slice(0,7);
+  // ครูดูอย่างเดียว — แสดงหมายเหตุโหมดดู
+  const t = document.querySelector('[data-teacher-only]'); if(t) t.classList.toggle('hidden', isAdmin());
+  renderCalendar();
 }
-async function addCal(){
-  if(!$('#clDate').value||!$('#clTitle').value.trim()) return toast('กรอกวันที่และหัวข้อก่อน',false);
-  try{ await api('addCalendarEvent',{date:$('#clDate').value,type:$('#clType').value,title:$('#clTitle').value.trim()}); $('#clTitle').value=''; toast('เพิ่มแล้ว'); loadCalendar(); }
-  catch(e){ toast(e.message,false); }
+function calEventsOf(iso){ return (CAL.items||[]).filter(e=>ymdStr(e.date)===iso); }
+function ymdStr(d){ return String(d||'').slice(0,10); }
+function calMove(d){
+  const [y,m]=CAL.month.split('-').map(Number);
+  const dt=new Date(y, m-1+d, 1);
+  CAL.month = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+  CAL.sel=null; $('#calAdmin').classList.add('hidden');
+  renderCalendar();
 }
-async function delCal(id){ try{ await api('deleteCalendarEvent',{id}); loadCalendar(); }catch(e){ toast(e.message,false); } }
+function calToday(){ CAL.month=todayISO().slice(0,7); renderCalendar(); }
+function renderCalendar(){
+  const [y,m]=CAL.month.split('-').map(Number);
+  $('#calTitle').textContent=(THAI_MONTHS[m-1]||'')+' '+(y+543);
+  const startW=new Date(y,m-1,1).getDay();
+  const days=new Date(y,m,0).getDate();
+  const admin=isAdmin(), today=todayISO();
+  let cells='';
+  for(let i=0;i<startW;i++) cells+='<div class="cal-cell dim"></div>';
+  for(let d=1;d<=days;d++){
+    const iso=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const wd=new Date(iso+'T00:00:00').getDay();
+    const ev=calEventsOf(iso);
+    const cls=['cal-cell'];
+    if(wd===0) cls.push('sun'); if(wd===6) cls.push('sat');
+    if(ev.some(e=>e.type==='holiday')&&!ev.some(e=>e.type==='makeup')) cls.push('holiday');
+    if(ev.some(e=>e.type==='makeup')) cls.push('makeup');
+    if(iso===today) cls.push('today');
+    if(admin) cls.push('clickable');
+    const chips=ev.map(e=>`<span class="cal-chip ${CAL_TYPE[e.type]?CAL_TYPE[e.type].chip:'chip-event'}" title="${esc(e.title||'')}">${esc(e.title||(CAL_TYPE[e.type]?CAL_TYPE[e.type].label:e.type))}</span>`).join('');
+    cells+=`<div class="${cls.join(' ')}" ${admin?`onclick="calSelect('${iso}')"`:''}><span class="cal-d">${d}</span>${chips}</div>`;
+  }
+  $('#calGrid').innerHTML=cells;
+}
+function calSelect(iso){
+  if(!isAdmin()) return;
+  CAL.sel=iso;
+  $('#calAdmin').classList.remove('hidden');
+  const dt=new Date(iso+'T00:00:00');
+  $('#calSelDate').textContent='วัน'+THAI_WD[dt.getDay()]+'ที่ '+dt.getDate()+' '+THAI_MONTHS[dt.getMonth()]+' '+(dt.getFullYear()+543);
+  renderCalDayList();
+}
+function renderCalDayList(){
+  const ev=calEventsOf(CAL.sel);
+  $('#calDayList').innerHTML = ev.length ? ev.map(e=>`<div class="flex items-center justify-between gap-2 border-b border-slate-100 py-1.5 text-sm">
+      <span><span class="cal-chip ${CAL_TYPE[e.type]?CAL_TYPE[e.type].chip:''}">${CAL_TYPE[e.type]?CAL_TYPE[e.type].label:esc(e.type)}</span> ${esc(e.title||'')}</span>
+      <button onclick='delCalEvent(${JSON.stringify(String(e.ID))})' class="text-rose-500 text-xs">🗑️ ลบ</button></div>`).join('')
+    : '<p class="text-xs text-slate-400">ยังไม่มีรายการในวันนี้</p>';
+}
+async function addCalEvent(){
+  if(!CAL.sel) return toast('เลือกวันก่อนครับ',false);
+  const type=$('#cal_type').value, title=$('#cal_title').value.trim();
+  if(!title) return toast('กรอกชื่อรายการก่อน',false);
+  try{
+    await api('addCalendarEvent',{date:CAL.sel,type,title});
+    $('#cal_title').value='';
+    CAL.items = await api('getCalendar',{},true); showLoading(false);
+    renderCalendar(); renderCalDayList(); toast('เพิ่มรายการแล้ว');
+  }catch(e){ toast(e.message,false); }
+}
+async function delCalEvent(id){
+  try{
+    await api('deleteCalendarEvent',{id});
+    CAL.items = await api('getCalendar',{},true); showLoading(false);
+    renderCalendar(); renderCalDayList(); toast('ลบแล้ว');
+  }catch(e){ toast(e.message,false); }
+}
 
 /* ════════════════ ADMIN ════════════════ */
 async function loadAdmin(){
