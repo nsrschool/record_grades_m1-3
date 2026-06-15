@@ -166,6 +166,7 @@
       <div class="text-sm text-slate-500 pb-2">ภาคเรียนที่ <b id="subSemLabel"></b> (เปลี่ยนที่แถบบน)</div>
       <div class="flex-1"></div>
       <button data-admin onclick="openSubjectModal()" class="btn bg-indigo-600 text-white px-4 py-2 text-sm">➕ เพิ่มรายวิชา</button>
+      <button data-admin onclick="importSubjFromSchedule()" class="btn bg-teal-600 text-white px-4 py-2 text-sm">🗓️ นำเข้าวิชาจากตารางสอน</button>
       <button data-admin onclick="openCopyModal()" class="btn bg-violet-600 text-white px-4 py-2 text-sm">📑 คัดลอกรายวิชาไปห้องอื่น</button>
     </div>
   </div>
@@ -811,6 +812,18 @@ async function doCopySubjects(){
     const r = await api('copySubjects',{fromClass:$('#cpFrom').value,toClass:$('#cpTo').value,
       fromSemester:$('#cpFromSem').value,toSemester:$('#cpToSem').value});
     mdCopy.close(); toast(`คัดลอก ${r.count} วิชาเรียบร้อย`); loadSubjects();
+  }catch(e){ toast(e.message,false); }
+}
+// นำเข้ารายวิชาจากตารางสอนที่นำเข้าไว้ (เฉพาะห้อง ม.ต้น) เข้าภาคเรียนปัจจุบัน
+async function importSubjFromSchedule(){
+  const onlyThis = confirm(`นำเข้ารายวิชาจากตารางสอน เข้า "ภาคเรียนที่ ${SEM}"\n\nกด "ตกลง" = นำเข้าเฉพาะห้อง ${$('#subFilterClass').value}\nกด "ยกเลิก" = นำเข้าทุกห้อง ม.1-3`);
+  const target = onlyThis ? $('#subFilterClass').value : '';
+  if(!confirm(`ยืนยันการนำเข้า${target?'ห้อง '+target:'ทุกห้อง ม.1-3'} เข้าภาคเรียนที่ ${SEM}?\n\n• ดึงชื่อวิชา + ห้อง + ครูผู้สอน จากตารางสอน\n• ประมาณหน่วยกิตจากจำนวนคาบ (คาบ/สัปดาห์ × 20 ÷ 40) และเดากลุ่มสาระให้อัตโนมัติ\n• ข้ามวิชาที่มีอยู่แล้ว, ไม่นำเข้ากิจกรรม (ชุมนุม/ลูกเสือ/แนะแนว)\n• รหัสวิชาเว้นว่างไว้ให้กรอกภายหลัง`)) return;
+  try{
+    const r = await api('importSubjectsFromSchedule',{semester:SEM, classLevel:target});
+    if(r.added===0 && r.skipped===0) toast('ไม่พบวิชาในตารางสอน — ตรวจว่านำเข้าตารางสอนแล้วหรือยัง',false);
+    else toast(`นำเข้าวิชาใหม่ ${r.added} วิชา (ข้ามซ้ำ ${r.skipped})`);
+    loadSubjects();
   }catch(e){ toast(e.message,false); }
 }
 
