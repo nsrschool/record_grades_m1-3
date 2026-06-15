@@ -758,12 +758,15 @@ async function loadSubjects(){
 }
 function renderSubjects(){
   const cls = $('#subFilterClass').value;
-  const rows = subjectsOf(cls, SEM);
+  const meCore = STATE.teacher ? coreName(STATE.teacher.name) : '';
+  let rows = subjectsOf(cls, SEM);
+  // ครูทั่วไปเห็นเฉพาะวิชาที่ตนเองสอน (เทียบชื่อจากตารางสอน) | แอดมินเห็นทุกวิชา
+  if(!isAdmin()) rows = rows.filter(sb=> meCore && coreName(sb.teacher)===meCore);
   $('#subjectEmpty').classList.toggle('hidden', rows.length>0);
-  const meCore = STATE.teacher ? String(STATE.teacher.name).replace(/^(ว่าที่ร้อยตรีหญิง|ว่าที่ร้อยตรี|นางสาว|นาง|นาย|ครู|ดร\.)\s*/,'').trim() : '';
+  $('#subjectEmpty').textContent = isAdmin() ? 'ยังไม่มีรายวิชาในห้อง/ภาคเรียนนี้'
+    : 'คุณยังไม่มีวิชาที่สอนในห้อง '+cls+' ภาคเรียนนี้ (ลองเปลี่ยนห้อง หรือให้แอดมินนำเข้าวิชาจากตารางสอน)';
   $('#subjectRows').innerHTML = rows.map(sb=>{
-    const sbCore = String(sb.teacher||'').replace(/^(ว่าที่ร้อยตรีหญิง|ว่าที่ร้อยตรี|นางสาว|นาง|นาย|ครู|ดร\.)\s*/,'').trim();
-    const canEdit = isAdmin() || (meCore && sbCore===meCore);
+    const canEdit = isAdmin() || (meCore && coreName(sb.teacher)===meCore);
     return `<tr>
     <td class="font-mono">${esc(sb.code)}</td><td>${esc(sb.name)}${sb.classLevel!==cls?` <span class="text-[10px] text-violet-500">(รายชั้น ${esc(sb.classLevel)})</span>`:''}</td>
     <td>${esc(sb.learningArea)}</td><td>${esc(sb.type)}</td>
@@ -833,11 +836,12 @@ function initScores(){ fillScoreSubjects(); }
 function fillScoreSubjects(){
   const cls = $('#scClass').value;
   let subs = subjectsOf(cls, SEM);
-  // วิชาของครูที่ล็อกอินขึ้นก่อน
-  const me = STATE.teacher ? STATE.teacher.name : '';
-  subs = subs.sort((a,b)=>((b.teacher===me)-(a.teacher===me)));
+  const meCore = STATE.teacher ? coreName(STATE.teacher.name) : '';
+  // ครูทั่วไปเห็นเฉพาะวิชาที่ตนสอน | แอดมินเห็นทุกวิชา (วิชาตนเองขึ้นก่อน)
+  if(!isAdmin()) subs = subs.filter(sb=> meCore && coreName(sb.teacher)===meCore);
+  else subs = subs.sort((a,b)=>((coreName(b.teacher)===meCore)-(coreName(a.teacher)===meCore)));
   $('#scSubject').innerHTML = subs.map(sb=>`<option value="${sb.ID}">${esc(sb.code)} ${esc(sb.name)} (${esc(sb.teacher||'-')})</option>`).join('')
-    || '<option value="">— ไม่มีวิชาในภาคเรียนนี้ —</option>';
+    || `<option value="">— ${isAdmin()?'ไม่มีวิชาในภาคเรียนนี้':'คุณไม่มีวิชาที่สอนในห้องนี้'} —</option>`;
   loadScoreGrid();
 }
 async function loadScoreGrid(){
