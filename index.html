@@ -447,6 +447,7 @@
         <div><label class="text-xs text-slate-500">ภาค 2 สิ้นสุด</label><input id="sgS2b" type="date" class="inp"></div>
         <div><label class="text-xs text-slate-500">📋 วันที่อนุมัติผล ภาค 1</label><input id="sgAp1" type="date" class="inp"></div>
         <div><label class="text-xs text-slate-500">📋 วันที่อนุมัติผล ภาค 2</label><input id="sgAp2" type="date" class="inp"></div>
+        <div class="col-span-2"><label class="text-xs text-slate-500">📝 หมายเหตุท้ายใบรายงาน</label><input id="sgRemark" class="inp" placeholder="เช่น ผลการเรียน 'ร' หมายถึง รอการประเมิน"></div>
         <div><label class="text-xs text-slate-500">สัดส่วนกลาง: ระหว่างภาค (%)</label><input id="sgRMid" type="number" class="inp"></div>
         <div><label class="text-xs text-slate-500">สัดส่วนกลาง: ปลายภาค (%)</label><input id="sgRFin" type="number" class="inp"></div>
       </div>
@@ -1222,26 +1223,50 @@ async function buildReport(){
   const stuID = $('#rpStudent').value; if(!stuID) return;
   const r = await api('getReportData',{studentID:stuID,semester:SEM});
   const st = r.student, s = STATE.settings;
-  let h = rptHeader(st, `แบบรายงานผลการเรียน ภาคเรียนที่ ${r.semester} ปีการศึกษา ${esc(s.academicYear)}`);
-  h += `<div class="text-sm mb-3">ชื่อ-นามสกุล <b>${esc(st.fullName)}</b> &nbsp; เลขประจำตัว <b>${esc(st.studentCode||'-')}</b> &nbsp; ชั้น <b>${esc(st.classLevel)}</b> เลขที่ <b>${st.number}</b></div>`;
-  h += '<table class="tbl w-full text-sm"><thead><tr><th>รหัส</th><th class="text-left">รายวิชา</th><th>ประเภท</th><th>นก.</th><th>คะแนน (%)</th><th>ผลการเรียน</th></tr></thead><tbody>';
-  r.items.forEach(it=>{
-    h+=`<tr><td class="text-center font-mono">${esc(it.code)}</td><td>${esc(it.name)}</td><td class="text-center">${esc(it.type)}</td>
-      <td class="text-center">${it.credit}</td><td class="text-center">${it.percent!==''?it.percent:'-'}</td>
-      <td class="text-center">${gradeChip(it.grade)}${it.fixedFrom?`<div class="text-[10px] text-slate-400">แก้จาก ${esc(it.fixedFrom)}</div>`:''}</td></tr>`;
-  });
-  h += `</tbody></table>
-  <div class="flex justify-between text-sm mt-2"><span>หน่วยกิตรวม: <b>${r.sumCredits}</b></span><span>ผลการเรียนเฉลี่ย (GPA) ภาคเรียนนี้: <b class="text-violet-700 text-base">${r.gpa===null?'-':r.gpa.toFixed(2)}</b></span></div>`;
-  // คุณลักษณะ + อ่านคิดฯ + กิจกรรม (สรุปย่อ)
   const meanTxt = {3:'ดีเยี่ยม',2:'ดี',1:'ผ่าน',0:'ไม่ผ่าน'};
+  const g = v => (v==null||v==='')?'-':v;
+
+  // แยกวิชาพื้นฐาน/เพิ่มเติม
+  const basic = r.items.filter(it=>it.type!=='เพิ่มเติม');
+  const extra = r.items.filter(it=>it.type==='เพิ่มเติม');
+  const subjRow = it=>`<tr><td class="text-center font-mono">${esc(it.code)}</td><td>${esc(it.name)}</td>
+    <td class="text-center">${it.credit}</td><td class="text-center">${it.percent!==''?it.percent:'-'}</td>
+    <td class="text-center">${gradeChip(it.grade)}${it.fixedFrom?`<div class="text-[10px] text-slate-400">แก้จาก ${esc(it.fixedFrom)}</div>`:''}</td></tr>`;
+  let subjBody = basic.map(subjRow).join('');
+  if(extra.length) subjBody += `<tr><td colspan="5" class="!bg-slate-200 font-semibold text-center">รายวิชาเพิ่มเติม</td></tr>` + extra.map(subjRow).join('');
+  if(!r.items.length) subjBody = '<tr><td colspan="5" class="text-center text-slate-400 py-3">ยังไม่มีรายวิชา</td></tr>';
+
+  // ผลการประเมิน: คุณลักษณะ / อ่านคิดเขียน (เฉลี่ย) + กิจกรรมพัฒนาผู้เรียนรายตัว
   const attrAvg = avgOf(r.attributes.filter(a=>a.group==='คุณลักษณะ'));
   const rwAvg = avgOf(r.attributes.filter(a=>a.group==='อ่านคิดเขียน'));
-  h += `<div class="grid grid-cols-3 gap-2 text-sm mt-3">
-    <div class="border rounded p-2 text-center">คุณลักษณะอันพึงประสงค์<br><b>${attrAvg===null?'-':meanTxt[Math.round(attrAvg)]}</b></div>
-    <div class="border rounded p-2 text-center">อ่าน คิดวิเคราะห์ เขียน<br><b>${rwAvg===null?'-':meanTxt[Math.round(rwAvg)]}</b></div>
-    <div class="border rounded p-2 text-center">กิจกรรมพัฒนาผู้เรียน<br><b>${r.activities.length? (r.activities.every(a=>a.result==='ผ')?'ผ่าน':'มีกิจกรรมไม่ผ่าน') : '-'}</b></div>
-  </div>`;
-  h += signBlock(s, r.homeroomTeacher, SEM==='1'?s.approveDate1:s.approveDate2);
+  const actMap = {}; r.activities.forEach(a=>actMap[a.activity]=a.result);
+  const evalItems = [
+    ['คุณลักษณะอันพึงประสงค์', attrAvg===null?'-':meanTxt[Math.round(attrAvg)]],
+    ['การอ่าน คิดวิเคราะห์ และเขียน', rwAvg===null?'-':meanTxt[Math.round(rwAvg)]],
+    ...r.activityList.map(a=>[a, g(actMap[a])])
+  ];
+  const evalHTML = evalItems.map(e=>`<div>• ${esc(e[0])} : <b>${esc(e[1])}</b></div>`).join('');
+
+  // สรุปเวลาเรียน
+  const a = r.attendance;
+  const attHTML = a ? `<div class="mt-3 text-sm"><div class="font-semibold mb-1">สรุปเวลาเรียน</div>
+    <table class="w-full text-sm" style="border-collapse:collapse">
+      <tr style="background:#f1f5f9">${['วันเปิดเรียน','มาเรียน','มาสาย','ลา','ขาด','คิดเป็นร้อยละ'].map(x=>`<th style="border:1px solid #94a3b8;padding:2px 6px">${x}</th>`).join('')}</tr>
+      <tr class="text-center">${[a.schoolDays,a.present,a.late,a.leave,a.absent].map(x=>`<td style="border:1px solid #94a3b8;padding:2px 6px">${x}</td>`).join('')}
+        <td style="border:1px solid #94a3b8;padding:2px 6px;font-weight:700;${a.risk?'color:#dc2626':''}">${a.percent}%</td></tr>
+    </table></div>` : '';
+
+  let h = rptHeader(st, `แบบรายงานผลการเรียน ภาคเรียนที่ ${r.semester} ปีการศึกษา ${esc(s.academicYear)}`);
+  h += `<div class="text-sm mb-2 flex justify-between border-b border-slate-800 pb-1">
+    <span>ชื่อ-นามสกุล <b>${esc(st.fullName)}</b></span>
+    <span>เลขประจำตัว <b>${esc(st.studentCode||'-')}</b> &nbsp; ชั้น <b>${esc(st.classLevel)}</b> เลขที่ <b>${st.number}</b></span></div>`;
+  h += '<table class="tbl w-full text-sm"><thead><tr><th>รหัสวิชา</th><th class="text-left">รายวิชา</th><th>นก.</th><th>คะแนน (%)</th><th>ระดับผลการเรียน</th></tr></thead><tbody>'+subjBody+'</tbody></table>';
+  h += `<div class="flex justify-between text-sm mt-2"><span>หน่วยกิตรวม: <b>${r.sumCredits}</b></span><span>ผลการเรียนเฉลี่ย (GPA) ภาคเรียนนี้: <b class="text-violet-700 text-base">${r.gpa===null?'-':r.gpa.toFixed(2)}</b></span></div>`;
+  h += `<div class="mt-3 text-sm"><div class="font-semibold mb-1">ผลการประเมิน</div>
+    <div class="grid grid-cols-2 gap-x-8 gap-y-0.5">${evalHTML}</div></div>`;
+  h += attHTML;
+  if(s.reportRemark) h += `<div class="text-xs text-slate-600 mt-3">หมายเหตุ : ${esc(s.reportRemark)}</div>`;
+  h += signBlockFull(s, r.homeroomTeachers, SEM==='1'?s.approveDate1:s.approveDate2, true);
   $('#printArea').innerHTML = h;
 }
 function avgOf(rows){ if(!rows.length) return null; return rows.reduce((a,r)=>a+Number(r.value||0),0)/rows.length; }
@@ -1263,6 +1288,22 @@ function signBlock(s, homeroom, dateStr){
       <div>(${esc(s.directorName||'.................................')})</div><div>ผู้อำนวยการโรงเรียน</div></div>
   </div>`;
 }
+// ใบรายงานผล: ครูประจำชั้นหลายคน + รองผอ./ผอ. + ช่องผู้ปกครอง + วันที่
+function signBlockFull(s, homerooms, dateStr, withParent){
+  const sigImg = url => url?`<img src="${url}" class="h-10 mx-auto object-contain -mb-0.5">`:'<div class="h-10"></div>';
+  let hts = (homerooms||[]).slice(0,3);
+  if(!hts.length) hts = [''];
+  const htBlocks = hts.map(nm=>`<div class="px-1" style="flex:0 1 ${Math.floor(96/hts.length)}%">
+    <div class="h-6"></div>(ลงชื่อ) ...........................<br>( ${esc(nm||'.............................')} )<br>ครูประจำชั้น</div>`).join('');
+  return `
+  <div class="flex justify-around text-center text-xs mt-6">${htBlocks}</div>
+  <div class="flex justify-around text-center text-sm mt-5">
+    <div class="flex-1">${sigImg(s.deputySignURL)}(ลงชื่อ) .....................................<br>( ${esc(s.deputyName||'.................................')} )<br>รองผู้อำนวยการฝ่ายวิชาการ</div>
+    <div class="flex-1">${sigImg(s.directorSignURL)}(ลงชื่อ) .....................................<br>( ${esc(s.directorName||'.................................')} )<br>ผู้อำนวยการ${esc(s.schoolName||'')}<br><span class="text-xs">ให้ไว้ ณ วันที่ ${thaiDate(dateStr)}</span></div>
+  </div>
+  ${withParent?`<div class="flex justify-center text-center text-sm mt-5"><div style="flex:0 1 60%">
+    <div class="h-6"></div>(ลงชื่อ) ............................................. ผู้ปกครอง<br>( ............................................. )<br><span class="text-xs text-slate-500">ได้รับทราบผลการเรียนของนักเรียนแล้ว</span></div></div>`:''}`;
+}
 async function buildTranscript(){
   const stuID = $('#rpStudent').value; if(!stuID) return;
   const r = await api('getTranscript',{studentID:stuID});
@@ -1278,7 +1319,7 @@ async function buildTranscript(){
   h += `</tbody></table>
   <div class="text-right mt-3 text-sm">หน่วยกิตสะสม: <b>${r.totalCredits}</b> &nbsp;&nbsp; ผลการเรียนเฉลี่ยสะสม (GPAX): <b class="text-violet-700 text-lg">${r.gpax===null?'-':r.gpax.toFixed(2)}</b></div>`;
   if(!r.terms.some(t=>t.source==='history')) h += '<p class="text-xs text-slate-400 mt-2">* หากต้องการรวมผลภาคเรียนของปีก่อนหน้า ให้แอดมินกรอกที่เมนู 🛠️ แอดมิน → ประวัติ GPA</p>';
-  h += signBlock(s, r.homeroomTeacher, s.approveDate2||s.approveDate1);
+  h += signBlockFull(s, r.homeroomTeachers, s.approveDate2||s.approveDate1, false);
   $('#printArea').innerHTML = h;
 }
 
@@ -1502,6 +1543,7 @@ function loadSettingsTab(){
   $('#sgS1a').value=s.semester1Start||''; $('#sgS1b').value=s.semester1End||'';
   $('#sgS2a').value=s.semester2Start||''; $('#sgS2b').value=s.semester2End||'';
   $('#sgAp1').value=s.approveDate1||''; $('#sgAp2').value=s.approveDate2||'';
+  $('#sgRemark').value=s.reportRemark||'';
   $('#sgRMid').value=s.defaultRatioMid||70; $('#sgRFin').value=s.defaultRatioFinal||30;
   ['logoURL|imgLogo','directorSignURL|imgDirSign','deputySignURL|imgDepSign'].forEach(x=>{
     const [k,id]=x.split('|'); const img=$('#'+id);
@@ -1524,6 +1566,7 @@ async function saveSettingsForm(){
       semester1Start:$('#sgS1a').value, semester1End:$('#sgS1b').value,
       semester2Start:$('#sgS2a').value, semester2End:$('#sgS2b').value,
       approveDate1:$('#sgAp1').value, approveDate2:$('#sgAp2').value,
+      reportRemark:$('#sgRemark').value,
       defaultRatioMid:rm, defaultRatioFinal:rf });
     applySettingsToUI(); toast('บันทึกการตั้งค่าแล้ว');
   }catch(e){ toast(e.message,false); }
