@@ -398,7 +398,7 @@
         <button onclick="downloadStudentTemplate()" class="btn bg-slate-100 text-slate-700 px-3 py-1.5 text-sm">📥 ดาวน์โหลดฟอร์มตัวอย่าง (.xlsx)</button>
         <label class="btn bg-sky-600 text-white px-3 py-1.5 text-sm cursor-pointer">📤 นำเข้ารายชื่อ (.xlsx/.csv)<input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importStudents(this)"></label>
       </div>
-      <p class="text-[11px] text-rose-500 mb-3">⚠️ การนำเข้าไฟล์จะลบรายชื่อเดิมทั้งหมดแล้วแทนที่ด้วยรายชื่อใหม่ | ฟอร์ม: ชั้น, เลขที่, เลขประจำตัว, คำนำหน้า, ชื่อ, นามสกุล | หรือใช้เมนู NSR → 📋/📥 ในหน้า Google Sheets ก็ได้</p>
+      <p class="text-[11px] text-slate-500 mb-3">📌 นำเข้าแบบอัปเดตทับ: ชื่อซ้ำคงข้อมูลเดิม (คะแนน/เกรด/เช็คชื่อ) ปรับเฉพาะเลขที่ตามไฟล์ใหม่ • ชื่อใหม่เพิ่มเข้าระบบ | ฟอร์ม: ชั้น, เลขที่, เลขประจำตัว, คำนำหน้า, ชื่อ, นามสกุล | หรือใช้เมนู NSR ในหน้า Google Sheets</p>
       <div class="flex flex-wrap gap-2 mb-3">
         <input id="nsCode" class="inp w-28" placeholder="เลขประจำตัว">
         <input id="nsNo" class="inp w-20" placeholder="เลขที่">
@@ -530,7 +530,7 @@
 
 <!-- ══════════ FOOTER ══════════ -->
 <footer class="bg-slate-800 text-slate-300 text-center text-xs py-4 mt-6">
-  พัฒนาโดย: ครูรุ่งนิรันดร์ • All Rights Reserved. สำหรับใช้ในโรงเรียนหนองสำโรงวิทยาเท่านั้น ไม่อนุญาตให้ดัดแปลง แก้ไข ทำซ้ำ เพื่อการพาณิชย์ หรือแอบอ้างเป็นผลงานของตนเอง
+  พัฒนาโดย: ครูรุ่งนิรันดร์ • All Rights Reserved. สำหรับใช้ในโรงเรียนหนองสำโรงวิทยาเท่านั้น
 </footer>
 
 <!-- ══════════ LOADING + TOAST ══════════ -->
@@ -1608,10 +1608,10 @@ function importStudents(input){
         classLevel:String(r[0]||'').trim(), number:r[1]!=null?r[1]:'', studentCode:String(r[2]||'').trim(),
         prefix:String(r[3]||'').trim(), firstName:String(r[4]||'').trim(), lastName:String(r[5]||'').trim() }));
       if(!rows.length) return toast('ไม่พบข้อมูลในไฟล์ (ตรวจหัวคอลัมน์: ชั้น เลขที่ เลขประจำตัว คำนำหน้า ชื่อ นามสกุล)',false);
-      if(!confirm(`พบรายชื่อ ${rows.length} คน\n\n⚠️ การนำเข้าจะ "ลบรายชื่อเดิมทั้งหมด" พร้อมคะแนน/เกรด/คุณลักษณะ/กิจกรรม/เช็คชื่อที่ผูกอยู่ แล้วแทนที่ด้วยรายชื่อใหม่\n\nดำเนินการต่อ?`)){ input.value=''; return; }
-      const r = await api('replaceAllStudents',{rows});
+      if(!confirm(`พบรายชื่อ ${rows.length} คน\n\nรูปแบบนำเข้า: อัปเดตทับโดยคงข้อมูลเดิม\n• ชื่อที่มีอยู่แล้ว → คงคะแนน/เกรด/เช็คชื่อเดิมไว้ แต่ปรับ "เลขที่" ตามไฟล์ใหม่\n• ชื่อใหม่ → เพิ่มเข้าระบบ\n• นักเรียนเดิมที่ไม่มีในไฟล์ → คงไว้ (ไม่ลบ)\n\nดำเนินการต่อ?`)){ input.value=''; return; }
+      const r = await api('upsertStudents',{rows});
       STATE.students = await api('getStudents',{},true);
-      toast(`นำเข้ารายชื่อใหม่ ${r.count} คนเรียบร้อย (ลบของเดิมแล้ว)`); renderStudentTable();
+      toast(`นำเข้าเรียบร้อย: อัปเดต ${r.updated} คน, เพิ่มใหม่ ${r.added} คน`); renderStudentTable();
     }catch(err){ toast('อ่านไฟล์ไม่สำเร็จ: '+err.message,false); }
     input.value='';
   };
