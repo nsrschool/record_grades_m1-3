@@ -60,7 +60,11 @@
     #printArea,#printArea *{visibility:visible}
     #printArea{position:absolute;left:0;top:0;width:100%}
     @page{size:A4;margin:12mm}
+    .pp5-page{page-break-after:always}
+    .pp5-page:last-child{page-break-after:auto}
   }
+  .pp5-page{padding:8px 0;border-bottom:1px dashed #cbd5e1;margin-bottom:16px}
+  .pp5-page:last-child{border-bottom:none}
 </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -281,14 +285,26 @@
 
 <!-- ══════════ TAB: REPORT (พิมพ์รายคน + Transcript GPAX) ══════════ -->
 <section id="tab-report" class="tabpane hidden">
-  <div class="card p-5 mb-4 flex flex-wrap items-end gap-3">
-    <div><label class="text-xs text-slate-500">ห้องเรียน</label><select id="rpClass" class="inp" onchange="fillReportStudents()"></select></div>
-    <div><label class="text-xs text-slate-500">นักเรียน</label><select id="rpStudent" class="inp min-w-[16rem]"></select></div>
-    <button onclick="buildReport()" class="btn bg-indigo-600 text-white px-4 py-2 text-sm">📄 ใบรายงานผล ภาคเรียนที่ <span class="scSemLabel"></span></button>
-    <button onclick="buildTranscript()" class="btn bg-violet-600 text-white px-4 py-2 text-sm">🎓 ใบสรุปผลสะสม (GPAX)</button>
-    <button onclick="window.print()" class="btn bg-slate-700 text-white px-4 py-2 text-sm">🖨️ พิมพ์</button>
+  <div class="card p-5 mb-4">
+    <h3 class="font-bold text-slate-700 mb-2 text-sm">📄 รายงานรายบุคคล</h3>
+    <div class="flex flex-wrap items-end gap-3">
+      <div><label class="text-xs text-slate-500">ห้องเรียน</label><select id="rpClass" class="inp" onchange="fillReportStudents()"></select></div>
+      <div><label class="text-xs text-slate-500">นักเรียน</label><select id="rpStudent" class="inp min-w-[16rem]"></select></div>
+      <button onclick="buildReport()" class="btn bg-indigo-600 text-white px-4 py-2 text-sm">📄 ใบรายงานผล ภาคเรียนที่ <span class="scSemLabel"></span></button>
+      <button onclick="buildTranscript()" class="btn bg-violet-600 text-white px-4 py-2 text-sm">🎓 ใบสรุปผลสะสม (GPAX)</button>
+    </div>
   </div>
-  <div class="card p-6 overflow-x-auto"><div id="printArea" class="text-slate-800"><p class="text-slate-400 text-center py-8">เลือกนักเรียนแล้วกดสร้างใบรายงาน</p></div></div>
+  <div class="card p-5 mb-4">
+    <h3 class="font-bold text-slate-700 mb-2 text-sm">📕 เล่ม ปพ.5 — แบบบันทึกผลการพัฒนาคุณภาพผู้เรียน (รายวิชา)</h3>
+    <div class="flex flex-wrap items-end gap-3">
+      <div><label class="text-xs text-slate-500">ห้องเรียน</label><select id="pp5Class" class="inp" onchange="fillPP5Subjects()"></select></div>
+      <div><label class="text-xs text-slate-500">รายวิชา (ภาคเรียนที่ <span class="scSemLabel"></span>)</label><select id="pp5Subject" class="inp min-w-[18rem]"></select></div>
+      <button onclick="buildPP5()" class="btn bg-emerald-600 text-white px-4 py-2 text-sm">📕 สร้างเล่ม ปพ.5</button>
+      <button onclick="window.print()" class="btn bg-slate-700 text-white px-4 py-2 text-sm">🖨️ พิมพ์</button>
+    </div>
+    <p class="text-[11px] text-slate-400 mt-2">เล่ม ปพ.5 ตามหลักสูตรแกนกลางฯ 2551 — ปกหน้าแสดงรายวิชา + หน้าบันทึกคะแนนทั้งห้อง + หน้าสรุปการประเมินผล</p>
+  </div>
+  <div class="card p-6 overflow-x-auto"><div id="printArea" class="text-slate-800"><p class="text-slate-400 text-center py-8">เลือกนักเรียนแล้วกดสร้างใบรายงาน หรือเลือกรายวิชาเพื่อสร้างเล่ม ปพ.5</p></div></div>
 </section>
 
 <!-- ══════════ TAB: SUMMARY + EXPORT ══════════ -->
@@ -760,7 +776,7 @@ async function boot(){
     $('#connText').textContent = '☁️ เชื่อมต่อกับ Google Sheets (Online Mode)';
     applySettingsToUI();
     [STATE.students, STATE.subjects] = await Promise.all([api('getStudents',{},true), api('getSubjects',{},true)]);
-    ['#subFilterClass','#scClass','#atClass','#acClass','#adClass','#rpClass','#smClass','#stClass','#nsClass','#esClass','#ghClass','#cpFrom','#cpTo','#tHome'].forEach(id=>{
+    ['#subFilterClass','#scClass','#atClass','#acClass','#adClass','#rpClass','#pp5Class','#smClass','#stClass','#nsClass','#esClass','#ghClass','#cpFrom','#cpTo','#tHome'].forEach(id=>{
       const el=$(id); if(el) classOpts(el, false);
     });
     $('#tHome').insertAdjacentHTML('afterbegin','<option value="">-ไม่ประจำชั้น-</option>');
@@ -803,7 +819,7 @@ function applyFavicon(){
 /* ════════════════ TABS ════════════════ */
 const TAB_LOADERS = {
   home: loadHome, subjects: loadSubjects, scores: initScores, attrs: initAttrs, acts: initActs,
-  attend: loadAttendance, schedule: initSchedule, fix: loadFixList, report: fillReportStudents, summary: loadSummary,
+  attend: loadAttendance, schedule: initSchedule, fix: loadFixList, report: initReportTab, summary: loadSummary,
   stats: ()=>{}, risk: ()=>{}, calendar: loadCalendar, admin: loadAdmin, settings: loadSettingsTab, manual: ()=>{}
 };
 function switchTab(name){
@@ -1255,6 +1271,112 @@ async function doFixGrade(){
 function fillReportStudents(){
   const cls = $('#rpClass').value;
   $('#rpStudent').innerHTML = studentsOf(cls).map(s=>`<option value="${s.ID}">${s.number}. ${esc(s.fullName)}</option>`).join('');
+}
+function initReportTab(){ fillReportStudents(); fillPP5Subjects(); }
+function fillPP5Subjects(){
+  const cls = $('#pp5Class').value;
+  let subs = subjectsOf(cls, SEM);
+  const meCore = STATE.teacher ? coreName(STATE.teacher.name) : '';
+  // ครูทั่วไปเห็นเฉพาะวิชาตน (วิชาตนขึ้นก่อนสำหรับแอดมิน)
+  if(!isAdmin()) subs = subs.filter(sb=> meCore && coreName(sb.teacher)===meCore);
+  else subs = subs.sort((a,b)=>((coreName(b.teacher)===meCore)-(coreName(a.teacher)===meCore)));
+  $('#pp5Subject').innerHTML = subs.map(sb=>`<option value="${sb.ID}">${esc(sb.code)} ${esc(sb.name)} (${esc(sb.teacher||'-')})</option>`).join('')
+    || `<option value="">— ${isAdmin()?'ไม่มีวิชาในภาคเรียนนี้':'คุณไม่มีวิชาที่สอนในห้องนี้'} —</option>`;
+}
+async function buildPP5(){
+  const sid = $('#pp5Subject').value, cls = $('#pp5Class').value;
+  if(!sid) return toast('เลือกรายวิชาก่อนครับ',false);
+  const r = await api('getPP5',{subjectID:sid,classLevel:cls});
+  const s = r.settings, sb = r.subject;
+  const yr = esc(s.academicYear);
+  const meanTxt = {3:'ดีเยี่ยม',2:'ดี',1:'ผ่าน',0:'ไม่ผ่าน'};
+
+  // ── ปกหน้า (รายวิชาด้านหน้าปก) ──
+  let cover = `<div class="pp5-page text-center" style="min-height:90vh;display:flex;flex-direction:column;justify-content:center;gap:10px">
+    ${s.logoURL?`<img src="${s.logoURL}" class="h-24 mx-auto object-contain">`:'<div class="text-5xl">📕</div>'}
+    <div class="text-xl font-bold mt-2">แบบบันทึกผลการพัฒนาคุณภาพผู้เรียน (ปพ.5)</div>
+    <div class="text-sm">ตามหลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551</div>
+    <div class="mt-6 text-lg font-bold">รหัสวิชา ${esc(sb.code||'-')} &nbsp; รายวิชา ${esc(sb.name)}</div>
+    <div class="text-base">รายวิชา${esc(sb.type)} &nbsp; จำนวน ${sb.credit} หน่วยกิต (${sb.hours} ชั่วโมง/ภาคเรียน)</div>
+    <div class="text-base">กลุ่มสาระการเรียนรู้${esc(sb.learningArea||'-')}</div>
+    <div class="mt-4 text-lg font-semibold">ชั้น ${esc(r.classLevel)} &nbsp; ภาคเรียนที่ ${SEM} &nbsp; ปีการศึกษา ${yr}</div>
+    <div class="mt-8 text-base">ครูผู้สอน : <b>${esc(sb.teacher||'-')}</b></div>
+    <div class="text-base">${esc(s.schoolName)}</div>
+    <div class="text-sm">${esc(s.area||'')}</div>
+  </div>`;
+
+  // ── หน้าบันทึกคะแนน ──
+  const midSlots = r.slots.filter(sl=>sl.part!=='final');
+  const finSlots = r.slots.filter(sl=>sl.part==='final');
+  const slotTh = sl=>`<th class="px-1" title="${esc(sl.slotName)}">${esc(sl.slotName)}<br><span class="text-[9px] font-normal">(${sl.maxScore})</span></th>`;
+  let head = `<tr><th rowspan="2">เลขที่</th><th rowspan="2" class="text-left">ชื่อ-นามสกุล</th>`;
+  if(midSlots.length) head += `<th colspan="${midSlots.length+1}">คะแนนระหว่างภาค (${sb.ratioMid})</th>`;
+  if(finSlots.length) head += `<th colspan="${finSlots.length+1}">ปลายภาค (${sb.ratioFinal})</th>`;
+  head += `<th rowspan="2">รวม<br>(100)</th><th rowspan="2">เกรด</th></tr><tr>`;
+  midSlots.forEach(sl=>head+=slotTh(sl)); if(midSlots.length) head+=`<th>รวม<br>(${r.midMax})</th>`;
+  finSlots.forEach(sl=>head+=slotTh(sl)); if(finSlots.length) head+=`<th>รวม<br>(${r.finMax})</th>`;
+  head += `</tr>`;
+  let body = r.students.map(st=>{
+    let tds = `<td class="text-center">${st.number}</td><td>${esc(st.fullName)}</td>`;
+    let mi=0;
+    midSlots.forEach((sl,idx)=>{ const gi=r.slots.indexOf(sl); tds+=`<td class="text-center">${st.slotScores[gi]!==''?st.slotScores[gi]:''}</td>`; });
+    if(midSlots.length) tds+=`<td class="text-center font-semibold">${st.midSum||''}</td>`;
+    finSlots.forEach(sl=>{ const gi=r.slots.indexOf(sl); tds+=`<td class="text-center">${st.slotScores[gi]!==''?st.slotScores[gi]:''}</td>`; });
+    if(finSlots.length) tds+=`<td class="text-center font-semibold">${st.finSum||''}</td>`;
+    tds += `<td class="text-center">${st.percent!==''?st.percent:''}</td><td class="text-center">${gradeChip(st.grade)}</td>`;
+    return `<tr>${tds}</tr>`;
+  }).join('');
+  if(!r.students.length) body = `<tr><td colspan="20" class="text-center text-slate-400 py-3">ยังไม่มีนักเรียนในห้องนี้</td></tr>`;
+  let scorePage = `<div class="pp5-page">
+    ${rptHeader2(s, `แบบบันทึกคะแนน รายวิชา ${esc(sb.code)} ${esc(sb.name)}`, `ชั้น ${esc(r.classLevel)} ภาคเรียนที่ ${SEM} ปีการศึกษา ${yr}`)}
+    <div class="overflow-x-auto"><table class="tbl w-full" style="font-size:11px">${'<thead>'+head+'</thead>'}<tbody>${body}</tbody></table></div>
+    <p class="text-[11px] text-slate-500 mt-2">เกณฑ์การประเมิน: คะแนนรวม = (คะแนนระหว่างภาค ÷ ${r.midMax||0} × ${sb.ratioMid}) + (คะแนนปลายภาค ÷ ${r.finMax||0} × ${sb.ratioFinal}) แล้วเทียบระดับผลการเรียน 8 ระดับ (4, 3.5, 3, 2.5, 2, 1.5, 1, 0)</p>
+  </div>`;
+
+  // ── หน้าสรุปการประเมินผล ──
+  const total = r.students.length;
+  const distRows = r.buckets.map(b=>{
+    const c = r.distribution[b]||0;
+    const pct = total>0?Math.round(c/total*1000)/10:0;
+    return `<tr><td class="text-center">${b}</td><td class="text-center">${c}</td><td class="text-center">${pct}%</td></tr>`;
+  }).join('');
+  let summaryPage = `<div class="pp5-page">
+    ${rptHeader2(s, `สรุปผลการประเมิน รายวิชา ${esc(sb.code)} ${esc(sb.name)}`, `ชั้น ${esc(r.classLevel)} ภาคเรียนที่ ${SEM} ปีการศึกษา ${yr}`)}
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <div class="font-semibold mb-1">การแจกแจงระดับผลการเรียน</div>
+        <table class="tbl w-full text-sm"><thead><tr><th>ระดับผลการเรียน</th><th>จำนวน (คน)</th><th>ร้อยละ</th></tr></thead><tbody>${distRows}</tbody></table>
+      </div>
+      <div class="text-sm space-y-1">
+        <div class="font-semibold mb-1">สรุปภาพรวม</div>
+        <div>จำนวนนักเรียนทั้งหมด : <b>${total}</b> คน</div>
+        <div>ประเมินผลแล้ว : <b>${r.graded}</b> คน</div>
+        <div>ผ่านเกณฑ์ (ได้ระดับ 1 ขึ้นไป) : <b class="text-emerald-700">${r.passed}</b> คน</div>
+        <div>ไม่ผ่านเกณฑ์ (ติด 0/ร/มส) : <b class="text-rose-600">${r.failed + (r.distribution['ร']||0) + (r.distribution['มส']||0)}</b> คน</div>
+        <div>ระดับผลการเรียนเฉลี่ย : <b class="text-violet-700">${r.avg===null?'-':r.avg.toFixed(2)}</b></div>
+      </div>
+    </div>
+    ${pp5SignBlock(s, sb.teacher, r.homeroomTeachers)}
+  </div>`;
+
+  $('#printArea').innerHTML = cover + scorePage + summaryPage;
+  toast('สร้างเล่ม ปพ.5 แล้ว — กดปุ่ม 🖨️ พิมพ์');
+}
+function rptHeader2(s, title, sub){
+  return `<div class="text-center mb-3">
+    <div class="font-bold text-base">${esc(s.schoolName)}</div>
+    <div class="font-semibold">${title}</div>
+    <div class="text-sm text-slate-600">${sub}</div>
+  </div>`;
+}
+function pp5SignBlock(s, teacher, homerooms){
+  let hts = (homerooms||[]).filter(Boolean);
+  const htLine = hts.length ? hts.join(', ') : '.................................';
+  return `<div class="grid grid-cols-3 gap-6 text-center text-sm mt-10">
+    <div><div class="h-10"></div>(ลงชื่อ) ...............................<br>( ${esc(teacher||'.................................')} )<br>ครูผู้สอน</div>
+    <div><div class="h-10"></div>(ลงชื่อ) ...............................<br>( ${esc(s.deputyName||'.................................')} )<br>รองผู้อำนวยการฝ่ายวิชาการ</div>
+    <div><div class="h-10"></div>(ลงชื่อ) ...............................<br>( ${esc(s.directorName||'.................................')} )<br>ผู้อำนวยการ${esc(s.schoolName||'')}</div>
+  </div>`;
 }
 function rptHeader(st, title){
   const s = STATE.settings;
