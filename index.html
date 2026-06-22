@@ -1286,6 +1286,7 @@ function fillPP5Subjects(){
 async function buildPP5(){
   const sid = $('#pp5Subject').value, cls = $('#pp5Class').value;
   if(!sid) return toast('เลือกรายวิชาก่อนครับ',false);
+  try{
   const r = await api('getPP5',{subjectID:sid,classLevel:cls});
   const s = r.settings, sb = r.subject;
   const yr = esc(s.academicYear);
@@ -1361,6 +1362,10 @@ async function buildPP5(){
 
   $('#printArea').innerHTML = cover + scorePage + summaryPage;
   toast('สร้างเล่ม ปพ.5 แล้ว — กดปุ่ม 🖨️ พิมพ์');
+  }catch(e){
+    toast(e.message,false);
+    if(/getPP5/.test(e.message)) $('#printArea').innerHTML = '<p class="text-center text-rose-600 py-8">⚠️ ยังสร้างเล่ม ปพ.5 ไม่ได้ เพราะ Code.gs ฝั่ง Apps Script ยังไม่ได้ Deploy เวอร์ชันใหม่<br><span class="text-sm text-slate-500">ไปที่ Apps Script → Deploy → Manage deployments → ✏️ Edit → New version → Deploy แล้วลองใหม่</span></p>';
+  }
 }
 function rptHeader2(s, title, sub){
   return `<div class="text-center mb-3">
