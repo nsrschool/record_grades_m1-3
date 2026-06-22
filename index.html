@@ -213,7 +213,7 @@
         <div style="height:240px"><canvas id="chartClass"></canvas></div>
       </div>
       <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-2 text-sm">การกระจายระดับผลการเรียน (หลักสูตร 2568)</h3>
+        <h3 class="font-bold text-teal-700 mb-2 text-sm">การกระจายผลการเรียน (เกรด 2551)</h3>
         <div style="height:240px"><canvas id="chartGrade"></canvas></div>
       </div>
     </div>
@@ -304,7 +304,7 @@
         </div>
       </div>
       <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(ระบบคิดร้อยละ → ระดับ 68 → เกรด 51 ให้อัตโนมัติ)</span></h3>
+        <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(ระบบคิดร้อยละ → เกรด 2551 ให้อัตโนมัติ)</span></h3>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead id="scoreHead"></thead>
@@ -321,12 +321,12 @@
     <div id="sc_modeB" class="hidden">
       <div class="card p-4">
         <h3 class="font-bold text-teal-700 mb-1">กรอกร้อยละ หรือเลือกระดับโดยตรง</h3>
-        <p class="text-xs text-slate-400 mb-3">กรอกร้อยละ → ระบบเทียบระดับ 68 และเกรด 51 ให้อัตโนมัติ • หรือเลือกระดับ 68 โดยไม่กรอกร้อยละก็ได้ (ระบบใช้เกรดตั้งต้นของระดับนั้น)</p>
+        <p class="text-xs text-slate-400 mb-3">กรอกร้อยละ → ระบบแปลงเป็นเกรด 2551 ให้อัตโนมัติ • หรือเลือกเกรดเองโดยไม่กรอกร้อยละก็ได้</p>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead><tr class="text-left text-slate-400 border-b">
               <th class="py-2 px-2">เลขที่</th><th class="px-2">ชื่อ</th><th class="px-2">นามสกุล</th>
-              <th class="px-2">ร้อยละ</th><th class="px-2">ระดับ 68</th><th class="px-2 text-center">เกรด 51</th>
+              <th class="px-2">ร้อยละ</th><th class="px-2">เกรด (เลือกเอง)</th><th class="px-2 text-center">เกรด</th>
             </tr></thead>
             <tbody id="modeBBody"></tbody>
           </table>
@@ -498,7 +498,7 @@
         <button onclick="buildReports()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 text-sm">👁️ สร้างรายงาน</button>
         <button onclick="printOnly('tab-report')" class="btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm">🖨️ พิมพ์</button>
       </div>
-      <p class="text-xs text-slate-400 mt-2">💡 พิมพ์ใบรายงานจบช่วงชั้นได้ที่ ป.3 และ ป.6 • แต่ละคน 1 หน้า A4 • แสดงทั้งหลักสูตร 2568 และ 2551</p>
+      <p class="text-xs text-slate-400 mt-2">💡 พิมพ์ใบรายงานรายบุคคล • แต่ละคน 1 หน้า A4 • ผลการเรียนแยกภาค 1/2 ตามหลักสูตร 2551</p>
     </div>
     <div id="reportArea"></div>
     <div id="rp_empty" class="card p-8 text-center text-slate-400 report-controls">เลือกชั้นแล้วกด “สร้างรายงาน”</div>
@@ -540,7 +540,7 @@
   <section id="tab-stats" class="tabpane hidden">
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4" id="statCards"></div>
     <div class="card p-4 mb-4">
-      <h3 class="font-bold text-teal-700 mb-3">การกระจายระดับความสามารถ (หลักสูตร 2568)</h3>
+      <h3 class="font-bold text-teal-700 mb-3">การกระจายผลการเรียนรายวิชา (เกรด 2551)</h3>
       <div id="statBars"></div>
     </div>
 
@@ -700,13 +700,13 @@
     <!-- sub: mapping -->
     <div id="sub-mapping" class="subpane hidden">
       <div class="card p-4">
-        <h2 class="font-bold text-teal-700 mb-1">ตารางแปลงเกรด (ร้อยละ → ระดับ 68 → เกรด 51)</h2>
-        <p class="text-xs text-slate-400 mb-3">อิงตารางที่ ๕ ของแนวปฏิบัติการเทียบผลการเรียน — แก้ไขได้ตามบริบทโรงเรียน</p>
+        <h2 class="font-bold text-teal-700 mb-1">ตารางแปลงเกรด (ร้อยละ → เกรด 2551)</h2>
+        <p class="text-xs text-slate-400 mb-3">เกณฑ์ตัดสินผลการเรียน 8 ระดับ ตามหลักสูตรฯ 2551 — แก้ไขได้ตามบริบทโรงเรียน</p>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead><tr class="text-left text-slate-400 border-b">
               <th class="py-2 px-2">ร้อยละต่ำสุด</th><th class="px-2">ร้อยละสูงสุด</th>
-              <th class="px-2">ระดับ 68</th><th class="px-2">เกรด 51</th><th class="px-2">ตัวอักษร</th><th class="px-2"></th>
+              <th class="px-2">เกรด</th><th class="px-2">ความหมาย</th><th class="px-2"></th>
             </tr></thead>
             <tbody id="mappingBody"></tbody>
           </table>
@@ -734,7 +734,7 @@
     <div id="asub-roster" class="asubpane hidden">
       <div class="card p-4">
         <h3 class="font-bold text-teal-700 mb-1">นำเข้ารายชื่อนักเรียน (ทั้งโรงเรียน)</h3>
-        <p class="text-xs text-slate-400 mb-3">ไฟล์ Excel คอลัมน์: A=ชั้น(ป.1/1) • B=เลขที่ • C=เลขประจำตัว • D=คำนำหน้า • E=ชื่อ • F=นามสกุล<br><b class="text-rose-500">การนำเข้าจะแทนที่รายชื่อเดิมทั้งหมด</b> และเรียงเลขที่ทุกห้องให้ต่อเนื่องอัตโนมัติ</p>
+        <p class="text-xs text-slate-400 mb-3">ไฟล์ Excel คอลัมน์: A=ชั้น(ม.1/1) • B=เลขที่ • C=เลขประจำตัว • D=คำนำหน้า • E=ชื่อ • F=นามสกุล<br><b class="text-rose-500">การนำเข้าจะแทนที่รายชื่อเดิมทั้งหมด</b> และเรียงเลขที่ทุกห้องให้ต่อเนื่องอัตโนมัติ</p>
         <div class="flex flex-wrap gap-2">
           <button onclick="downloadRosterTemplate()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">📥 ดาวน์โหลดฟอร์ม (A-F)</button>
           <button onclick="document.getElementById('rosterFile').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 เลือกไฟล์นำเข้า</button>
@@ -747,7 +747,7 @@
     <div id="asub-schedule" class="asubpane hidden">
       <div class="card p-4 mb-4">
         <h3 class="font-bold text-teal-700 mb-1">นำเข้าตารางสอน</h3>
-        <p class="text-xs text-slate-400 mb-3">ใช้ไฟล์ตารางสอนที่มีแท็บ <b>"ตารางสอนรายวัน"</b> — ระบบจะอ่าน วัน×คาบ×ชั้น→วิชา+ครู (เฉพาะ ป.1-6) และสร้างบัญชีครูอัตโนมัติ (PIN เริ่มต้น 1234)</p>
+        <p class="text-xs text-slate-400 mb-3">ใช้ไฟล์ตารางสอนที่มีแท็บ <b>"ตารางสอนรายวัน"</b> — ระบบจะอ่าน วัน×คาบ×ชั้น→วิชา+ครู (เฉพาะ ม.1-3) และสร้างบัญชีครูอัตโนมัติ (PIN เริ่มต้น 1234)</p>
         <div class="flex flex-wrap gap-2">
           <button onclick="document.getElementById('scheduleFile').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 เลือกไฟล์ตารางสอน</button>
           <button onclick="syncSubjects()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">🔄 สร้างรายวิชาจากตารางสอน</button>
@@ -928,8 +928,8 @@
           <li>ตั้งค่า <b>ข้อมูลสถานศึกษา</b> (โลโก้ ชื่อโรงเรียน ปีการศึกษา ผอ./รองผอ. ลายเซ็น)</li>
           <li>เพิ่ม/นำเข้า <b>รายชื่อนักเรียน</b> (ดาวน์โหลดฟอร์มตัวอย่างไปกรอกแล้วนำเข้า)</li>
           <li>ตั้ง <b>รายวิชา</b> ตามโครงสร้างหลักสูตร แยกพื้นฐาน/เพิ่มเติม + เวลาเรียน</li>
-          <li><b>บันทึกผลการเรียน</b> (Part 3) — กรอกคะแนนรายหน่วย หรือเลือกระดับ 68 โดยตรง</li>
-          <li><b>พิมพ์ใบรายงาน</b> (Part 4) — แสดงผลทั้งหลักสูตร 2568 และ 2551 ใน A4 เดียว</li>
+          <li><b>บันทึกผลการเรียน</b> — กรอกคะแนนรายหน่วย (ระบบคิดเกรดให้) หรือกรอกร้อยละ/เลือกเกรดเอง แยกภาคเรียน</li>
+          <li><b>พิมพ์ใบรายงาน</b> — แสดงผลการเรียนแยกภาค 1/2 + GPA ตามหลักสูตร 2551 ใน A4 เดียว</li>
         </ol>
       </div>
       <div>
@@ -1148,11 +1148,11 @@ function formatReportDate(v){
   return v;
 }
 
-const DEFAULT_REMARK='โรงเรียนในโครงการขับเคลื่อนหลักสูตรการศึกษาประถมศึกษาตอนต้น (ชั้นประถมศึกษาปีที่ 1 - 6) พุทธศักราช 2568';
-// แทนที่หมายเหตุค่าตั้งต้นเดิม (เลขไทย/ป.๑-๓) ด้วยข้อความใหม่ ; ข้อความที่ผู้ใช้แก้เองคงไว้
+const DEFAULT_REMARK='';
+// คงข้อความหมายเหตุที่ผู้ใช้กรอกเอง ; ล้างข้อความค่าตั้งต้นเก่าที่อ้างถึงหลักสูตร 2568/ประถม
 function normalizeRemark(v){
-  if(!v) return DEFAULT_REMARK;
-  if(/ชั้นประถมศึกษาปีที่\s*๑\s*-\s*๓/.test(v)) return DEFAULT_REMARK;
+  if(!v) return '';
+  if(/พุทธศักราช\s*2568|ประถมศึกษาตอนต้น/.test(v)) return '';
   return v;
 }
 
@@ -1389,7 +1389,7 @@ async function delStudent(id){
 /* ---- TEMPLATE + IMPORT (SheetJS) ---- */
 function downloadTemplate(){
   const ws=XLSX.utils.aoa_to_sheet([['เลขประจำตัว','เลขที่','ชื่อ-นามสกุล','ระดับชั้น/ห้อง'],
-    ['17554','1','เด็กชายตัวอย่าง ใจดี','ป.1/1']]);
+    ['17554','1','เด็กชายตัวอย่าง ใจดี','ม.1/1']]);
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'นักเรียน');
   XLSX.writeFile(wb,'ฟอร์มรายชื่อนักเรียน.xlsx');
 }
@@ -1479,13 +1479,12 @@ function renderMapping(){
     <tr class="border-b">
       <td class="px-1 py-1"><input class="inp text-sm" value="${m.minPercent}" onchange="state.mapping[${i}].minPercent=Number(this.value)"></td>
       <td class="px-1"><input class="inp text-sm" value="${m.maxPercent}" onchange="state.mapping[${i}].maxPercent=Number(this.value)"></td>
-      <td class="px-1"><input class="inp text-sm" value="${esc(m.level68)}" onchange="state.mapping[${i}].level68=this.value"></td>
       <td class="px-1"><input class="inp text-sm w-16" value="${m.grade51}" onchange="state.mapping[${i}].grade51=this.value"></td>
       <td class="px-1"><input class="inp text-sm w-16" value="${esc(m.letter51)}" onchange="state.mapping[${i}].letter51=this.value"></td>
       <td class="px-1 text-right"><button onclick="state.mapping.splice(${i},1);renderMapping()" class="text-rose-500 px-1">🗑️</button></td>
     </tr>`).join('');
 }
-function addMappingRow(){ state.mapping.push({minPercent:0,maxPercent:0,level68:'',grade51:'',letter51:''}); renderMapping(); }
+function addMappingRow(){ state.mapping.push({minPercent:0,maxPercent:0,grade51:'',letter51:''}); renderMapping(); }
 async function saveMapping(){
   try{ showLoading(true); state.mapping=await GAS.call('saveGradeMapping',{mapping:state.mapping}); renderMapping(); toast('บันทึกตารางแปลงเกรดแล้ว'); }
   catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
@@ -1526,18 +1525,21 @@ async function doClear(){
    ============================================================ */
 Object.assign(state, { units:{}, scoreSubject:null, scoreMode:'A', scores:[], grades:[] });
 
-const LEVELS_68 = ['','เริ่มต้น','พัฒนา','ชำนาญ','เชี่ยวชาญ','ไม่ผ่าน'];
+const GRADE_OPTS = ['','4','3.5','3','2.5','2','1.5','1','0'];
 
 /* ---- เครื่องมือแปลงเกรดฝั่ง client (ใช้ตารางเดียวกับ backend) ---- */
 function gradeFromPercent(p){
   p=Number(p);
-  for(const m of state.mapping){ if(p>=m.minPercent && p<=m.maxPercent) return {level68:m.level68,grade51:m.grade51,letter51:m.letter51}; }
-  return {level68:'',grade51:'',letter51:''};
+  for(const m of state.mapping){ if(p>=m.minPercent && p<=m.maxPercent) return {grade51:m.grade51,letter51:m.letter51}; }
+  return {grade51:'',letter51:''};
+}
+function letterForGrade(grade){
+  const r=state.mapping.filter(m=>String(m.grade51)===String(grade))[0];
+  return r?r.letter51:'';
 }
 function gradeFromLevel(level){
-  const rows=state.mapping.filter(m=>m.level68===level);
-  if(!rows.length) return {grade51:'',letter51:''};
-  rows.sort((a,b)=>Number(b.maxPercent)-Number(a.maxPercent));
+  const rows=state.mapping.filter(m=>String(m.grade51)===String(level));
+  if(!rows.length) return {grade51:level||'',letter51:''};
   return {grade51:rows[0].grade51, letter51:rows[0].letter51};
 }
 function classDigit(c){ return String(c||'').replace(/[^0-9]/g,'').charAt(0); }
@@ -1574,7 +1576,7 @@ function fillScoreSubjects(){
     subs=subs.filter(s=>taught.has(s.name+'|'+classDigit(s.classLevel)));
   }
   subs.sort((a,b)=>String(a.classLevel).localeCompare(String(b.classLevel))||String(a.code).localeCompare(String(b.code)));
-  // แยกเป็นรายห้อง (เช่น คณิตศาสตร์ ป.5/1, ป.5/2)
+  // แยกเป็นรายห้อง (เช่น คณิตศาสตร์ ม.1/1, ม.1/2)
   const opts=[];
   subs.forEach(s=>gradeRoomsFor(s).forEach(room=>{
     opts.push(`<option value="${s.ID}|${esc(room)}">[${esc(room)}] ${esc(s.code)} ${esc(s.name)}</option>`);
@@ -1691,7 +1693,7 @@ function calcRowTr(tr){
   const g=gradeFromPercent(pct);
   tr.querySelector('.sumCell').textContent=sum;
   tr.querySelector('.pctCell').textContent=(totalMax>0&&hasInput)?pct+'%':'-';
-  tr.querySelector('.lvlCell').textContent=(totalMax>0&&hasInput)?g.level68:'-';
+  tr.querySelector('.lvlCell').textContent=(totalMax>0&&hasInput)?(g.grade51!==''?g.grade51:'-'):'-';
   tr.querySelector('.grdCell').textContent=(totalMax>0&&hasInput)?(g.grade51+' ('+g.letter51+')'):'-';
 }
 async function saveScoresFn(){
@@ -1728,7 +1730,7 @@ function renderModeB(){
       <td class="px-2 whitespace-nowrap">${esc(nmLast(st))}</td>
       <td class="px-2"><input type="number" class="inp w-20 text-sm bPct" value="${(g.percent!=null&&g.percent!=='')?g.percent:''}" oninput="calcModeBRow(this)" placeholder="%"></td>
       <td class="px-2"><select class="inp text-sm bLvl" onchange="calcModeBRow(this)">
-        ${LEVELS_68.map(l=>`<option ${g.level68===l?'selected':''}>${l}</option>`).join('')}
+        ${GRADE_OPTS.map(l=>`<option value="${l}" ${String(g.grade51)===l?'selected':''}>${l===''?'—':l}</option>`).join('')}
       </select></td>
       <td class="px-2 text-center bGrd font-bold text-teal-700">${grdTxt}</td>
     </tr>`;
@@ -1738,8 +1740,8 @@ function calcModeBRow(el){
   const tr=el.closest('tr');
   const pct=tr.querySelector('.bPct').value;
   const lvlSel=tr.querySelector('.bLvl');
-  if(pct!==''){ const g=gradeFromPercent(pct); lvlSel.value=g.level68||''; tr.querySelector('.bGrd').textContent=g.grade51+' ('+g.letter51+')'; }
-  else if(lvlSel.value){ const gg=gradeFromLevel(lvlSel.value); tr.querySelector('.bGrd').textContent=(gg.grade51!==''?gg.grade51:'-')+(gg.letter51?' ('+gg.letter51+')':''); }
+  if(pct!==''){ const g=gradeFromPercent(pct); lvlSel.value=String(g.grade51); tr.querySelector('.bGrd').textContent=(g.grade51!==''?g.grade51:'-')+(g.letter51?' ('+g.letter51+')':''); }
+  else if(lvlSel.value!==''){ tr.querySelector('.bGrd').textContent=lvlSel.value+(letterForGrade(lvlSel.value)?' ('+letterForGrade(lvlSel.value)+')':''); }
   else tr.querySelector('.bGrd').textContent='-';
 }
 async function saveModeB(){
@@ -1753,7 +1755,7 @@ async function saveModeB(){
     if(pct==='' && !lvl) return;
     const payload={ studentID:sid, subjectID:sub.ID, mode:'B' };
     if(pct!==''){ payload.percent=Number(pct); }
-    else { const gg=gradeFromLevel(lvl); payload.percent=''; payload.level68=lvl; payload.grade51=gg.grade51; payload.letter51=gg.letter51; }
+    else { payload.percent=''; payload.grade51=lvl; payload.letter51=letterForGrade(lvl); payload.manualOverride=true; }
     tasks.push(payload);
   });
   if(!tasks.length){ toast('ยังไม่มีข้อมูลให้บันทึก','error'); return; }
@@ -1917,7 +1919,6 @@ function reportPageHTML(s, rs){
   const dirSign = s.directorSignURL?`<img src="${esc(s.directorSignURL)}" style="height:32px;object-fit:contain;display:block;margin:0 auto -2px">`:'<div style="height:30px"></div>';
   const depSign = s.deputySignURL?`<img src="${esc(s.deputySignURL)}" style="height:32px;object-fit:contain;display:block;margin:0 auto -2px">`:'<div style="height:30px"></div>';
 
-  const leftRows=rs.subjects.map(x=>`<tr><td>${esc(x.name)}</td><td style="text-align:center">${esc(x.hours)}</td><td style="text-align:center">${g(x.level68)}</td></tr>`).join('');
   const basicRows=basic.map(x=>`<tr><td style="text-align:center">${esc(x.code)}</td><td>${esc(x.name)}</td><td style="text-align:center">${esc(x.hours)}</td><td class="rp-grade">${g(x.grade51)}</td></tr>`).join('');
   const extraRows=extra.length?(`<tr><td colspan="4" style="background:#e2e8f0;font-weight:600;text-align:center">รายวิชาเพิ่มเติม</td></tr>`+extra.map(x=>`<tr><td style="text-align:center">${esc(x.code)}</td><td>${esc(x.name)}</td><td style="text-align:center">${esc(x.hours)}</td><td class="rp-grade">${g(x.grade51)}</td></tr>`).join('')):'';
 
@@ -1931,7 +1932,7 @@ function reportPageHTML(s, rs){
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;text-align:center">
       ${logo}
       <div>
-        <div style="font-weight:700;font-size:15px">ใบรายงานผลสัมฤทธิ์ทางการเรียน ระดับประถมศึกษาตอนต้น &nbsp;&nbsp; ปีการศึกษา ${esc(s.academicYear)}</div>
+        <div style="font-weight:700;font-size:15px">ใบรายงานผลการเรียน ระดับมัธยมศึกษาตอนต้น &nbsp;&nbsp; ปีการศึกษา ${esc(s.academicYear)}</div>
         <div style="font-size:13px">${esc(s.schoolName)} ${esc(s.area||'')}</div>
       </div>
     </div>
@@ -1941,18 +1942,11 @@ function reportPageHTML(s, rs){
       <span>ชั้น <b>${esc(st.classLevel)}</b> &nbsp; เลขที่ <b>${esc(st.number)}</b></span>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1.18fr;gap:6px;align-items:start">
-      <table class="rp-tbl">
-        <thead>
-          <tr><th class="rp-head-68" colspan="3">หลักสูตรการศึกษาประถมศึกษาตอนต้น พุทธศักราช 2568</th></tr>
-          <tr><th>ความสามารถผู้เรียน</th><th style="width:54px">เวลา (ชม.)</th><th style="width:66px">ระดับความสามารถ</th></tr>
-        </thead>
-        <tbody>${leftRows||'<tr><td colspan="3" style="text-align:center;color:#888">ยังไม่มีข้อมูล</td></tr>'}</tbody>
-      </table>
+    <div>
       <table class="rp-tbl">
         <thead>
           <tr><th class="rp-head-51" colspan="4">หลักสูตรแกนกลางการศึกษาขั้นพื้นฐาน พุทธศักราช 2551</th></tr>
-          <tr><th style="width:52px">รหัสวิชา</th><th>รายวิชาพื้นฐาน</th><th style="width:48px">เวลา (ชม.)</th><th style="width:56px">ระดับผลการเรียน</th></tr>
+          <tr><th style="width:60px">รหัสวิชา</th><th>รายวิชาพื้นฐาน</th><th style="width:60px">เวลา (ชม.)</th><th style="width:70px">ระดับผลการเรียน</th></tr>
         </thead>
         <tbody>${basicRows||'<tr><td colspan="4" style="text-align:center;color:#888">ยังไม่มีข้อมูล</td></tr>'}${extraRows}</tbody>
       </table>
@@ -2021,8 +2015,12 @@ async function loadStats(){
       ['รายการเกรด', s.gradeCount, 'text-amber-600'],
       ['ระดับที่ประเมิน', Object.keys(s.byLevel||{}).length, 'text-violet-700']
     ].map(c=>`<div class="card p-4 text-center"><div class="text-2xl font-bold ${c[2]}">${c[1]}</div><div class="text-xs text-slate-500 mt-1">${c[0]}</div></div>`).join('');
-    const order=['เชี่ยวชาญ','ชำนาญ','พัฒนา','เริ่มต้น','ไม่ผ่าน','ยังไม่ประเมิน'];
-    const vals=s.byLevel||{}; const max=Math.max(1,...Object.values(vals));
+    const vals=s.byLevel||{};
+    const order=Object.keys(vals).sort((a,b)=>{
+      const ga=parseFloat(String(a).replace('เกรด ','')); const gb=parseFloat(String(b).replace('เกรด ',''));
+      if(isNaN(ga)) return 1; if(isNaN(gb)) return -1; return gb-ga;
+    });
+    const max=Math.max(1,...Object.values(vals));
     const html=order.filter(k=>vals[k]).map(k=>{
       const v=vals[k], w=Math.round(v/max*100);
       return `<div class="mb-2"><div class="flex justify-between text-xs mb-0.5"><span>${k}</span><span class="font-semibold">${v}</span></div>
@@ -2058,7 +2056,7 @@ async function exportMIS(){
     const rows=await GAS.call('exportSchoolMIS',{classLevel:cls});
     if(!rows.length){ toast('ไม่มีข้อมูลให้ส่งออก','error'); return; }
     const aoa=[['เลขประจำตัว','เลขที่','ชื่อ-นามสกุล','ชั้น/ห้อง','รหัสวิชา','ชื่อวิชา','ร้อยละ','เกรด (51)','ระดับ (68)']];
-    rows.forEach(r=>aoa.push([r.studentCode,r.number,r.fullName,r.classLevel,r.subjectCode,r.subjectName,r.percent,r.grade51,r.level68]));
+    rows.forEach(r=>aoa.push([r.studentCode,r.number,r.fullName,r.classLevel,r.subjectCode,r.subjectName,r.percent,r.grade51]));
     const ws=XLSX.utils.aoa_to_sheet(aoa); const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'SchoolMIS');
     XLSX.writeFile(wb,'SchoolMIS_'+(cls||'ทั้งหมด')+'.xlsx');
@@ -2103,14 +2101,16 @@ async function renderHome(){
     options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{precision:0}}} }
   });
 
-  // กราฟ 2: การกระจายระดับ 68
-  const order=['เชี่ยวชาญ','ชำนาญ','พัฒนา','เริ่มต้น','ไม่ผ่าน'];
-  const colors={'เชี่ยวชาญ':'#0d9488','ชำนาญ':'#22c55e','พัฒนา':'#f59e0b','เริ่มต้น':'#f97316','ไม่ผ่าน':'#ef4444'};
+  // กราฟ 2: การกระจายผลการเรียน (เกรด 2551)
   const lv=(stats&&stats.byLevel)||{};
-  const lvKeys=order.filter(k=>lv[k]);
+  const palette=['#0d9488','#14b8a6','#22c55e','#84cc16','#fbbf24','#f59e0b','#f97316','#ef4444','#94a3b8'];
+  const lvKeys=Object.keys(lv).sort((a,b)=>{
+    const ga=parseFloat(String(a).replace('เกรด ','')); const gb=parseFloat(String(b).replace('เกรด ',''));
+    if(isNaN(ga)) return 1; if(isNaN(gb)) return -1; return gb-ga;
+  });
   if(lvKeys.length){
     makeChart('chartGrade',{ type:'doughnut',
-      data:{ labels:lvKeys, datasets:[{ data:lvKeys.map(k=>lv[k]), backgroundColor:lvKeys.map(k=>colors[k]) }] },
+      data:{ labels:lvKeys, datasets:[{ data:lvKeys.map(k=>lv[k]), backgroundColor:lvKeys.map((k,i)=>palette[i%palette.length]) }] },
       options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11}}}} }
     });
   } else { clearChart('chartGrade','ยังไม่มีข้อมูลผลการเรียน'); }
@@ -2152,10 +2152,10 @@ async function seedDemoIfEmpty(){
     for(const sub of subs){ const r=await GAS.call('addSubject',sub); subIds.push(r.id); }
 
     // นักเรียนตัวอย่าง 2 คน
-    const a=await GAS.call('addStudent',{studentCode:'10001',number:'1',fullName:'เด็กชายตัวอย่าง เรียนดี',classLevel:'ป.6/1'});
-    const b=await GAS.call('addStudent',{studentCode:'10002',number:'2',fullName:'เด็กหญิงตัวอย่าง ตั้งใจเรียน',classLevel:'ป.6/1'});
+    const a=await GAS.call('addStudent',{studentCode:'10001',number:'1',fullName:'เด็กชายตัวอย่าง เรียนดี',classLevel:'ม.1/1'});
+    const b=await GAS.call('addStudent',{studentCode:'10002',number:'2',fullName:'เด็กหญิงตัวอย่าง ตั้งใจเรียน',classLevel:'ม.1/1'});
 
-    // คะแนน (กรอกร้อยละ → ระบบเทียบระดับ 68 + เกรด 51 ให้)
+    // คะแนน (กรอกร้อยละ → ระบบแปลงเป็นเกรด 2551 ให้)
     const p1=[85,78,72,68,90,80], p2=[74,82,66,77,88,70];
     const grades=[];
     subIds.forEach((sid,i)=>{
@@ -2277,8 +2277,8 @@ function applyRole(){
 function downloadRosterTemplate(){
   const ws=XLSX.utils.aoa_to_sheet([
     ['ชั้น','เลขที่','เลขประจำตัว','คำนำหน้า','ชื่อ','นามสกุล'],
-    ['ป.1/1','1','17554','เด็กชาย','สมชาย','ใจดี'],
-    ['ป.1/1','2','17555','เด็กหญิง','สมหญิง','รักเรียน']
+    ['ม.1/1','1','17554','เด็กชาย','สมชาย','ใจดี'],
+    ['ม.1/1','2','17555','เด็กหญิง','สมหญิง','รักเรียน']
   ]);
   const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'รายชื่อ');
   XLSX.writeFile(wb,'ฟอร์มนำเข้ารายชื่อ.xlsx');
@@ -2318,8 +2318,8 @@ function importScheduleFile(ev){
       if(!sheetName){ toast('ไม่พบแท็บ "ตารางสอนรายวัน" ในไฟล์','error'); return; }
       const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1});
       const rows=parseScheduleSheet(aoa);
-      if(!rows.length){ toast('อ่านตารางสอนไม่ได้ (เฉพาะ ป.1-6)','error'); return; }
-      if(!confirm('พบ '+rows.length+' คาบสอน (ป.1-6) จะแทนที่ตารางสอนเดิมทั้งหมด ยืนยัน?')){ return; }
+      if(!rows.length){ toast('อ่านตารางสอนไม่ได้ (เฉพาะ ม.1-3)','error'); return; }
+      if(!confirm('พบ '+rows.length+' คาบสอน (ม.1-3) จะแทนที่ตารางสอนเดิมทั้งหมด ยืนยัน?')){ return; }
       showLoading(true);
       const res=await GAS.call('importSchedule',{rows});
       document.getElementById('scheduleSummary').innerHTML='✅ นำเข้า '+res.count+' คาบ • สร้างบัญชีครูใหม่ '+res.teachersAdded+' คน (PIN 1234) • สร้างรายวิชา '+res.subjectsAdded+' วิชา';
@@ -2336,7 +2336,7 @@ function parseScheduleSheet(aoa){
     const a=(row[0]==null?'':String(row[0])).trim();
     if(/^วัน(จันทร์|อังคาร|พุธ|พฤหัส|ศุกร์)/.test(a)){ day=a.replace(/^วัน/,''); periodOfCol={}; return; }
     if(a==='ชั้น'){ for(let c=1;c<row.length;c++){ const m=String(row[c]||'').match(/คาบ\s*(\d+)/); if(m) periodOfCol[c]=+m[1]; } return; }
-    if(/^ป\.[1-6]\//.test(a)){
+    if(/^ม\.[1-3]\//.test(a)){
       for(let c=1;c<row.length;c++){
         const cell=(row[c]==null?'':String(row[c])).trim(); if(!cell) continue;
         const parts=cell.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -3059,13 +3059,13 @@ function pp5AbilityPage(d, group, items, title){
 
 function pp5ChartPage(d){
   return pp5Page(pp5Head(d,'แผนภูมิสรุปผลการเรียน')+`
-    <div style="margin-bottom:14px"><div style="font-weight:700;text-align:center;margin-bottom:4px">การกระจายระดับพัฒนาการ (หลักสูตร 2568)</div><div style="height:240px"><canvas id="pp5cDist"></canvas></div></div>
+    <div style="margin-bottom:14px"><div style="font-weight:700;text-align:center;margin-bottom:4px">การกระจายผลการเรียน (เกรด 2551)</div><div style="height:240px"><canvas id="pp5cDist"></canvas></div></div>
     <div><div style="font-weight:700;text-align:center;margin-bottom:4px">เกรดเฉลี่ยรายวิชา (หลักสูตร 2551)</div><div style="height:300px"><canvas id="pp5cAvg"></canvas></div></div>`);
 }
 function renderPP5BookCharts(d){
-  const DEV=(d.cover&&d.cover.gradeLevels)||['เริ่มต้น','พัฒนา','ชำนาญ','เชี่ยวชาญ'];
+  const DEV=(d.cover&&d.cover.gradeLevels)||['4','3.5','3','2.5','2','1.5','1','0'];
   const dist=DEV.map((_,i)=>(d.cover&&d.cover.subjects||[]).reduce((sum,sub)=>sum+(sub.counts[i]||0),0));
-  const COL=['#ef4444','#fbbf24','#2dd4bf','#0d9488']; // เริ่มต้น→เชี่ยวชาญ
+  const COL=['#0d9488','#14b8a6','#22c55e','#84cc16','#fbbf24','#f59e0b','#f97316','#ef4444']; // 4→0
   makeChart('pp5cDist',{type:'doughnut',data:{labels:DEV,datasets:[{data:dist,backgroundColor:COL}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:12}}}}}});
   makeChart('pp5cAvg',{type:'bar',data:{labels:d.stats.subjects.map(s=>s.name),datasets:[{label:'เกรดเฉลี่ย',data:d.stats.subjects.map(s=>s.avg),backgroundColor:'#14b8a6',borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:4,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}});
 }
@@ -3074,7 +3074,7 @@ function pp5PageHTML(d){
   const s=d.settings||{};
   const bd='border:1px solid #000;';
   const td=(v,extra)=>`<td style="${bd}padding:2px 4px;text-align:center;${extra||''}">${v}</td>`;
-  const classTH='ประถมศึกษาปีที่ '+String(d.classLevel).replace(/^ป\./,'');
+  const classTH='มัธยมศึกษาปีที่ '+String(d.classLevel).replace(/^ม\./,'');
   const hts=(d.homeroomTeachers&&d.homeroomTeachers.length?d.homeroomTeachers:['','']).slice(0,2);
   while(hts.length<2) hts.push('');
   // ===== ตารางซ้าย: คะแนนรายวิชา (header + body อยู่ตารางเดียวกัน คอลัมน์ตรงกันแน่นอน) =====
@@ -3093,7 +3093,7 @@ function pp5PageHTML(d){
     <table style="border-collapse:collapse;font-size:12px;">
       <tr>
         <td rowspan="2" style="${bd}padding:2px 4px;text-align:center;font-weight:700;width:170px;">รายวิชา</td>
-        <td colspan="${d.gradeLevels.length}" style="${bd}padding:2px 4px;text-align:center;font-weight:700;">จำนวนคนที่ได้ระดับพัฒนาการ (หลักสูตร 2568)</td>
+        <td colspan="${d.gradeLevels.length}" style="${bd}padding:2px 4px;text-align:center;font-weight:700;">จำนวนคนที่ได้ระดับผลการเรียน (เกรด 2551)</td>
       </tr>
       <tr>${d.gradeLevels.map(g=>`<td style="${bd}${gw}text-align:center;font-weight:700;">${g}</td>`).join('')}</tr>
       ${leftRows}
