@@ -11,7 +11,7 @@
      ตัวอย่าง: 'https://script.google.com/macros/s/AKfycb..../exec'
      ============================================================ -->
 <script>
-  window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwAih8yJtqPp5j0kIv5oF6VU8jrqqFqJJq4iGdl5pMMaHYaLG37Ut3_y5OwDKB_OrexEg/exec';
+  window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_bZ3uWDMeW9Nv96yhjYMYzxyP2VxZterIy5nH2Y0uf-_DljrHuuebSqe0Wikr5FdjpQ/exec';
 </script>
 
 <!-- Tailwind CSS -->
@@ -235,8 +235,7 @@
         </select>
         <select id="su_class" class="inp">
           <option value="">— ชั้น —</option>
-          <option>ป.1</option><option>ป.2</option><option>ป.3</option>
-          <option>ป.4</option><option>ป.5</option><option>ป.6</option>
+          <option>ม.1</option><option>ม.2</option><option>ม.3</option>
         </select>
         <input id="su_hours" type="number" class="inp" placeholder="เวลาเรียน (ชม.)">
         <select id="su_type" class="inp">
@@ -252,8 +251,7 @@
         <h2 class="font-bold text-teal-700">📚 รายวิชาทั้งหมด</h2>
         <select id="su_filter" class="inp w-auto text-sm" onchange="renderSubjects()">
           <option value="">ทุกชั้น</option>
-          <option>ป.1</option><option>ป.2</option><option>ป.3</option>
-          <option>ป.4</option><option>ป.5</option><option>ป.6</option>
+          <option>ม.1</option><option>ม.2</option><option>ม.3</option>
         </select>
       </div>
       <div class="overflow-x-auto">
@@ -1006,8 +1004,7 @@
       <select id="es_area" class="inp"></select>
       <select id="es_class" class="inp">
         <option value="">— ชั้น —</option>
-        <option>ป.1</option><option>ป.2</option><option>ป.3</option>
-        <option>ป.4</option><option>ป.5</option><option>ป.6</option>
+        <option>ม.1</option><option>ม.2</option><option>ม.3</option>
       </select>
       <input id="es_hours" type="number" class="inp" placeholder="เวลาเรียน (ชม.)">
       <select id="es_type" class="inp">
@@ -2139,14 +2136,14 @@ async function seedDemoIfEmpty(){
     if(state.students.length>0 || state.subjects.length>0){ localStorage.setItem('kps_seeded','1'); return; }
 
     showLoading(true);
-    // รายวิชาตัวอย่าง (ป.6)
+    // รายวิชาตัวอย่าง (ม.1)
     const subs=[
-      {code:'ท16101',name:'ภาษาไทย',learningArea:'ภาษาไทย',hours:'200',type:'พื้นฐาน',classLevel:'ป.6'},
-      {code:'ค16101',name:'คณิตศาสตร์',learningArea:'คณิตศาสตร์',hours:'200',type:'พื้นฐาน',classLevel:'ป.6'},
-      {code:'ว16101',name:'วิทยาศาสตร์และเทคโนโลยี',learningArea:'วิทยาศาสตร์และเทคโนโลยี',hours:'80',type:'พื้นฐาน',classLevel:'ป.6'},
-      {code:'ส16101',name:'สังคมศึกษา ศาสนาและวัฒนธรรม',learningArea:'สังคมศึกษา ศาสนาและวัฒนธรรม',hours:'80',type:'พื้นฐาน',classLevel:'ป.6'},
-      {code:'อ16101',name:'ภาษาอังกฤษ',learningArea:'ภาษาต่างประเทศ',hours:'80',type:'พื้นฐาน',classLevel:'ป.6'},
-      {code:'ส16201',name:'หน้าที่พลเมือง',learningArea:'รายวิชาเพิ่มเติม',hours:'40',type:'เพิ่มเติม',classLevel:'ป.6'}
+      {code:'ท21101',name:'ภาษาไทย',learningArea:'ภาษาไทย',hours:'120',type:'พื้นฐาน',classLevel:'ม.1'},
+      {code:'ค21101',name:'คณิตศาสตร์',learningArea:'คณิตศาสตร์',hours:'120',type:'พื้นฐาน',classLevel:'ม.1'},
+      {code:'ว21101',name:'วิทยาศาสตร์และเทคโนโลยี',learningArea:'วิทยาศาสตร์และเทคโนโลยี',hours:'120',type:'พื้นฐาน',classLevel:'ม.1'},
+      {code:'ส21101',name:'สังคมศึกษา ศาสนาและวัฒนธรรม',learningArea:'สังคมศึกษา ศาสนาและวัฒนธรรม',hours:'120',type:'พื้นฐาน',classLevel:'ม.1'},
+      {code:'อ21101',name:'ภาษาอังกฤษ',learningArea:'ภาษาต่างประเทศ',hours:'120',type:'พื้นฐาน',classLevel:'ม.1'},
+      {code:'ส21231',name:'หน้าที่พลเมือง',learningArea:'รายวิชาเพิ่มเติม',hours:'40',type:'เพิ่มเติม',classLevel:'ม.1'}
     ];
     const subIds=[];
     for(const sub of subs){ const r=await GAS.call('addSubject',sub); subIds.push(r.id); }
@@ -2822,7 +2819,7 @@ function pp5CoverHTML(d){
     </div>
     <table style="width:100%;font-size:14px;margin-top:10px;border-collapse:collapse">
       <tr><td style="width:120px;text-align:right;padding-right:8px"><b>โรงเรียน</b></td><td>${esc(s.schoolName||'')}</td></tr>
-      <tr><td style="text-align:right;padding-right:8px"><b>สังกัด</b></td><td>${esc(s.area||'สำนักงานเขตพื้นที่การศึกษาประถมศึกษาอุดรธานี เขต 1')}</td></tr>
+      <tr><td style="text-align:right;padding-right:8px"><b>สังกัด</b></td><td>${esc(s.area||'สำนักงานเขตพื้นที่การศึกษา')}</td></tr>
       <tr><td style="text-align:right;padding-right:8px"><b>ชั้น</b></td><td>${esc(d.classLevel)} &nbsp;&nbsp; <b>ปีการศึกษา</b> ${esc(s.academicYear||'')}</td></tr>
       <tr><td style="text-align:right;padding-right:8px"><b>ครูประจำชั้น</b></td><td>${esc(ht.join('   '))}</td></tr>
       <tr><td style="text-align:right;padding-right:8px"><b>ผู้อำนวยการโรงเรียน</b></td><td>${esc(s.directorName||'')}</td></tr>
@@ -3236,7 +3233,7 @@ state.currPdf=null; // {bytes, sections:[{start,end,grade,guess,subjectID}]}
 // ทำให้ข้อความไทยที่สกัดจาก PDF เทียบง่ายขึ้น (ลบช่องว่าง)
 function _norm(t){ return String(t||'').replace(/\s+/g,''); }
 // ดึงเลขชั้น (ปีที่ N) จากข้อความหัวข้อ
-function _gradeFromHead(t){ const m=_norm(t).match(/ปีท[ี่ิ]*([๑-๙1-9])/); if(!m) return ''; const map={'๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6'}; return 'ป.'+(map[m[1]]||m[1]); }
+function _gradeFromHead(t){ const n=_norm(t); const m=n.match(/ปีท[ี่ิ]*([๑-๙1-9])/); if(!m) return ''; const map={'๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'}; const d=map[m[1]]||m[1]; const prefix=(n.indexOf('ประถม')>=0)?'ป.':'ม.'; return prefix+d; }
 
 async function onPickCurriculum(ev){
   const file=ev.target.files[0]; if(!file) return;
@@ -3611,7 +3608,7 @@ function exportRisk(){
    ============================================================ */
 function initGradeCharts(){
   const sel=document.getElementById('gc_scope'); if(!sel) return;
-  const grades=['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'].filter(g=>state.students.some(s=>classDigit(s.classLevel)===classDigit(g)));
+  const grades=['ม.1','ม.2','ม.3'].filter(g=>state.students.some(s=>classDigit(s.classLevel)===classDigit(g)));
   const rooms=allClasses();
   const cur=sel.value;
   sel.innerHTML='<option value="">ทั้งโรงเรียน</option>'+
