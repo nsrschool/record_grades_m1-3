@@ -176,6 +176,8 @@
 <nav class="max-w-6xl mx-auto px-3 mt-4">
   <div class="flex flex-wrap items-center gap-2">
     <button data-tab="home"     data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏠 หน้าแรก</button>
+    <button data-tab="schedule" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📅 ตารางสอน</button>
+    <button data-tab="overview" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏫 ภาพรวมรายห้อง</button>
     <span class="nav-cat" data-role="all">📚 งานวิชาการ</span>
     <button data-tab="subjects" data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
     <button data-tab="scores"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📝 บันทึกผลการเรียน</button>
@@ -223,8 +225,32 @@
     </div>
   </section>
 
-  <!-- ---------- TAB: SUBJECTS ---------- -->
-  <section id="tab-subjects" class="tabpane hidden">
+  <!-- ---------- TAB: SCHEDULE (ตารางสอน) ---------- -->
+  <section id="tab-schedule" class="tabpane hidden">
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="font-bold text-teal-700">📅 ตารางสอน</h3>
+        <div id="schCtrls" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+      <p id="schHint" class="text-xs text-slate-400 mt-2"></p>
+    </div>
+    <div id="schArea" class="card p-4 overflow-x-auto text-sm text-slate-400">กำลังโหลด…</div>
+  </section>
+
+  <!-- ---------- TAB: OVERVIEW (ภาพรวมรายห้อง) ---------- -->
+  <section id="tab-overview" class="tabpane hidden">
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="font-bold text-teal-700">🏫 ภาพรวมรายห้อง</h3>
+        <button onclick="loadOverview()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 text-xs">🔄 รีเฟรช</button>
+      </div>
+      <div id="ovTotals" class="flex flex-wrap gap-2 mt-3"></div>
+    </div>
+    <div id="ovArea" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div class="card p-4 text-sm text-slate-400">กำลังโหลด…</div>
+    </div>
+  </section>
+
     <div class="card p-4 mb-4">
       <h2 class="font-bold text-teal-700 mb-3">➕ เพิ่มรายวิชา</h2>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -769,7 +795,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
           <input id="tnew_name" class="inp col-span-2" placeholder="ชื่อ (เช่น ครูรุ่งนิรันดร์)">
           <input id="tnew_pin" class="inp" placeholder="PIN">
-          <select id="tnew_role" class="inp"><option value="teacher">ครู</option><option value="admin">แอดมิน</option></select>
+          <select id="tnew_role" class="inp"><option value="teacher">ครู</option><option value="director">ผู้บริหาร</option><option value="admin">แอดมิน</option></select>
           <select id="tnew_home" class="inp"><option value="">— ห้องประจำชั้น —</option></select>
           <button onclick="addTeacher()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 text-sm col-span-2 sm:col-span-5">➕ เพิ่มครู</button>
         </div>
@@ -1173,6 +1199,8 @@ function switchTab(name){
   if(name==='attendance') initAttendance();
   if(name==='calendar') initCalendar();
   if(name==='risk') initRisk();
+  if(name==='schedule') initSchedule();
+  if(name==='overview') loadOverview();
   if(name==='summary68') initSummary68();
 }
 
@@ -1788,7 +1816,7 @@ function initAbility(){
   const sel=document.getElementById('ab_class');
   const u=state.currentUser;
   let classes=[...new Set(state.students.map(s=>s.classLevel).filter(Boolean))].sort();
-  if(u && u.role!=='admin' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
+  if(u && u.role==='teacher' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
   sel.innerHTML = classes.length ? classes.map(c=>`<option>${esc(c)}</option>`).join('') : '<option value="">(ไม่มีห้อง)</option>';
 }
 
@@ -1875,7 +1903,7 @@ function fillReportClasses(){
   const sel=document.getElementById('rp_class'); if(!sel) return;
   const u=state.currentUser;
   let classes=[...new Set(state.students.map(s=>s.classLevel).filter(Boolean))].sort();
-  if(u && u.role!=='admin' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
+  if(u && u.role==='teacher' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
   const cur=sel.value;
   sel.innerHTML='<option value="">— เลือกห้อง —</option>'+classes.map(c=>`<option>${esc(c)}</option>`).join('');
   if(cur) sel.value=cur;
@@ -2261,12 +2289,28 @@ async function submitChangePw(){
   finally{ showLoading(false); }
 }
 
+// สิทธิ์การเข้าถึงเมนูตามบทบาท ('*' = ทุกเมนู)
+const TAB_ACCESS = {
+  admin: '*',
+  teacher: ['home','schedule','scores','ability','report','summary68','attendance','calendar','risk','manual'],
+  director:['home','schedule','overview','report','summary68','stats','risk','calendar','manual']
+};
+function roleLabel(role){ return role==='admin'?'แอดมิน':role==='director'?'ผู้บริหาร':'ครู'; }
 function applyRole(){
-  const admin = state.currentUser && state.currentUser.role==='admin';
-  document.querySelectorAll('[data-role]').forEach(el=>{
-    el.style.display=(el.dataset.role==='admin' && !admin) ? 'none' : '';
+  const u = state.currentUser || {};
+  const role = u.role || 'teacher';
+  const allowed = TAB_ACCESS[role] || TAB_ACCESS.teacher;
+  document.querySelectorAll('.navbtn').forEach(b=>{
+    const tab=b.dataset.tab;
+    b.style.display = (allowed==='*' || allowed.indexOf(tab)>=0) ? '' : 'none';
   });
-  document.getElementById('userChip').textContent='👤 '+state.currentUser.name+(admin?' • แอดมิน':'');
+  const isAdmin = role==='admin';
+  // องค์ประกอบเฉพาะแอดมินภายในหน้า (ที่ไม่ใช่ปุ่มเมนู)
+  document.querySelectorAll('[data-role="admin"]').forEach(el=>{
+    if(el.classList.contains('navbtn')) return;
+    el.style.display = isAdmin ? '' : 'none';
+  });
+  document.getElementById('userChip').textContent='👤 '+(u.name||'')+' • '+roleLabel(role);
   document.getElementById('userBar').classList.remove('hidden');
 }
 
@@ -2380,7 +2424,7 @@ function renderTeachers(){
   document.getElementById('teachersBody').innerHTML = list.length ? list.map(t=>`
     <tr class="border-b" data-id="${t.ID}">
       <td class="px-1 py-1"><input class="inp text-sm tc-name" value="${esc(t.name)}"></td>
-      <td class="px-1"><select class="inp text-sm tc-role"><option value="teacher" ${t.role!=='admin'?'selected':''}>ครู</option><option value="admin" ${t.role==='admin'?'selected':''}>แอดมิน</option></select></td>
+      <td class="px-1"><select class="inp text-sm tc-role"><option value="teacher" ${(t.role||'teacher')==='teacher'?'selected':''}>ครู</option><option value="director" ${t.role==='director'?'selected':''}>ผู้บริหาร</option><option value="admin" ${t.role==='admin'?'selected':''}>แอดมิน</option></select></td>
       <td class="px-1"><input class="inp text-sm w-20 tc-pin" value="${esc(t.pin)}"></td>
       <td class="px-1"><select class="inp text-sm w-28 tc-home">${homeroomOptions(t.homeroomClass)}</select></td>
       <td class="px-1 text-right whitespace-nowrap">
@@ -2440,7 +2484,7 @@ function fillFlagClasses(){
   const sel=document.getElementById('att_flag_class');
   const u=state.currentUser;
   let classes=[...new Set(state.students.map(s=>s.classLevel).filter(Boolean))].sort();
-  if(u && u.role!=='admin' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
+  if(u && u.role==='teacher' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
   sel.innerHTML = classes.length ? classes.map(c=>`<option>${esc(c)}</option>`).join('') : '<option value="">(ไม่มีห้องประจำชั้น)</option>';
 }
 
@@ -2784,7 +2828,7 @@ function initSummary68(){
   const sel=document.getElementById('sm68_class');
   const u=state.currentUser;
   let classes=[...new Set(state.students.map(s=>s.classLevel).filter(Boolean))].sort();
-  if(u && u.role!=='admin' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
+  if(u && u.role==='teacher' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
   sel.innerHTML=classes.length?classes.map(c=>`<option>${esc(c)}</option>`).join(''):'<option value="">(ไม่มีห้อง)</option>';
 }
 async function loadSummary68(){
@@ -2865,7 +2909,7 @@ function fillPP5Classes(){
   const sel=document.getElementById('pp5_class'); if(!sel) return;
   const u=state.currentUser;
   let classes=[...new Set(state.students.map(s=>s.classLevel).filter(Boolean))].sort();
-  if(u && u.role!=='admin' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
+  if(u && u.role==='teacher' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
   const cur=sel.value;
   sel.innerHTML=classes.length?classes.map(c=>`<option>${esc(c)}</option>`).join(''):'<option value="">(ไม่มีห้อง)</option>';
   if(cur) sel.value=cur;
@@ -3536,7 +3580,7 @@ function initRisk(){
   const sel=document.getElementById('rk_class');
   const u=state.currentUser;
   let classes=allClasses();
-  if(u && u.role!=='admin' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
+  if(u && u.role==='teacher' && u.homeroomClass) classes=classes.filter(c=>c===u.homeroomClass);
   const cur=sel.value;
   sel.innerHTML='<option value="">ทุกห้อง</option>'+classes.map(c=>`<option>${esc(c)}</option>`).join('');
   if(cur) sel.value=cur; else if(u && u.role!=='admin' && u.homeroomClass) sel.value=u.homeroomClass;
@@ -3601,6 +3645,132 @@ function exportRisk(){
   const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'นักเรียนเสี่ยง');
   XLSX.writeFile(wb,'นักเรียนเสี่ยง_'+todayISO()+'.xlsx');
+}
+
+// ============================================================
+//   ตารางสอน (Schedule view)
+// ============================================================
+const SCH_DAYS = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'];
+state.schAll=null; state.schMode='teacher';
+async function initSchedule(){
+  const u=state.currentUser||{}; const role=u.role||'teacher';
+  const ctrls=document.getElementById('schCtrls');
+  const hint=document.getElementById('schHint');
+  if(role==='teacher'){
+    ctrls.innerHTML='<button onclick="exportSchedule()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs">📥 Excel</button>';
+    hint.textContent='ตารางสอนของคุณ ('+esc(u.name)+')';
+    try{ showLoading(true);
+      const rows=await GAS.call('getSchedule',{teacher:u.name});
+      renderScheduleGrid(rows,'teacher');
+    }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+    return;
+  }
+  try{ showLoading(true);
+    if(!state.schAll) state.schAll=await GAS.call('getSchedule',{});
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+  const teachers=[...new Set((state.schAll||[]).map(r=>String(r.teacher||'').trim()).filter(Boolean))].sort();
+  const classes=[...new Set((state.schAll||[]).map(r=>String(r.classLevel||'').trim()).filter(Boolean))].sort();
+  ctrls.innerHTML=
+    '<select id="schModeSel" class="inp text-sm py-1.5" onchange="onSchMode()">'+
+      '<option value="teacher">รายครู</option><option value="class">รายห้อง</option></select>'+
+    '<select id="schPick" class="inp text-sm py-1.5" onchange="renderSchedulePick()"></select>'+
+    '<button onclick="exportSchedule()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs">📥 Excel</button>';
+  state._schTeachers=teachers; state._schClasses=classes;
+  document.getElementById('schModeSel').value=state.schMode;
+  onSchMode();
+}
+function onSchMode(){
+  state.schMode=document.getElementById('schModeSel').value;
+  const pick=document.getElementById('schPick');
+  const list = state.schMode==='teacher' ? state._schTeachers : state._schClasses;
+  pick.innerHTML=list.map(x=>`<option>${esc(x)}</option>`).join('') || '<option value="">— ไม่มีข้อมูล —</option>';
+  renderSchedulePick();
+}
+function renderSchedulePick(){
+  const key=document.getElementById('schPick').value;
+  const hint=document.getElementById('schHint');
+  if(state.schMode==='teacher'){
+    const rows=(state.schAll||[]).filter(r=>String(r.teacher).trim()===key);
+    hint.textContent='ตารางสอนของ '+esc(key);
+    renderScheduleGrid(rows,'teacher');
+  }else{
+    const rows=(state.schAll||[]).filter(r=>String(r.classLevel).trim()===key);
+    hint.textContent='ตารางเรียนของห้อง '+esc(key);
+    renderScheduleGrid(rows,'class');
+  }
+}
+function renderScheduleGrid(rows, mode){
+  const area=document.getElementById('schArea');
+  if(!rows || !rows.length){ area.innerHTML='<div class="text-center text-slate-400 py-6">ไม่มีข้อมูลตารางสอน</div>'; state._schExport=null; return; }
+  const periods=[...new Set(rows.map(r=>Number(r.period)).filter(n=>!isNaN(n)))].sort((a,b)=>a-b);
+  const maxP=periods.length?Math.max(...periods):0;
+  const cols=[]; for(let p=1;p<=maxP;p++) cols.push(p);
+  const days=SCH_DAYS.filter(d=>rows.some(r=>String(r.day).trim()===d));
+  const cell=(d,p)=>{
+    const hit=rows.filter(r=>String(r.day).trim()===d && Number(r.period)===p);
+    if(!hit.length) return '<td class="border border-slate-200 p-1 text-center text-slate-300">–</td>';
+    return '<td class="border border-slate-200 p-1 align-top">'+hit.map(r=>{
+      const sub=esc(r.subject||'');
+      const extra = mode==='teacher' ? esc(r.classLevel||'') : esc(r.teacher||'');
+      return `<div class="leading-tight"><div class="font-medium text-slate-700">${sub}</div><div class="text-[10px] text-teal-600">${extra}</div></div>`;
+    }).join('<hr class="my-1 border-slate-100">')+'</td>';
+  };
+  area.innerHTML='<table class="w-full text-xs border-collapse" style="min-width:640px"><thead><tr class="bg-teal-50">'+
+    '<th class="border border-slate-200 p-1 w-16">วัน \\ คาบ</th>'+
+    cols.map(p=>`<th class="border border-slate-200 p-1">คาบ ${p}</th>`).join('')+'</tr></thead><tbody>'+
+    days.map(d=>`<tr><td class="border border-slate-200 p-1 font-medium text-teal-700 bg-teal-50/50">${d}</td>${cols.map(p=>cell(d,p)).join('')}</tr>`).join('')+
+    '</tbody></table>';
+  state._schExport={rows:rows.slice(), mode};
+}
+function exportSchedule(){
+  const ex=state._schExport; if(!ex || !ex.rows.length){ toast('ไม่มีข้อมูลให้ส่งออก','error'); return; }
+  const aoa=[['วัน','คาบ','ชั้น','วิชา','ครู']];
+  ex.rows.slice().sort((a,b)=>(SCH_DAYS.indexOf(String(a.day).trim())-SCH_DAYS.indexOf(String(b.day).trim()))||(Number(a.period)-Number(b.period)))
+    .forEach(r=>aoa.push([r.day,r.period,r.classLevel,r.subject,r.teacher]));
+  const ws=XLSX.utils.aoa_to_sheet(aoa); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'ตารางสอน');
+  XLSX.writeFile(wb,'schedule_'+todayISO()+'.xlsx');
+}
+
+// ============================================================
+//   ภาพรวมรายห้อง (Director dashboard)
+// ============================================================
+async function loadOverview(){
+  try{ showLoading(true);
+    const d=await GAS.call('getDirectorOverview',{semester:state.semester});
+    renderOverview(d);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function renderOverview(d){
+  const t=document.getElementById('ovTotals');
+  t.innerHTML=
+    `<span class="badge bg-slate-100 text-slate-700">ภาคเรียนที่ ${esc(d.semester)}</span>`+
+    `<span class="badge bg-teal-100 text-teal-700">${d.totals.classes} ห้อง</span>`+
+    `<span class="badge bg-sky-100 text-sky-700">${d.totals.students} นักเรียน</span>`+
+    `<span class="badge bg-violet-100 text-violet-700">ครู ${d.totals.teachers} คน</span>`+
+    `<span class="badge bg-rose-100 text-rose-700">เสี่ยงรวม ${d.totals.atRisk} คน</span>`;
+  const area=document.getElementById('ovArea');
+  if(!d.classes.length){ area.innerHTML='<div class="card p-4 text-center text-slate-400">ยังไม่มีข้อมูลห้องเรียน</div>'; return; }
+  area.innerHTML=d.classes.map(c=>{
+    const barColor = c.gradePct>=80?'bg-emerald-500':c.gradePct>=50?'bg-amber-500':'bg-rose-500';
+    const att = c.attChecked
+      ? `<span class="text-emerald-600">✓ เช็คแล้ว ${c.attPresent}/${c.attTotal}</span>`
+      : `<span class="text-slate-400">— ยังไม่เช็ค</span>`;
+    return `<div class="card p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="font-bold text-teal-700">${esc(c.classLevel)}</h4>
+        <span class="text-xs text-slate-400">${esc((c.homeroom||[]).join(', ')||'—')}</span>
+      </div>
+      <div class="text-xs text-slate-500 flex justify-between mb-1"><span>กรอกผลการเรียน</span><span class="font-medium">${c.gradePct}%</span></div>
+      <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3"><div class="${barColor} h-full" style="width:${c.gradePct}%"></div></div>
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div><div class="font-bold text-slate-700">${c.students}</div><div class="text-slate-400">นักเรียน</div></div>
+        <div><div class="font-bold text-slate-700">${c.subjects}</div><div class="text-slate-400">รายวิชา</div></div>
+        <div><div class="font-bold ${c.atRisk>0?'text-rose-600':'text-slate-700'}">${c.atRisk}</div><div class="text-slate-400">เสี่ยง</div></div>
+      </div>
+      <div class="text-xs mt-3 pt-2 border-t border-slate-100">เช็คชื่อวันนี้: ${att}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ============================================================
