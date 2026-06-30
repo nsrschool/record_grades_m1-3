@@ -707,6 +707,7 @@
         <div class="flex flex-wrap gap-2 mb-4">
           <button onclick="downloadTemplate()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">📥 ดาวน์โหลดฟอร์มตัวอย่าง</button>
           <button onclick="document.getElementById('stdImport').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 นำเข้ารายชื่อ (.xlsx/.csv)</button>
+          <button onclick="cleanupStudents()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-2 text-xs">🧹 ล้างนักเรียนซ้ำ</button>
           <input type="file" id="stdImport" accept=".xlsx,.xls,.csv" class="hidden" onchange="importStudents(event)">
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
@@ -1464,7 +1465,7 @@ function importStudents(ev){
       showLoading(true);
       const res=await GAS.call('bulkImportStudents',{rows:out});
       await loadStudents();
-      toast('นำเข้า '+res.count+' รายชื่อแล้ว');
+      toast('นำเข้าสำเร็จ — เพิ่มใหม่ '+(res.added||0)+' • อัปเดต '+(res.updated||0)+' (กันรายชื่อซ้ำให้แล้ว)');
     }catch(err){ toast(err.message,'error'); } finally{ showLoading(false); ev.target.value=''; }
   };
   reader.readAsArrayBuffer(file);
@@ -2447,6 +2448,14 @@ async function cleanupSubjects(){
     const res=await GAS.call('dedupeSubjects');
     await loadSubjects();
     toast(res.removed?('ล้างวิชาซ้ำแล้ว '+res.removed+' รายการ'):'ไม่พบวิชาซ้ำ','success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function cleanupStudents(){
+  if(!confirm('ล้างรายชื่อนักเรียนที่ซ้ำกัน (รหัสเดียวกัน หรือ ชื่อ+ชั้นเดียวกัน)? ระบบจะเก็บไว้คนละ 1 รายการ และย้ายคะแนน/เกรด/การเช็คชื่อไปยังรายการที่เก็บ')) return;
+  try{ showLoading(true);
+    const res=await GAS.call('dedupeStudents');
+    await loadStudents();
+    toast(res.removed?('ล้างนักเรียนซ้ำแล้ว '+res.removed+' รายการ'):'ไม่พบรายชื่อซ้ำ','success');
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 async function loadSchedule(){
@@ -3839,6 +3848,7 @@ function initTeaching(){
     loadTeachingTasks();
   }else{
     ctrls.innerHTML=
+      '<input id="thSearch" class="inp text-sm py-1.5" placeholder="🔍 ค้นหาครู/วิชา" oninput="reRenderTeachingOverview()" style="min-width:150px">'+
       '<select id="thView" class="inp text-sm py-1.5" onchange="setThView()"><option value="teacher">รายครู</option><option value="subject">รายวิชา</option></select>'+
       '<label class="text-xs flex items-center gap-1 text-slate-500"><input type="checkbox" id="thPending" onchange="reRenderTeachingOverview()"> เฉพาะที่ยังไม่ครบ</label>'+
       '<button onclick="loadTeachingOverview()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 text-xs">🔄 รีเฟรช</button>';
@@ -3928,6 +3938,8 @@ function renderTeachingOverview(d){
   const T=d.totals;
   const onlyPending = (document.getElementById('thPending')||{}).checked;
   const view = (document.getElementById('thView')||{}).value || 'teacher';
+  const q = ((document.getElementById('thSearch')||{}).value||'').trim().toLowerCase();
+  const match=(s)=>!q || String(s||'').toLowerCase().indexOf(q)>=0;
   // ----- แผงสรุปจำนวน -----
   document.getElementById('thTotals').innerHTML=
     `<span class="badge bg-slate-100 text-slate-700">ครู ${T.teachers} คน</span>`+
@@ -3940,7 +3952,7 @@ function renderTeachingOverview(d){
 
   if(view==='subject'){
     // ----- มุมมองรายวิชา: วิชาไหน ครูคนไหน ส่งแล้ว/ยังไม่ส่ง -----
-    let subs=d.subjects;
+    let subs=d.subjects.filter(su=>match(su.subject)||match(su.classLevel)||(su.teachers||[]).some(t=>match(t.teacher)));
     area.innerHTML=subs.map((su,idx)=>{
       let ts=su.teachers;
       const paceN=ts.filter(t=>t.pace).length, planN=ts.filter(t=>t.plan).length, n=ts.length;
@@ -3965,6 +3977,7 @@ function renderTeachingOverview(d){
 
   // ----- มุมมองรายครู -----
   let teachers = onlyPending ? d.teachers.filter(t=>!t.complete) : d.teachers;
+  teachers = teachers.filter(t=>match(t.teacher)||(t.items||[]).some(it=>match(it.subject)||match(it.classLevel)));
   if(!teachers.length){ area.innerHTML='<div class="text-center text-emerald-600 py-6">🎉 ครูทุกคนส่งครบแล้ว</div>'; return; }
   area.innerHTML=teachers.map((t,idx)=>{
     const rows=t.items.map(it=>{
