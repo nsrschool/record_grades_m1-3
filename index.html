@@ -182,6 +182,7 @@
     <button data-tab="subjects" data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
     <button data-tab="scores"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📝 บันทึกผลการเรียน</button>
     <button data-tab="ability"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🎓 ความสามารถ/คุณลักษณะ</button>
+    <button data-tab="teaching" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📤 ส่งเอกสารการสอน</button>
     <button data-tab="report"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🖨️ พิมพ์ใบรายงาน</button>
     <button data-tab="summary68" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📋 สรุปผลการเรียน</button>
     <button data-tab="stats"    data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📊 รายงานสรุป</button>
@@ -249,6 +250,20 @@
     <div id="ovArea" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <div class="card p-4 text-sm text-slate-400">กำลังโหลด…</div>
     </div>
+  </section>
+
+  <!-- ---------- TAB: TEACHING DOCS (ส่งเอกสารการสอน) ---------- -->
+  <section id="tab-teaching" class="tabpane hidden">
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="font-bold text-teal-700">📤 ส่งเอกสารการสอน</h3>
+        <div id="thCtrls" class="flex items-center gap-2"></div>
+      </div>
+      <p id="thHint" class="text-xs text-slate-400 mt-2"></p>
+      <div id="thTotals" class="flex flex-wrap gap-2 mt-2"></div>
+    </div>
+    <div id="thArea" class="card p-4 overflow-x-auto text-sm text-slate-400">กำลังโหลด…</div>
+    <input type="file" id="thFile" accept="application/pdf" class="hidden" onchange="onTeachingFile(event)">
   </section>
 
     <div class="card p-4 mb-4">
@@ -1201,6 +1216,7 @@ function switchTab(name){
   if(name==='risk') initRisk();
   if(name==='schedule') initSchedule();
   if(name==='overview') loadOverview();
+  if(name==='teaching') initTeaching();
   if(name==='summary68') initSummary68();
 }
 
@@ -2292,8 +2308,8 @@ async function submitChangePw(){
 // สิทธิ์การเข้าถึงเมนูตามบทบาท ('*' = ทุกเมนู)
 const TAB_ACCESS = {
   admin: '*',
-  teacher: ['home','schedule','scores','ability','report','summary68','attendance','calendar','risk','manual'],
-  director:['home','schedule','overview','report','summary68','stats','risk','calendar','manual']
+  teacher: ['home','schedule','scores','ability','teaching','report','summary68','attendance','calendar','risk','manual'],
+  director:['home','schedule','overview','teaching','report','summary68','stats','risk','calendar','manual']
 };
 function roleLabel(role){ return role==='admin'?'แอดมิน':role==='director'?'ผู้บริหาร':'ครู'; }
 function applyRole(){
@@ -3770,6 +3786,163 @@ function renderOverview(d){
       </div>
       <div class="text-xs mt-3 pt-2 border-t border-slate-100">เช็คชื่อวันนี้: ${att}</div>
     </div>`;
+  }).join('');
+}
+
+// ============================================================
+//   ส่งเอกสารการสอน (กำหนดการสอน + แผนการสอน)
+// ============================================================
+const TEACH_DOC_TYPES=['กำหนดการสอน','แผนการสอน'];
+state.teachTasks=null; state._thTarget=null;
+function initTeaching(){
+  const u=state.currentUser||{}; const role=u.role||'teacher';
+  const ctrls=document.getElementById('thCtrls');
+  if(role==='teacher'){
+    ctrls.innerHTML='';
+    loadTeachingTasks();
+  }else{
+    ctrls.innerHTML=
+      '<select id="thView" class="inp text-sm py-1.5" onchange="setThView()"><option value="teacher">รายครู</option><option value="subject">รายวิชา</option></select>'+
+      '<label class="text-xs flex items-center gap-1 text-slate-500"><input type="checkbox" id="thPending" onchange="reRenderTeachingOverview()"> เฉพาะที่ยังไม่ครบ</label>'+
+      '<button onclick="loadTeachingOverview()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 text-xs">🔄 รีเฟรช</button>';
+    loadTeachingOverview();
+  }
+}
+// ---------- มุมมองครู ----------
+async function loadTeachingTasks(){
+  const u=state.currentUser||{};
+  document.getElementById('thHint').textContent='อัปโหลดไฟล์ PDF ตามวิชาที่สอน (ยึดตามตารางสอน) • ภาคเรียนที่ '+state.semester;
+  try{ showLoading(true);
+    const d=await GAS.call('getTeachingTasks',{teacher:u.name, semester:state.semester});
+    state.teachTasks=d; renderTeachingTasks(d);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function renderTeachingTasks(d){
+  const tot=document.getElementById('thTotals');
+  const n=d.items.length;
+  const pace=d.items.filter(x=>x.docs['กำหนดการสอน']).length;
+  const plan=d.items.filter(x=>x.docs['แผนการสอน']).length;
+  tot.innerHTML=`<span class="badge bg-slate-100 text-slate-700">${n} วิชา</span>`+
+    `<span class="badge ${pace===n&&n?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">กำหนดการสอน ${pace}/${n}</span>`+
+    `<span class="badge ${plan===n&&n?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">แผนการสอน ${plan}/${n}</span>`;
+  const area=document.getElementById('thArea');
+  if(!n){ area.innerHTML='<div class="text-center text-slate-400 py-6">ไม่พบวิชาที่สอนในตารางสอน — แอดมินต้องนำเข้าตารางสอนก่อน</div>'; return; }
+  const cell=(it,dt)=>{
+    const doc=it.docs[dt];
+    if(doc){
+      return `<div class="flex items-center gap-1 justify-center">
+        <a href="${esc(doc.fileUrl)}" target="_blank" class="badge bg-emerald-100 text-emerald-700 hover:bg-emerald-200">✓ ดูไฟล์</a>
+        <button onclick="pickTeachingFile('${esc(it.subject)}','${esc(it.classLevel)}','${dt}')" class="text-blue-500 px-1" title="อัปโหลดใหม่">🔄</button>
+        <button onclick="removeTeachingDoc('${doc.id}')" class="text-rose-500 px-1" title="ลบ">🗑️</button>
+      </div>`;
+    }
+    return `<button onclick="pickTeachingFile('${esc(it.subject)}','${esc(it.classLevel)}','${dt}')" class="btn bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 px-3 py-1 text-xs">📎 อัปโหลด PDF</button>`;
+  };
+  area.innerHTML='<table class="w-full text-sm"><thead><tr class="text-left text-slate-400 border-b">'+
+    '<th class="py-2 px-2">ชั้น</th><th class="px-2">รายวิชา</th>'+
+    '<th class="px-2 text-center">กำหนดการสอน</th><th class="px-2 text-center">แผนการสอน</th></tr></thead><tbody>'+
+    d.items.map(it=>`<tr class="border-b hover:bg-teal-50/30">
+      <td class="py-2 px-2"><span class="badge bg-teal-100 text-teal-700">${esc(it.classLevel)}</span></td>
+      <td class="px-2 font-medium text-slate-700">${esc(it.subject)}</td>
+      <td class="px-2 text-center">${cell(it,'กำหนดการสอน')}</td>
+      <td class="px-2 text-center">${cell(it,'แผนการสอน')}</td>
+    </tr>`).join('')+'</tbody></table>';
+}
+function pickTeachingFile(subject, classLevel, docType){
+  state._thTarget={subject, classLevel, docType};
+  const f=document.getElementById('thFile'); f.value=''; f.click();
+}
+async function onTeachingFile(ev){
+  const file=ev.target.files[0]; if(!file || !state._thTarget) return;
+  if(file.type.indexOf('pdf')<0){ toast('กรุณาเลือกไฟล์ PDF','error'); return; }
+  if(file.size>20*1024*1024){ toast('ไฟล์ใหญ่เกิน 20MB','error'); return; }
+  const u=state.currentUser||{};
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{ showLoading(true);
+      const d=await GAS.call('uploadTeachingDoc',{
+        teacher:u.name, subject:state._thTarget.subject, classLevel:state._thTarget.classLevel,
+        docType:state._thTarget.docType, fileName:file.name, base64:e.target.result, semester:state.semester });
+      state.teachTasks=d; renderTeachingTasks(d); toast('อัปโหลดเรียบร้อย','success');
+    }catch(err){ toast(err.message,'error'); } finally{ showLoading(false); state._thTarget=null; }
+  };
+  reader.readAsDataURL(file);
+}
+async function removeTeachingDoc(id){
+  if(!confirm('ลบไฟล์นี้?')) return;
+  const u=state.currentUser||{};
+  try{ showLoading(true);
+    const d=await GAS.call('deleteTeachingDoc',{id, teacher:u.name, semester:state.semester});
+    state.teachTasks=d; renderTeachingTasks(d); toast('ลบแล้ว','success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+// ---------- มุมมองแอดมิน/ผู้บริหาร ----------
+async function loadTeachingOverview(){
+  document.getElementById('thHint').textContent='ภาพรวมการส่งเอกสารการสอนของครูทุกคน • ภาคเรียนที่ '+state.semester;
+  try{ showLoading(true);
+    const d=await GAS.call('getTeachingOverview',{semester:state.semester});
+    renderTeachingOverview(d);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function setThView(){ reRenderTeachingOverview(); }
+function reRenderTeachingOverview(){ if(state.thOv) renderTeachingOverview(state.thOv); }
+function renderTeachingOverview(d){
+  state.thOv=d;
+  const T=d.totals;
+  const onlyPending = (document.getElementById('thPending')||{}).checked;
+  const view = (document.getElementById('thView')||{}).value || 'teacher';
+  // ----- แผงสรุปจำนวน -----
+  document.getElementById('thTotals').innerHTML=
+    `<span class="badge bg-slate-100 text-slate-700">ครู ${T.teachers} คน</span>`+
+    `<span class="badge bg-emerald-100 text-emerald-700">ส่งครบทุกอย่าง ${T.teachersComplete} คน</span>`+
+    `<span class="badge bg-rose-100 text-rose-700">ยังไม่ครบ ${T.teachersIncomplete} คน</span>`+
+    `<span class="badge bg-teal-100 text-teal-700">กำหนดการสอน: ส่งครบ ${T.paceTeachersDone} • ค้าง ${T.teachers-T.paceTeachersDone}</span>`+
+    `<span class="badge bg-violet-100 text-violet-700">แผนการสอน: ส่งครบ ${T.planTeachersDone} • ค้าง ${T.teachers-T.planTeachersDone}</span>`;
+  const area=document.getElementById('thArea');
+  if(!d.teachers.length){ area.innerHTML='<div class="text-center text-slate-400 py-6">ยังไม่มีข้อมูลตารางสอน</div>'; return; }
+
+  if(view==='subject'){
+    // ----- มุมมองรายวิชา: วิชาไหน ครูคนไหน ส่งแล้ว/ยังไม่ส่ง -----
+    let subs=d.subjects;
+    area.innerHTML=subs.map((su,idx)=>{
+      let ts=su.teachers;
+      const paceN=ts.filter(t=>t.pace).length, planN=ts.filter(t=>t.plan).length, n=ts.length;
+      if(onlyPending) ts=ts.filter(t=>!t.pace || !t.plan);
+      if(onlyPending && !ts.length) return '';
+      const rows=ts.map(t=>{
+        const cP = t.pace?`<a href="${esc(t.paceUrl)}" target="_blank" class="badge bg-emerald-100 text-emerald-700">✓ ดู</a>`:'<span class="badge bg-rose-50 text-rose-500">ยังไม่ส่ง</span>';
+        const cL = t.plan?`<a href="${esc(t.planUrl)}" target="_blank" class="badge bg-emerald-100 text-emerald-700">✓ ดู</a>`:'<span class="badge bg-rose-50 text-rose-500">ยังไม่ส่ง</span>';
+        return `<tr class="border-b"><td class="py-1 px-2">${esc(t.teacher)}</td><td class="px-2 text-center">${cP}</td><td class="px-2 text-center">${cL}</td></tr>`;
+      }).join('');
+      return `<details class="border-b border-slate-100 py-2" ${idx===0?'open':''}>
+        <summary class="cursor-pointer flex flex-wrap items-center gap-2 font-medium text-slate-700">
+          <span class="badge bg-teal-100 text-teal-700">${esc(su.classLevel)}</span><span>${esc(su.subject)}</span>
+          <span class="badge ${paceN===n?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">กำหนดการ ${paceN}/${n}</span>
+          <span class="badge ${planN===n?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">แผน ${planN}/${n}</span>
+        </summary>
+        <div class="overflow-x-auto mt-2"><table class="w-full text-xs"><thead><tr class="text-left text-slate-400 border-b"><th class="py-1 px-2">ครูผู้รับผิดชอบ</th><th class="px-2 text-center">กำหนดการสอน</th><th class="px-2 text-center">แผนการสอน</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </details>`;
+    }).join('') || '<div class="text-center text-emerald-600 py-6">🎉 ทุกวิชาส่งครบแล้ว</div>';
+    return;
+  }
+
+  // ----- มุมมองรายครู -----
+  let teachers = onlyPending ? d.teachers.filter(t=>!t.complete) : d.teachers;
+  if(!teachers.length){ area.innerHTML='<div class="text-center text-emerald-600 py-6">🎉 ครูทุกคนส่งครบแล้ว</div>'; return; }
+  area.innerHTML=teachers.map((t,idx)=>{
+    const rows=t.items.map(it=>{
+      const c=(dt)=>{ const doc=it.docs[dt]; return doc?`<a href="${esc(doc.fileUrl)}" target="_blank" class="badge bg-emerald-100 text-emerald-700">✓ ดู</a>`:'<span class="badge bg-rose-50 text-rose-500">ยังไม่ส่ง</span>'; };
+      return `<tr class="border-b"><td class="py-1 px-2"><span class="badge bg-teal-50 text-teal-700">${esc(it.classLevel)}</span></td><td class="px-2">${esc(it.subject)}</td><td class="px-2 text-center">${c('กำหนดการสอน')}</td><td class="px-2 text-center">${c('แผนการสอน')}</td></tr>`;
+    }).join('');
+    return `<details class="border-b border-slate-100 py-2" ${idx===0?'open':''}>
+      <summary class="cursor-pointer flex flex-wrap items-center gap-2 font-medium text-slate-700">
+        <span>👩‍🏫 ${esc(t.teacher)}</span>
+        ${t.complete?'<span class="badge bg-emerald-100 text-emerald-700">ครบแล้ว</span>':'<span class="badge bg-rose-100 text-rose-700">ยังไม่ครบ</span>'}
+        <span class="badge ${t.paceComplete?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">กำหนดการ ${t.paceDone}/${t.total}</span>
+        <span class="badge ${t.planComplete?'bg-emerald-100 text-emerald-700':'bg-amber-100 text-amber-700'}">แผน ${t.planDone}/${t.total}</span>
+      </summary>
+      <div class="overflow-x-auto mt-2"><table class="w-full text-xs"><thead><tr class="text-left text-slate-400 border-b"><th class="py-1 px-2">ชั้น</th><th class="px-2">รายวิชา</th><th class="px-2 text-center">กำหนดการสอน</th><th class="px-2 text-center">แผนการสอน</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </details>`;
   }).join('');
 }
 
