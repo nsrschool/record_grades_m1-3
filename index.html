@@ -193,8 +193,6 @@
     <span class="nav-cat" data-role="admin">⚙️ ผู้ดูแลระบบ</span>
     <button data-tab="admin"    data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🛠️ แอดมิน</button>
     <button data-tab="settings" data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">⚙️ ตั้งค่าระบบ</button>
-    <span class="nav-cat" data-role="all">📖</span>
-    <button data-tab="manual"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📖 คู่มือ</button>
   </div>
 </nav>
 
@@ -792,6 +790,7 @@
         <div class="flex flex-wrap gap-2">
           <button onclick="document.getElementById('scheduleFile').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 เลือกไฟล์ตารางสอน</button>
           <button onclick="syncSubjects()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">🔄 สร้างรายวิชาจากตารางสอน</button>
+          <button onclick="cleanupSubjects()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-2 text-xs">🧹 ล้างวิชาซ้ำ</button>
           <input type="file" id="scheduleFile" accept=".xlsx,.xls" class="hidden" onchange="importScheduleFile(event)">
         </div>
         <div id="scheduleSummary" class="text-xs text-slate-500 mt-3"></div>
@@ -1619,9 +1618,11 @@ function fillScoreSubjects(){
     subs=subs.filter(s=>taught.has(s.name+'|'+classDigit(s.classLevel)));
   }
   subs.sort((a,b)=>String(a.classLevel).localeCompare(String(b.classLevel))||String(a.code).localeCompare(String(b.code)));
-  // แยกเป็นรายห้อง (เช่น คณิตศาสตร์ ม.1/1, ม.1/2)
-  const opts=[];
+  // แยกเป็นรายห้อง (เช่น คณิตศาสตร์ ม.1/1, ม.1/2) + กันรายการซ้ำ
+  const opts=[]; const seenOpt=new Set();
   subs.forEach(s=>gradeRoomsFor(s).forEach(room=>{
+    const dispKey=(s.name||'')+'|'+room;
+    if(seenOpt.has(dispKey)) return; seenOpt.add(dispKey);
     opts.push(`<option value="${s.ID}|${esc(room)}">[${esc(room)}] ${esc(s.code)} ${esc(s.name)}</option>`);
   }));
   sel.innerHTML='<option value="">— เลือกรายวิชา —</option>'+opts.join('');
@@ -2310,8 +2311,8 @@ async function submitChangePw(){
 // สิทธิ์การเข้าถึงเมนูตามบทบาท ('*' = ทุกเมนู)
 const TAB_ACCESS = {
   admin: '*',
-  teacher: ['home','schedule','scores','ability','teaching','report','summary68','attendance','calendar','risk','manual'],
-  director:['home','schedule','overview','teaching','report','summary68','stats','risk','calendar','manual']
+  teacher: ['home','schedule','scores','ability','teaching','report','summary68','attendance','calendar','risk'],
+  director:['home','schedule','overview','teaching','report','summary68','stats','risk','calendar']
 };
 function roleLabel(role){ return role==='admin'?'แอดมิน':role==='director'?'ผู้บริหาร':'ครู'; }
 function applyRole(){
@@ -2411,7 +2412,15 @@ async function syncSubjects(){
   try{ showLoading(true);
     const res=await GAS.call('syncSubjectsFromSchedule');
     await loadSubjects();
-    toast('สร้างรายวิชาจากตารางสอนแล้ว ('+res.added+' วิชาใหม่)');
+    toast('สร้างรายวิชาจากตารางสอนแล้ว ('+res.added+' วิชาใหม่'+(res.removed?', ล้างซ้ำ '+res.removed:'')+')');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function cleanupSubjects(){
+  if(!confirm('ล้างรายวิชาที่ซ้ำกัน (ชื่อ+ชั้นเดียวกัน)? ระบบจะเก็บไว้วิชาละ 1 รายการ และย้ายคะแนน/เกรดที่บันทึกไว้ไปยังวิชาที่เก็บ')) return;
+  try{ showLoading(true);
+    const res=await GAS.call('dedupeSubjects');
+    await loadSubjects();
+    toast(res.removed?('ล้างวิชาซ้ำแล้ว '+res.removed+' รายการ'):'ไม่พบวิชาซ้ำ','success');
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 async function loadSchedule(){
