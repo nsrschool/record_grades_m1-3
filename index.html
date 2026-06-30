@@ -16,19 +16,26 @@
 
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- เร่งการเชื่อมต่อปลายทางที่ใช้บ่อย -->
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<!-- ไลบรารีที่ใช้เฉพาะบางหน้า → defer ไม่ให้บล็อกการเรนเดอร์หน้าแรก -->
 <!-- SheetJS (นำเข้า/ส่งออก Excel) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- Chart.js (กราฟ Dashboard) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- html2canvas (แคปภาพสรุป) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- pdf.js (อ่านข้อความ) + pdf-lib (ตัดแยกหน้า) สำหรับแยกคำอธิบายจากไฟล์หลักสูตร -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
-<!-- ฟอนต์ Sarabun -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>window.addEventListener('load',function(){if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';});</script>
+<!-- ฟอนต์ Sarabun (ลดน้ำหนักที่โหลดเหลือเท่าที่ใช้) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+
 
 <style>
   :root{
@@ -1276,17 +1283,23 @@ async function bootstrap(){
   });
   try{
     showLoading(true);
-    const data=await GAS.call('getBootstrap');
+    // เรียกข้อมูลตั้งต้นทั้งหมดพร้อมกันในจังหวะเดียว (เดิมเรียกทีละอันทำให้ช้า)
+    const [data, , , cal, locks] = await Promise.all([
+      GAS.call('getBootstrap'),
+      loadStudents(),
+      loadSubjects(),
+      GAS.call('getCalendar').catch(()=>[]),
+      GAS.call('getLocks').catch(()=>[])
+    ]);
     state.settings=data.settings||{};
     state.mapping=data.mapping||[];
     state.semester=String(state.settings.currentSemester||'1');
+    state.calendar=cal||[];
+    state.locks=locks||[];
     var gsel=document.getElementById('globalSem'); if(gsel) gsel.value=state.semester;
     applySettingsToUI();
     applyFavicon();
     setStatus(true);
-    await Promise.all([loadStudents(), loadSubjects()]);
-    try{ state.calendar=await GAS.call('getCalendar'); }catch(e){ state.calendar=[]; }
-    try{ state.locks=await GAS.call('getLocks'); }catch(e){ state.locks=[]; }
     renderMapping();
     await seedDemoIfEmpty();
     renderHome();
@@ -2112,12 +2125,22 @@ async function exportMIS(){
    หน้าแรก (HOME)
    ============================================================ */
 function makeChart(id, config){
-  if(typeof Chart==='undefined') return;
+  if(typeof Chart==='undefined'){
+    // Chart.js ถูก defer ไว้ — ถ้ายังไม่พร้อม เก็บไว้ก่อนแล้ววาดเมื่อโหลดเสร็จ
+    (window._pendingCharts=window._pendingCharts||{})[id]=config;
+    return;
+  }
   if(!state.charts) state.charts={};
   if(state.charts[id]) state.charts[id].destroy();
   const el=document.getElementById(id); if(!el) return;
   state.charts[id]=new Chart(el, config);
 }
+window.addEventListener('load', function(){
+  if(typeof Chart!=='undefined' && window._pendingCharts){
+    var pend=window._pendingCharts; window._pendingCharts=null;
+    Object.keys(pend).forEach(function(id){ try{ makeChart(id, pend[id]); }catch(e){} });
+  }
+});
 async function renderHome(){
   const s=state.settings;
   document.getElementById('homeSchool').textContent=s.schoolName||'';
@@ -2251,10 +2274,11 @@ async function doLogin(){
     const u=await GAS.call('login',{name, pin});
     state.currentUser=u;
     try{ localStorage.setItem('kps_session_m13', JSON.stringify({id:u.id||'', name:u.name, role:u.role, homeroomClass:u.homeroomClass||''})); }catch(e){}
-    state.mySchedule = (u.role!=='admin') ? await GAS.call('getSchedule',{teacher:u.name}) : [];
     const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
     applyRole();
-    await bootstrap();
+    const schedP=(u.role!=='admin') ? GAS.call('getSchedule',{teacher:u.name}) : Promise.resolve([]);
+    const [sched]=await Promise.all([schedP, bootstrap()]);
+    state.mySchedule=sched||[];
     switchTab('home');
   }catch(e){ toast(e.message,'error'); }
   finally{ showLoading(false); }
@@ -2274,10 +2298,12 @@ async function initApp(){
     try{
       showLoading(true);
       state.currentUser=saved;
-      state.mySchedule = (saved.role!=='admin') ? await GAS.call('getSchedule',{teacher:saved.name}) : [];
       const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
       applyRole();
-      await bootstrap();
+      // โหลดตารางสอนของครูพร้อมกับ bootstrap (เดิมรอทีละขั้นทำให้ช้า)
+      const schedP=(saved.role!=='admin') ? GAS.call('getSchedule',{teacher:saved.name}) : Promise.resolve([]);
+      const [sched]=await Promise.all([schedP, bootstrap()]);
+      state.mySchedule=sched||[];
       switchTab('home');
       return;
     }catch(e){ /* ถ้ากู้สถานะไม่ได้ ค่อยให้ล็อกอินใหม่ */ }
