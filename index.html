@@ -436,9 +436,22 @@
     <div id="att-flag" class="attpane hidden">
       <div class="card p-4 mb-4">
         <div class="flex flex-wrap gap-3 items-end">
-          <div><label class="text-xs text-slate-500">วันที่</label><input type="date" id="att_flag_date" class="inp mt-1"></div>
-          <div><label class="text-xs text-slate-500">ชั้น/ห้อง</label><select id="att_flag_class" class="inp mt-1"></select></div>
-          <button onclick="loadFlag()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 text-sm">โหลดรายชื่อ</button>
+          <div><label class="text-xs text-slate-500">วันที่</label><input type="date" id="att_flag_date" class="inp mt-1" onchange="onFlagDateChange()"></div>
+          <div><label class="text-xs text-slate-500">ชั้น/ห้อง</label><select id="att_flag_class" class="inp mt-1" onchange="onFlagClassChange()"></select></div>
+          <span id="flagCheckedBadge" class="text-xs"></span>
+        </div>
+        <div class="mt-3">
+          <div class="flex items-center gap-2 mb-2">
+            <button onclick="flagMonthShift(-1)" class="btn bg-slate-100 hover:bg-slate-200 text-slate-600 w-8 h-8 rounded-lg">‹</button>
+            <span id="flagMonthLabel" class="text-sm font-medium text-teal-700"></span>
+            <button onclick="flagMonthShift(1)" class="btn bg-slate-100 hover:bg-slate-200 text-slate-600 w-8 h-8 rounded-lg">›</button>
+          </div>
+          <div id="flagStrip" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 mt-2">
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded bg-emerald-500"></span> เช็คแล้ว</span>
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded border border-slate-300 bg-white"></span> ยังไม่เช็ค</span>
+            <span class="text-rose-500">เลขสีแดง = วันหยุด</span>
+          </div>
         </div>
       </div>
       <div id="flagListWrap" class="card p-4 hidden">
@@ -446,7 +459,7 @@
         <div id="flagList"></div>
         <div class="text-right mt-3"><button onclick="saveFlag()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-sm">💾 บันทึกเช็คชื่อหน้าเสาธง</button></div>
       </div>
-      <div id="flagEmpty" class="card p-8 text-center text-slate-400">เลือกวันที่และห้อง แล้วกดโหลดรายชื่อ</div>
+      <div id="flagEmpty" class="card p-8 text-center text-slate-400">เลือกวันที่จากปฏิทินด้านบน ระบบจะแสดงรายชื่อให้ทันที</div>
     </div>
 
     <!-- att: period -->
@@ -2540,6 +2553,9 @@ async function initAttendance(){
     try{ state.schedule=await GAS.call('getSchedule',{}); }catch(e){}
   }
   switchAtt('flag');
+  state.flagMonth=(val('att_flag_date')||todayISO()).slice(0,7);
+  await loadFlagStrip();
+  loadFlag();   // แสดงรายชื่อวันที่เลือกทันที ไม่ต้องกดปุ่ม
 }
 
 function fillFlagClasses(){
@@ -2568,19 +2584,85 @@ function attSummary(students, draft){
   return ATT_STATUSES.map(([st])=>st+' '+c[st]).join(' • ');
 }
 
+/* ---- แถบปฏิทินหน้าเสาธง (คลิกวันที่ = โหลดรายชื่อทันที) ---- */
+state.flagMonth=null; state.flagCheckedSet={};
+async function loadFlagStrip(){
+  const cls=document.getElementById('att_flag_class').value;
+  const month=state.flagMonth || (val('att_flag_date')||todayISO()).slice(0,7);
+  state.flagMonth=month;
+  state.flagCheckedSet={};
+  if(cls){
+    try{
+      const dates=await GAS.call('getFlagCheckedDates',{classLevel:cls, month});
+      (dates||[]).forEach(d=>state.flagCheckedSet[d]=true);
+    }catch(e){}
+  }
+  renderFlagStrip();
+}
+function renderFlagStrip(){
+  const strip=document.getElementById('flagStrip'); if(!strip) return;
+  const month=state.flagMonth; // 'YYYY-MM'
+  const [y,m]=month.split('-').map(Number);
+  const days=new Date(y, m, 0).getDate();
+  const sel=val('att_flag_date');
+  const TH_MONTHS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('flagMonthLabel').textContent=TH_MONTHS[m-1]+' '+(y+543);
+  let holidayCount=0; let html='';
+  for(let d=1; d<=days; d++){
+    const ymd=month+'-'+String(d).padStart(2,'0');
+    const isHoliday=!isSchoolDay(ymd);
+    const checked=!!state.flagCheckedSet[ymd];
+    const isSel=(ymd===sel);
+    if(isHoliday) holidayCount++;
+    let cls='w-9 h-9 rounded-lg text-sm flex items-center justify-center border transition ';
+    if(isSel) cls+='ring-2 ring-teal-500 ';
+    if(checked) cls+='bg-emerald-500 text-white border-emerald-500 font-semibold';
+    else if(isHoliday) cls+='bg-rose-50 text-rose-500 border-rose-200 font-semibold';
+    else cls+='bg-white text-slate-600 border-slate-300 hover:border-teal-400';
+    const title=isHoliday?(schoolDayReason(ymd)||'วันหยุด'):(checked?'เช็คแล้ว':'ยังไม่เช็ค');
+    html+=`<button onclick="setFlagDate('${ymd}')" title="${esc(title)}" class="${cls}">${d}</button>`;
+  }
+  strip.innerHTML=html;
+}
+function setFlagDate(ymd){
+  document.getElementById('att_flag_date').value=ymd;
+  const mo=ymd.slice(0,7);
+  if(mo!==state.flagMonth){ state.flagMonth=mo; loadFlagStrip(); }
+  else renderFlagStrip();
+  loadFlag();
+}
+function onFlagDateChange(){
+  const mo=(val('att_flag_date')||'').slice(0,7);
+  if(mo && mo!==state.flagMonth){ state.flagMonth=mo; loadFlagStrip(); }
+  else renderFlagStrip();
+  loadFlag();
+}
+function onFlagClassChange(){ loadFlagStrip(); loadFlag(); }
+function flagMonthShift(delta){
+  const [y,m]=state.flagMonth.split('-').map(Number);
+  const dt=new Date(y, m-1+delta, 1);
+  state.flagMonth=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+  loadFlagStrip();
+}
+
 /* ---- หน้าเสาธง ---- */
 async function loadFlag(){
   const date=val('att_flag_date'), cls=document.getElementById('att_flag_class').value;
-  if(!date||!cls){ toast('เลือกวันที่และห้อง','error'); return; }
+  const badge=document.getElementById('flagCheckedBadge');
+  if(!date||!cls){ if(badge) badge.innerHTML=''; return; }
   if(!isSchoolDay(date)){
     document.getElementById('flagListWrap').classList.add('hidden');
     const em=document.getElementById('flagEmpty'); em.classList.remove('hidden');
     em.innerHTML='🚫 ไม่ใช่วันเปิดเรียนตามปฏิทินวิชาการ'+(schoolDayReason(date)?' — '+esc(schoolDayReason(date)):'')+'<br><span class="text-xs">ตั้ง “สอนชดเชย” ในปฏิทินวิชาการหากต้องการเช็คชื่อวันนี้</span>';
-    toast('วันนี้ไม่ใช่วันเปิดเรียน','error'); return;
+    if(badge) badge.innerHTML='<span class="px-2 py-1 rounded-full bg-rose-100 text-rose-600">วันหยุด</span>';
+    return;
   }
   try{ showLoading(true);
     const existing=await GAS.call('getAttendance',{date, classLevel:cls, period:0});
     const exMap={}; existing.forEach(r=>exMap[r.studentID]=r.status);
+    if(badge) badge.innerHTML = existing.length
+      ? '<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">✅ เช็คชื่อแล้ว</span>'
+      : '<span class="px-2 py-1 rounded-full bg-slate-100 text-slate-500">◻️ ยังไม่เช็ค</span>';
     state.flagStudents=state.students.filter(s=>s.classLevel===cls).sort(byNumber);
     state.flagDraft={}; state.flagStudents.forEach(s=>state.flagDraft[s.ID]=exMap[s.ID]||'มา');
     renderFlagList();
@@ -2601,6 +2683,10 @@ async function saveFlag(){
   try{ showLoading(true);
     await GAS.call('saveAttendance',{date, classLevel:cls, period:0, checkedBy:state.currentUser.name, records});
     toast('บันทึกเช็คชื่อหน้าเสาธงแล้ว');
+    // อัปเดตแถบปฏิทิน: วันนี้กลายเป็น "เช็คแล้ว" (เขียว) ทันที
+    state.flagCheckedSet[date]=true; renderFlagStrip();
+    const badge=document.getElementById('flagCheckedBadge');
+    if(badge) badge.innerHTML='<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">✅ เช็คชื่อแล้ว</span>';
     showAttResult({classLevel:cls, date, subtitle:'', students:state.flagStudents, draft:state.flagDraft});
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
