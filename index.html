@@ -4134,6 +4134,7 @@ function ovSwitch(sub){
   if(sub==='class'){ loadOverview(); return; }
   if(sub==='att'){
     ctrls.innerHTML=
+      '<div><label class="text-xs text-slate-500">ประเภท</label><select id="ovAttKind" class="inp mt-1 text-sm" onchange="loadOvAtt()"><option value="flag">🚩 หน้าเสาธง</option><option value="period">🕐 รายคาบ</option></select></div>'+
       '<div><label class="text-xs text-slate-500">ช่วงเวลา</label><select id="ovAttRange" class="inp mt-1 text-sm" onchange="onOvAttRange()"><option value="day">รายวัน</option><option value="month">รายเดือน</option><option value="semester">รายภาคเรียน</option><option value="year">รายปีการศึกษา</option></select></div>'+
       '<div id="ovAttDateWrap"><label class="text-xs text-slate-500">วันที่</label><input type="date" id="ovAttDate" class="inp mt-1 text-sm" onchange="loadOvAtt()"></div>'+
       '<div id="ovAttMonthWrap" class="hidden"><label class="text-xs text-slate-500">เดือน</label><input type="month" id="ovAttMonth" class="inp mt-1 text-sm" onchange="loadOvAtt()"></div>'+
@@ -4162,13 +4163,79 @@ async function loadOvAtt(){
   const range=document.getElementById('ovAttRange').value;
   try{ showLoading(true);
     const d=await GAS.call('getExecAttendance',{range,
+      kind:(document.getElementById('ovAttKind')||{}).value||'flag',
       date:document.getElementById('ovAttDate').value,
       month:document.getElementById('ovAttMonth').value,
       semester:state.semester});
     renderOvAtt(d);
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
+function renderOvAttPeriod(d){
+  const tot=document.getElementById('ovTotals');
+  const area=document.getElementById('ovArea');
+  if(d.needDates){
+    tot.innerHTML='';
+    area.innerHTML='<div class="card p-6 text-center text-amber-600 text-sm">⚠️ ยังไม่ได้ตั้งช่วงวันที่ภาคเรียน (sem1Start/End, sem2Start/End) ในชีต Settings — จำเป็นสำหรับมุมมองรายภาค/รายปี</div>';
+    return;
+  }
+  if(d.range==='day'){
+    const full=d.rooms.filter(r=>r.exp>0&&r.done>=r.exp).length;
+    const withSched=d.rooms.filter(r=>r.exp>0).length;
+    tot.innerHTML=`<span class="badge bg-slate-100 text-slate-700">🕐 รายคาบ • ${esc(d.date)}</span>`+
+      (d.isSchoolDay
+        ? `<span class="badge bg-emerald-100 text-emerald-700">เช็คครบทุกคาบ ${full}/${withSched} ห้อง</span><span class="badge bg-amber-100 text-amber-700">คาบที่เช็ค ${d.rooms.reduce((a,r)=>a+r.done,0)}/${d.rooms.reduce((a,r)=>a+r.exp,0)}</span>`
+        : `<span class="badge bg-rose-100 text-rose-600">วันหยุด${d.holidayTitle?': '+esc(d.holidayTitle):''}</span>`);
+    let head='';
+    for(let q=1;q<=d.maxPeriod;q++) head+=`<th class="px-1 text-center text-slate-400">คาบ ${q}</th>`;
+    area.innerHTML='<div class="card p-4 overflow-x-auto"><table class="w-full text-sm" style="min-width:640px"><thead><tr class="text-left text-slate-400 border-b"><th class="py-2 px-2">ห้อง</th>'+head+'<th class="px-2 text-center">สรุป</th></tr></thead><tbody>'+
+      d.rooms.map(r=>{
+        const cells=r.slots.map(sl=>{
+          if(!sl.scheduled && !sl.checked) return '<td class="px-1 text-center text-slate-200">·</td>';
+          if(sl.checked) return `<td class="px-1 text-center"><span class="badge ${sl.scheduled?'bg-emerald-100 text-emerald-700':'bg-sky-100 text-sky-600'}" title="มา ${sl.present}/${r.students}">✓ ${sl.present}</span></td>`;
+          return '<td class="px-1 text-center"><span class="badge bg-rose-100 text-rose-600">✗</span></td>';
+        }).join('');
+        return `<tr class="border-b ${r.exp>0&&r.done<r.exp?'bg-rose-50/30':''}">
+          <td class="py-2 px-2 font-medium text-slate-700">${esc(r.room)}</td>${cells}
+          <td class="px-2 text-center text-xs ${r.exp>0&&r.done>=r.exp?'text-emerald-600 font-semibold':'text-amber-600'}">${r.done}/${r.exp}</td></tr>`;
+      }).join('')+'</tbody></table>'+
+      '<p class="text-[11px] text-slate-400 mt-2">✓ เช็คแล้ว (ตัวเลข = มา+สาย) • ✗ = มีสอนตามตารางแต่ยังไม่เช็ค • · = ไม่มีคาบสอน • สีฟ้า = เช็คนอกตาราง</p></div>';
+    return;
+  }
+  if(d.range==='month'){
+    const today=todayISO();
+    tot.innerHTML=`<span class="badge bg-slate-100 text-slate-700">🕐 รายคาบ • เดือน ${esc(d.month)}</span>`;
+    const head=d.days.map(dd=>`<th class="px-0.5 text-center ${dd.school?'text-slate-500':'text-rose-400'}" title="${dd.iso}">${dd.d}</th>`).join('');
+    const rows=d.rooms.map(r=>{
+      let sd=0, se=0;
+      const cells=d.days.map((dd,ix)=>{
+        const c=r.cells[ix];
+        if(!dd.school || !c.e) return '<td class="px-0.5 text-center text-rose-200">·</td>';
+        if(dd.iso>today) return '<td class="px-0.5 text-center text-slate-200">·</td>';
+        sd+=c.dn; se+=c.e;
+        const cl = c.dn>=c.e?'bg-emerald-100 text-emerald-700':(c.dn>0?'bg-amber-100 text-amber-700':'bg-rose-50 text-rose-500 border border-rose-200');
+        return `<td class="px-0.5 text-center"><span class="inline-block rounded text-[10px] px-1 ${cl}">${c.dn}/${c.e}</span></td>`;
+      }).join('');
+      const pct=se?Math.round(sd/se*100):0;
+      return `<tr class="border-b"><td class="py-1 px-2 font-medium text-slate-700 whitespace-nowrap">${esc(r.room)}</td>${cells}<td class="px-2 text-center text-xs ${pct>=90?'text-emerald-600':'text-amber-600'}">${sd}/${se}</td></tr>`;
+    }).join('');
+    area.innerHTML='<div class="card p-4 overflow-x-auto"><table class="text-xs" style="min-width:1100px"><thead><tr class="border-b"><th class="px-2 text-left text-slate-400">ห้อง</th>'+head+'<th class="px-2 text-slate-400">รวม</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<p class="text-[11px] text-slate-400 mt-2">ตัวเลข = คาบที่เช็ค/คาบตามตารางสอน • เขียว = ครบ • เหลือง = บางคาบ • แดง = ไม่เช็คเลย • · = วันหยุด/ยังไม่ถึง</p></div>';
+    return;
+  }
+  // semester / year
+  tot.innerHTML=`<span class="badge bg-slate-100 text-slate-700">🕐 รายคาบ • ${d.range==='semester'?('ภาคเรียนที่ '+esc(d.semester)):'ทั้งปีการศึกษา'} (${esc(d.from)} → ${esc(d.to)})</span>`+
+    `<span class="badge bg-sky-100 text-sky-700">วันเปิดเรียนถึงวันนี้ ${d.schoolDays} วัน</span>`;
+  area.innerHTML='<div class="card p-4 overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-400 border-b"><th class="py-2 px-2">ห้อง</th><th class="px-2 text-center">คาบตามตาราง</th><th class="px-2 text-center">เช็คแล้ว</th><th class="px-2 text-center">คิดเป็น</th><th class="px-2" style="min-width:140px"></th></tr></thead><tbody>'+
+    d.rooms.map(r=>{
+      const col=r.pct>=90?'bg-emerald-500':r.pct>=70?'bg-amber-500':'bg-rose-500';
+      return `<tr class="border-b"><td class="py-2 px-2 font-medium text-slate-700">${esc(r.room)}</td>
+        <td class="px-2 text-center">${r.expected}</td><td class="px-2 text-center">${r.checked}</td>
+        <td class="px-2 text-center font-medium">${r.pct}%</td>
+        <td class="px-2"><div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div class="${col} h-full" style="width:${r.pct}%"></div></div></td></tr>`;
+    }).join('')+'</tbody></table></div>';
+}
 function renderOvAtt(d){
+  if(d.kind==='period'){ renderOvAttPeriod(d); return; }
   const tot=document.getElementById('ovTotals');
   const area=document.getElementById('ovArea');
   if(d.needDates){
