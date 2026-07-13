@@ -4184,10 +4184,21 @@ async function saveSchSlot(){
       subject:document.getElementById('schm_subject').value.trim(),
       teacher:document.getElementById('schm_teacher').value });
     state.schAll=res.rows;
-    state._schTeachers=[...new Set(res.rows.map(r=>String(r.teacher||'').trim()).filter(Boolean))].sort();
+    state._schTeachers=schTeacherList(res.rows);
     state._schClasses=[...new Set(res.rows.map(r=>String(r.classLevel||'').trim()).filter(Boolean))].sort();
     document.getElementById('schModal').classList.add('hidden');
     if(res.addedSubject){ try{ await loadSubjects(); }catch(e){} }
+    // สร้างตัวเลือก dropdown ใหม่ (กันครู/ห้องที่เพิ่งเพิ่ม ไม่มีในรายการ) โดยคงตัวที่เลือกไว้
+    const pick=document.getElementById('schPick');
+    if(pick){
+      const curKey=pick.value;
+      const list=state.schMode==='teacher'?state._schTeachers:state._schClasses;
+      pick.innerHTML=list.map(x=>`<option>${esc(x)}</option>`).join('');
+      const match=state.schMode==='teacher'
+        ? list.find(x=>tCoreFE(x)===tCoreFE(curKey))
+        : (list.includes(curKey)?curKey:null);
+      if(match) pick.value=match;
+    }
     renderSchedulePick();
     toast('บันทึกคาบสอนแล้ว','success');
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
@@ -4218,7 +4229,7 @@ async function initSchedule(){
   try{ showLoading(true);
     if(!state.schAll) state.schAll=await GAS.call('getSchedule',{});
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
-  const teachers=[...new Set((state.schAll||[]).map(r=>String(r.teacher||'').trim()).filter(Boolean))].sort();
+  const teachers=schTeacherList(state.schAll);
   const classes=[...new Set((state.schAll||[]).map(r=>String(r.classLevel||'').trim()).filter(Boolean))].sort();
   ctrls.innerHTML=
     '<select id="schModeSel" class="inp text-sm py-1.5" onchange="onSchMode()">'+
@@ -4240,11 +4251,25 @@ function onSchMode(){
   pick.innerHTML=list.map(x=>`<option>${esc(x)}</option>`).join('') || '<option value="">— ไม่มีข้อมูล —</option>';
   renderSchedulePick();
 }
+// ชื่อแรกของครู (ตัดคำนำหน้า) — ใช้จับคู่ชื่อสั้นในตารางสอนกับชื่อเต็มในชีต Teachers
+function tCoreFE(n){
+  return String(n||'').replace(/\s+/g,' ').trim()
+    .replace(/^(นางสาว|นาง|นาย|ครู|ว่าที่ ?ร\.?ต\.?|ว่าที่|ดร\.)/,'').trim().split(' ')[0];
+}
+function schTeacherList(rows){
+  const seen={}; const out=[];
+  (rows||[]).forEach(r=>{
+    const t=String(r.teacher||'').trim(); if(!t) return;
+    const c=tCoreFE(t); if(seen[c]) return; seen[c]=1; out.push(t);
+  });
+  return out.sort();
+}
 function renderSchedulePick(){
   const key=document.getElementById('schPick').value;
   const hint=document.getElementById('schHint');
   if(state.schMode==='teacher'){
-    const rows=(state.schAll||[]).filter(r=>String(r.teacher).trim()===key);
+    const kc=tCoreFE(key);
+    const rows=(state.schAll||[]).filter(r=>tCoreFE(r.teacher)===kc);
     hint.textContent='ตารางสอนของ '+esc(key);
     renderScheduleGrid(rows,'teacher');
   }else{
