@@ -194,6 +194,7 @@
     <button data-tab="approve"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🔏 ส่ง/อนุมัติผล</button>
     <button data-tab="supervise" data-role="all"  class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🧭 นิเทศชั้นเรียน</button>
     <button data-tab="docs"     data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📁 เอกสาร/แบบฟอร์ม</button>
+    <button data-tab="assign"   data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">👩‍🏫 จัดครูผู้สอน</button>
     <button data-tab="report"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🖨️ พิมพ์ใบรายงาน</button>
     <button data-tab="summary68" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📋 สรุปผลการเรียน</button>
     <button data-tab="stats"    data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📊 รายงานสรุป</button>
@@ -364,6 +365,42 @@
       <div id="memo_list" class="mt-3 text-sm text-slate-400">เลือกห้องแล้วกดค้นหา</div>
     </div>
   </section>
+
+  <!-- ---------- TAB: ASSIGN (จัดครูผู้สอน) ---------- -->
+  <section id="tab-assign" class="tabpane hidden">
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="font-bold text-teal-700">👩‍🏫 จัดครูผู้สอน (รายวิชา × ห้อง)</h3>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="syncAssign()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 text-xs">🔄 ดึงจากตารางสอน</button>
+          <button onclick="healthCheck()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-1.5 text-xs">🩺 ตรวจสุขภาพรายวิชา</button>
+          <button onclick="saveAssignAll()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 text-xs">💾 บันทึกทั้งหมด</button>
+        </div>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2">กำหนดว่าวิชาไหน ห้องไหน ครูคนใดสอน — มีผลต่อสิทธิ์กรอกคะแนน/เช็คชื่อรายคาบของครู • ค่าเริ่มต้นดึงจากตารางสอนอัตโนมัติ • ปุ่ม "ทั้งชั้น" = ใช้ครูคนเดียวกันทุกห้องของวิชานั้น</p>
+      <div id="asgHealth" class="hidden mt-3 text-xs"></div>
+    </div>
+    <div id="asgArea" class="card p-4 text-sm text-slate-400">กำลังโหลด…</div>
+  </section>
+  <!-- Modal แก้ไขคาบสอน -->
+  <div id="schModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-md shadow-xl">
+      <h3 class="font-bold text-teal-700 mb-3" id="schmTitle">แก้ไขคาบสอน</h3>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs text-slate-500">วัน</label><select id="schm_day" class="inp mt-1"></select></div>
+        <div><label class="text-xs text-slate-500">คาบ</label><select id="schm_period" class="inp mt-1"></select></div>
+        <div><label class="text-xs text-slate-500">ห้อง</label><select id="schm_class" class="inp mt-1"></select></div>
+        <div><label class="text-xs text-slate-500">ครูผู้สอน</label><select id="schm_teacher" class="inp mt-1"></select></div>
+        <div class="col-span-2"><label class="text-xs text-slate-500">วิชา</label>
+          <input id="schm_subject" class="inp mt-1" list="schmSubjects" placeholder="เช่น คณิตศาสตร์">
+          <datalist id="schmSubjects"></datalist></div>
+      </div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button onclick="document.getElementById('schModal').classList.add('hidden')" class="btn bg-slate-100 text-slate-600 px-4 py-2 text-sm">ยกเลิก</button>
+        <button onclick="saveSchSlot()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 text-sm">💾 บันทึก</button>
+      </div>
+    </div>
+  </div>
   <div id="memoPrintArea" class="hidden"></div>
 
   <!-- ---------- TAB: SUBJECTS ---------- -->
@@ -855,6 +892,21 @@
           </table>
         </div>
       </div>
+
+      <div class="card p-4 mt-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="font-bold text-amber-700">🗃️ นักเรียนย้ายออก/จำหน่าย <span id="movedCount" class="text-xs font-normal text-slate-400"></span></h3>
+          <div class="flex gap-2">
+            <input id="movedSearch" class="inp w-40 text-sm" placeholder="🔍 ค้นหา..." oninput="renderMoved()">
+            <button onclick="loadMoved()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 text-xs">🔄</button>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1">เก็บประวัตินักเรียนที่เคยเรียนถึงวันที่ย้ายออก — ดูข้อมูลย้อนหลังและพิมพ์ ปพ.6 ได้ • ลบถาวรทำได้ที่เมนู NSR ในชีตเท่านั้น</p>
+        <div class="overflow-x-auto mt-2"><table class="w-full text-sm">
+          <thead><tr class="text-left text-slate-400 border-b"><th class="py-2 px-2">เลขที่เดิม</th><th class="px-2">รหัส</th><th class="px-2">ชื่อ-นามสกุล</th><th class="px-2">ห้องเดิม</th><th class="px-2">วันที่ย้ายออก</th><th class="px-2"></th></tr></thead>
+          <tbody id="movedBody"></tbody>
+        </table></div>
+      </div>
     </div>
 
     <!-- sub: mapping -->
@@ -1219,7 +1271,10 @@ const GAS = {
     const res = await fetch(GAS.URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain เลี่ยง CORS preflight
-      body: JSON.stringify({ action, payload })
+      body: JSON.stringify({ action, payload: Object.assign({
+        _by: (state.currentUser||{}).name || '',
+        _role: (state.currentUser||{}).role || ''
+      }, payload) })
     });
     const json = await res.json();
     if (!json.ok) throw new Error(json.error || 'เกิดข้อผิดพลาด');
@@ -1343,6 +1398,7 @@ function switchTab(name){
   if(name==='approve') initApprove();
   if(name==='supervise') initSupervise();
   if(name==='docs') initDocs();
+  if(name==='assign') loadAssign();
   if(name==='summary68') initSummary68();
 }
 
@@ -1491,7 +1547,9 @@ function uploadImg(ev, settingKey, previewId){
 /* ============================================================
    STUDENTS
    ============================================================ */
-async function loadStudents(){ state.students=await GAS.call('getStudents'); renderStudents(); }
+async function loadStudents(){ state.students=await GAS.call('getStudents'); renderStudents();
+  if((state.currentUser||{}).role==='admin' && !state.moved && document.getElementById('movedBody')) loadMoved();
+}
 
 function renderStudents(){
   // เติมตัวเลือกห้อง (จากข้อมูลจริง) ให้ตัวกรองและฟอร์มเพิ่ม
@@ -1523,7 +1581,7 @@ function renderStudents(){
       <td class="px-2"><span class="badge bg-teal-100 text-teal-700">${esc(s.classLevel)}</span></td>
       <td class="px-2 text-right whitespace-nowrap">
         <button onclick='openEditStudent(${JSON.stringify(s)})' class="text-blue-500 hover:text-blue-700 px-1">✏️</button>
-        <button onclick="delStudent('${s.ID}')" class="text-rose-500 hover:text-rose-700 px-1">🗑️</button>
+        <button onclick="moveOutStd('${s.ID}','${esc(s.fullName)}','${esc(s.classLevel)}')" class="text-amber-600 hover:text-amber-700 px-1" title="ย้ายออก/จำหน่าย (เก็บประวัติ)">📤</button>
       </td>
     </tr>`).join('') : `<tr><td colspan="6" class="text-center text-slate-400 py-6">ยังไม่มีรายชื่อนักเรียน</td></tr>`;
 }
@@ -1553,10 +1611,57 @@ async function saveEditStudent(){
   try{ showLoading(true); await GAS.call('updateStudent',p); closeModal('editStdModal'); await loadStudents(); toast('บันทึกแล้ว'); }
   catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
-async function delStudent(id){
-  if(!confirm('ยืนยันลบนักเรียนคนนี้?')) return;
-  try{ showLoading(true); await GAS.call('deleteStudent',{id}); await loadStudents(); toast('ลบแล้ว'); }
-  catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+async function moveOutStd(id, name, room){
+  if(!confirm('ย้ายออก/จำหน่าย: '+name+' ('+room+') ?\n\n• ข้อมูลคะแนน เกรด เช็คชื่อ จะถูกเก็บไว้ทั้งหมด (ดูย้อนหลัง/พิมพ์ ปพ.6 ได้)\n• เลขที่ของนักเรียนที่เหลือในห้องจะขยับใหม่อัตโนมัติ')) return;
+  try{ showLoading(true);
+    const r=await GAS.call('moveOutStudent',{studentID:id});
+    await loadStudents(); await loadMoved();
+    toast('ย้ายออกแล้ว • จัดเลขที่ห้อง '+r.room+' ใหม่ ('+r.remaining+' คน)','success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function loadMoved(){
+  const box=document.getElementById('movedBody'); if(!box) return;
+  try{
+    state.moved=await GAS.call('getMovedStudents');
+    renderMoved();
+  }catch(e){ box.innerHTML='<tr><td colspan="6" class="text-rose-400 text-xs py-3 text-center">'+esc(e.message)+'</td></tr>'; }
+}
+function renderMoved(){
+  const box=document.getElementById('movedBody'); if(!box) return;
+  const q=((document.getElementById('movedSearch')||{}).value||'').toLowerCase();
+  const list=(state.moved||[]).filter(s=>(s.fullName+' '+s.classLevel+' '+(s.studentCode||'')).toLowerCase().includes(q));
+  document.getElementById('movedCount').textContent='('+list.length+' คน)';
+  box.innerHTML=list.length?list.map(s=>`
+    <tr class="border-b hover:bg-amber-50/40">
+      <td class="py-2 px-2">${esc(s.movedNumber||s.number||'')}</td>
+      <td class="px-2">${esc(s.studentCode||'')}</td>
+      <td class="px-2 font-medium text-slate-700 whitespace-nowrap">${esc(s.fullName)}</td>
+      <td class="px-2"><span class="badge bg-slate-100 text-slate-600">${esc(s.classLevel)}</span></td>
+      <td class="px-2 text-xs text-slate-400">${esc(s.movedDate||'')}</td>
+      <td class="px-2 text-right whitespace-nowrap">
+        <button onclick="printMovedPP6('${s.ID}')" class="btn bg-teal-600 hover:bg-teal-700 text-white px-2 py-1 text-xs">🖨️ ปพ.6</button>
+        <button onclick="restoreStd('${s.ID}','${esc(s.fullName)}')" class="text-emerald-600 hover:text-emerald-700 px-1" title="กู้คืน">↩️</button>
+      </td>
+    </tr>`).join(''):`<tr><td colspan="6" class="text-center text-slate-400 py-4 text-xs">ไม่มีนักเรียนย้ายออก</td></tr>`;
+}
+async function restoreStd(id, name){
+  if(!confirm('กู้คืน '+name+' กลับเข้าห้องเดิม? (จะได้เลขที่ต่อท้ายห้อง)')) return;
+  try{ showLoading(true);
+    const r=await GAS.call('restoreStudent',{studentID:id});
+    await loadStudents(); await loadMoved();
+    toast('กู้คืนแล้ว — ได้เลขที่ '+r.number+' ห้อง '+r.room,'success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function printMovedPP6(id){
+  try{ showLoading(true);
+    const data=await GAS.call('getReportBatch',{classLevel:'', studentID:id});
+    if(data.settings){ data.settings.reportDate=formatReportDate(data.settings.reportDate); data.settings.remark=normalizeRemark(data.settings.remark); }
+    const students=data.students||[];
+    if(!students.length){ toast('ไม่พบข้อมูลนักเรียน','error'); return; }
+    const area=document.getElementById('memoPrintArea');
+    area.innerHTML=students.map(rs=>reportPageHTML(data.settings,rs)).join('');
+    printOnly('memoPrintArea');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 
 /* ---- TEMPLATE + IMPORT (SheetJS) ---- */
@@ -1742,8 +1847,20 @@ function gradeRoomsFor(sub){
 
 function fillScoreSubjects(){
   const sel=document.getElementById('sc_subject'); const cur=sel.value;
-  let subs=state.subjects.slice();
   const u=state.currentUser;
+  // ครู: จำกัดรายวิชา×ห้อง ตามที่ได้รับมอบ (เมนูจัดครูผู้สอน ∪ ตารางสอน)
+  if(u && u.role!=='admin' && state.myTeach && state.myTeach.length){
+    const opts=[]; const seenOpt=new Set();
+    state.myTeach.forEach(t=>{
+      const key=t.name+'|'+t.room;
+      if(seenOpt.has(key)) return; seenOpt.add(key);
+      opts.push(`<option value="${t.subjectID}|${esc(t.room)}">[${esc(t.room)}] ${esc(t.code)} ${esc(t.name)}</option>`);
+    });
+    sel.innerHTML='<option value="">— เลือกรายวิชา —</option>'+opts.join('');
+    if(cur) sel.value=cur;
+    return;
+  }
+  let subs=state.subjects.slice();
   if(u && u.role!=='admin' && state.mySchedule && state.mySchedule.length){
     const taught=new Set(state.mySchedule.map(s=>s.subject+'|'+classDigit(s.classLevel)));
     subs=subs.filter(s=>taught.has(s.name+'|'+classDigit(s.classLevel)));
@@ -2450,8 +2567,9 @@ async function doLogin(){
     const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
     applyRole();
     const schedP=(u.role!=='admin') ? GAS.call('getSchedule',{teacher:u.name}) : Promise.resolve([]);
-    const [sched]=await Promise.all([schedP, bootstrap()]);
-    state.mySchedule=sched||[];
+    const teachP=(u.role==='teacher') ? GAS.call('getMyTeach',{teacher:u.name}).catch(()=>[]) : Promise.resolve([]);
+    const [sched, myTeach]=await Promise.all([schedP, teachP, bootstrap()]);
+    state.mySchedule=sched||[]; state.myTeach=myTeach||[];
     switchTab('home');
   }catch(e){ toast(e.message,'error'); }
   finally{ showLoading(false); }
@@ -2475,8 +2593,9 @@ async function initApp(){
       applyRole();
       // โหลดตารางสอนของครูพร้อมกับ bootstrap (เดิมรอทีละขั้นทำให้ช้า)
       const schedP=(saved.role!=='admin') ? GAS.call('getSchedule',{teacher:saved.name}) : Promise.resolve([]);
-      const [sched]=await Promise.all([schedP, bootstrap()]);
-      state.mySchedule=sched||[];
+      const teachP=(saved.role==='teacher') ? GAS.call('getMyTeach',{teacher:saved.name}).catch(()=>[]) : Promise.resolve([]);
+      const [sched, myTeach]=await Promise.all([schedP, teachP, bootstrap()]);
+      state.mySchedule=sched||[]; state.myTeach=myTeach||[];
       switchTab('home');
       return;
     }catch(e){ /* ถ้ากู้สถานะไม่ได้ ค่อยให้ล็อกอินใหม่ */ }
@@ -4037,6 +4156,52 @@ function exportRisk(){
 // ============================================================
 const SCH_DAYS = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'];
 state.schAll=null; state.schMode='teacher';
+state._schEditId=null;
+function openSchSlot(id, day, period, teacher, room){
+  state._schEditId=id||null;
+  const rec = id ? (state.schAll||[]).find(r=>r.ID===id) : null;
+  document.getElementById('schmTitle').textContent = id?'แก้ไข/ย้ายคาบสอน':'เพิ่มคาบสอน';
+  document.getElementById('schm_day').innerHTML = SCH_DAYS.slice(0,5).map(d=>`<option>${d}</option>`).join('');
+  document.getElementById('schm_period').innerHTML = [1,2,3,4,5,6,7,8].map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('schm_class').innerHTML = allClasses().map(c=>`<option>${esc(c)}</option>`).join('');
+  document.getElementById('schm_teacher').innerHTML = '<option value="">— ไม่ระบุ —</option>'+
+    (state.teachers||[]).filter(t=>t.role!=='admin').map(t=>`<option>${esc(t.name)}</option>`).join('');
+  document.getElementById('schmSubjects').innerHTML = [...new Set((state.subjects||[]).map(s=>s.name))].map(n=>`<option value="${esc(n)}">`).join('');
+  document.getElementById('schm_day').value = rec?String(rec.day).trim():(day||'จันทร์');
+  document.getElementById('schm_period').value = rec?Number(rec.period):(period||1);
+  document.getElementById('schm_class').value = rec?String(rec.classLevel).trim():(room||allClasses()[0]||'');
+  document.getElementById('schm_teacher').value = rec?String(rec.teacher||'').trim():(teacher||'');
+  document.getElementById('schm_subject').value = rec?String(rec.subject||''):'';
+  document.getElementById('schModal').classList.remove('hidden');
+}
+async function saveSchSlot(){
+  try{ showLoading(true);
+    const res=await GAS.call('saveScheduleSlot',{
+      id:state._schEditId,
+      day:document.getElementById('schm_day').value,
+      period:Number(document.getElementById('schm_period').value),
+      classLevel:document.getElementById('schm_class').value,
+      subject:document.getElementById('schm_subject').value.trim(),
+      teacher:document.getElementById('schm_teacher').value });
+    state.schAll=res.rows;
+    state._schTeachers=[...new Set(res.rows.map(r=>String(r.teacher||'').trim()).filter(Boolean))].sort();
+    state._schClasses=[...new Set(res.rows.map(r=>String(r.classLevel||'').trim()).filter(Boolean))].sort();
+    document.getElementById('schModal').classList.add('hidden');
+    if(res.addedSubject){ try{ await loadSubjects(); }catch(e){} }
+    renderSchedulePick();
+    toast('บันทึกคาบสอนแล้ว','success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function delSchSlot(id){
+  const rec=(state.schAll||[]).find(r=>r.ID===id);
+  if(!confirm('ลบคาบสอนนี้?'+(rec?('\n'+rec.day+' คาบ '+rec.period+' • '+rec.classLevel+' • '+rec.subject):''))) return;
+  try{ showLoading(true);
+    const res=await GAS.call('deleteScheduleSlot',{id});
+    state.schAll=res.rows;
+    renderSchedulePick();
+    toast('ลบคาบสอนแล้ว','success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
 async function initSchedule(){
   const u=state.currentUser||{}; const role=u.role||'teacher';
   const ctrls=document.getElementById('schCtrls');
@@ -4059,7 +4224,11 @@ async function initSchedule(){
     '<select id="schModeSel" class="inp text-sm py-1.5" onchange="onSchMode()">'+
       '<option value="teacher">รายครู</option><option value="class">รายห้อง</option></select>'+
     '<select id="schPick" class="inp text-sm py-1.5" onchange="renderSchedulePick()"></select>'+
-    '<button onclick="exportSchedule()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs">📥 Excel</button>';
+    '<button onclick="exportSchedule()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs">📥 Excel</button>'+
+    (role==='admin'
+      ? '<label class="text-xs flex items-center gap-1 text-slate-500"><input type="checkbox" id="schEdit" onchange="renderSchedulePick()"> ✏️ โหมดแก้ไข</label>'+
+        '<button onclick="openSchSlot(null)" class="btn bg-sky-50 text-sky-700 border border-sky-200 px-3 py-1.5 text-xs">➕ เพิ่มคาบสอน</button>'
+      : '');
   state._schTeachers=teachers; state._schClasses=classes;
   document.getElementById('schModeSel').value=state.schMode;
   onSchMode();
@@ -4091,13 +4260,22 @@ function renderScheduleGrid(rows, mode){
   const maxP=periods.length?Math.max(...periods):0;
   const cols=[]; for(let p=1;p<=maxP;p++) cols.push(p);
   const days=SCH_DAYS.filter(d=>rows.some(r=>String(r.day).trim()===d));
+  const editing = ((state.currentUser||{}).role==='admin') && (document.getElementById('schEdit')||{}).checked;
+  const pickKey = (document.getElementById('schPick')||{}).value||'';
   const cell=(d,p)=>{
     const hit=rows.filter(r=>String(r.day).trim()===d && Number(r.period)===p);
-    if(!hit.length) return '<td class="border border-slate-200 p-1 text-center text-slate-300">–</td>';
+    if(!hit.length){
+      if(editing){
+        const pre = mode==='class' ? `'','${esc(pickKey)}'` : `'${esc(pickKey)}',''`;
+        return `<td class="border border-slate-200 p-1 text-center"><button onclick="openSchSlot(null,'${esc(d)}',${p},${pre})" class="text-slate-300 hover:text-teal-600 text-xs">➕</button></td>`;
+      }
+      return '<td class="border border-slate-200 p-1 text-center text-slate-300">–</td>';
+    }
     return '<td class="border border-slate-200 p-1 align-top">'+hit.map(r=>{
       const sub=esc(r.subject||'');
       const extra = mode==='teacher' ? esc(r.classLevel||'') : esc(r.teacher||'');
-      return `<div class="leading-tight"><div class="font-medium text-slate-700">${sub}</div><div class="text-[10px] text-teal-600">${extra}</div></div>`;
+      const tools = editing ? `<div class="flex gap-1 mt-0.5"><button onclick="openSchSlot('${r.ID}')" class="text-blue-400 text-[10px]">✏️</button><button onclick="delSchSlot('${r.ID}')" class="text-rose-400 text-[10px]">🗑️</button></div>` : '';
+      return `<div class="leading-tight"><div class="font-medium text-slate-700">${sub}</div><div class="text-[10px] text-teal-600">${extra}</div>${tools}</div>`;
     }).join('<hr class="my-1 border-slate-100">')+'</td>';
   };
   area.innerHTML='<table class="w-full text-xs border-collapse" style="min-width:640px"><thead><tr class="bg-teal-50">'+
@@ -4451,6 +4629,78 @@ async function resolveRemed(i){
       origMark:x.origMark, newGrade:g, note, by:u.name||''});
     toast('บันทึกผลแก้ตัวแล้ว','success');
     await loadRemed();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+
+// ============================================================
+//   จัดครูผู้สอน (รายวิชา × ห้อง)
+// ============================================================
+state.assign=null;
+async function loadAssign(){
+  try{ showLoading(true);
+    state.assign=await GAS.call('getTeacherAssign');
+    renderAssign();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function renderAssign(){
+  const d=state.assign; if(!d) return;
+  const area=document.getElementById('asgArea');
+  if(!d.subjects.length){ area.innerHTML='<div class="text-center text-slate-400 py-6">ยังไม่มีรายวิชา — นำเข้าตารางสอน/สร้างรายวิชาก่อน</div>'; return; }
+  const tOpts=(sel)=>'<option value="">— ไม่กำหนด —</option>'+d.teachers.map(t=>`<option ${t===sel?'selected':''}>${esc(t)}</option>`).join('');
+  area.innerHTML=d.subjects.map((su,si)=>{
+    const rooms=su.rooms.map((r,ri)=>`
+      <div class="flex items-center gap-2">
+        <span class="badge bg-teal-50 text-teal-700 w-14 justify-center">${esc(r.room)}</span>
+        <select class="inp text-sm py-1 asg-cell" data-si="${si}" data-ri="${ri}">${tOpts(r.teacher)}</select>
+      </div>`).join('');
+    return `<div class="border-b border-slate-100 py-3">
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <span class="badge bg-teal-100 text-teal-700">${esc(su.classLevel||'-')}</span>
+        <span class="font-medium text-slate-700">${esc(su.code)} ${esc(su.name)}</span>
+        <select class="inp text-xs py-1 ml-auto" id="asgAll${si}">${tOpts('')}</select>
+        <button onclick="applyWholeGrade(${si})" class="btn bg-sky-50 text-sky-700 border border-sky-200 px-2 py-1 text-xs">ทั้งชั้น →</button>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">${rooms}</div>
+    </div>`;
+  }).join('');
+}
+function applyWholeGrade(si){
+  const t=document.getElementById('asgAll'+si).value;
+  document.querySelectorAll(`.asg-cell[data-si="${si}"]`).forEach(sel=>sel.value=t);
+}
+async function saveAssignAll(){
+  const d=state.assign; if(!d) return;
+  const items=[];
+  document.querySelectorAll('.asg-cell').forEach(sel=>{
+    const su=d.subjects[Number(sel.dataset.si)];
+    const room=su.rooms[Number(sel.dataset.ri)].room;
+    items.push({subjectID:su.subjectID, room, teacher:sel.value});
+  });
+  try{ showLoading(true);
+    await GAS.call('saveTeacherAssign',{items});
+    toast('บันทึกการจัดครูผู้สอนแล้ว','success');
+    await loadAssign();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function syncAssign(){
+  try{ showLoading(true);
+    const r=await GAS.call('syncTeacherAssign');
+    toast('ดึงจากตารางสอนแล้ว (เพิ่ม '+r.added+' รายการ)','success');
+    await loadAssign();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function healthCheck(){
+  try{ showLoading(true);
+    const h=await GAS.call('subjectHealthCheck');
+    const el=document.getElementById('asgHealth'); el.classList.remove('hidden');
+    const orph=Object.keys(h.orphans||{}).map(k=>`${k}: ${h.orphans[k]} แถว`).join(', ');
+    el.innerHTML=
+      `<div class="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+        <div>📚 รายวิชาทั้งหมด: <b>${h.subjectCount}</b> วิชา</div>
+        <div>${h.duplicates.length?('🔁 วิชาซ้ำ: <b class="text-rose-600">'+h.duplicates.length+'</b> ('+h.duplicates.slice(0,5).map(esc).join(', ')+') — กด 🧹 ล้างวิชาซ้ำ ในหน้าแอดมิน'):'🔁 วิชาซ้ำ: <b class="text-emerald-600">ไม่มี ✅</b>'}</div>
+        <div>${orph?('🔗 ข้อมูลอ้างวิชาที่ถูกลบ (orphan): <b class="text-rose-600">'+orph+'</b> — แจ้งผมเพื่อทำตัวซ่อม'):'🔗 ข้อมูลอ้างวิชาที่ถูกลบ: <b class="text-emerald-600">ไม่มี ✅</b>'}</div>
+        <div>${h.missingFromSchedule.length?('📅 วิชาในตารางสอนที่ยังไม่มีในระบบ: <b class="text-amber-600">'+h.missingFromSchedule.map(esc).join(', ')+'</b> — กด 🔄 สร้างรายวิชาจากตารางสอน'):'📅 วิชาจากตารางสอน: <b class="text-emerald-600">ครบ ✅</b>'}</div>
+      </div>`;
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 
