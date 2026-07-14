@@ -4335,15 +4335,27 @@ function exportRisk(){
 const SCH_DAYS = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'];
 state.schAll=null; state.schMode='teacher';
 state._schEditId=null;
-function openSchSlot(id, day, period, teacher, room){
+// โหลดรายชื่อครูถ้ายังไม่มีในหน่วยความจำ (กันกรณีโหลดตอนล็อกอินพลาด)
+async function ensureTeachers(){
+  if(state.teachers && state.teachers.length) return;
+  try{ state.teachers=await GAS.call('getTeachers'); }catch(e){ state.teachers=state.teachers||[]; }
+}
+// รายชื่อครูสำหรับ dropdown — ถ้าชีต Teachers ใช้ไม่ได้ ใช้ชื่อครูจากตารางสอนแทน
+function teacherOptionNames(){
+  let names=(state.teachers||[]).filter(t=>t.role!=='admin').map(t=>t.name).filter(Boolean);
+  if(!names.length) names=(state._schTeachers||[]).filter(t=>t!==SCH_NO_TEACHER);
+  return names;
+}
+async function openSchSlot(id, day, period, teacher, room){
   state._schEditId=id||null;
+  await ensureTeachers();
   const rec = id ? (state.schAll||[]).find(r=>r.ID===id) : null;
   document.getElementById('schmTitle').textContent = id?'แก้ไข/ย้ายคาบสอน':'เพิ่มคาบสอน';
   document.getElementById('schm_day').innerHTML = SCH_DAYS.slice(0,5).map(d=>`<option>${d}</option>`).join('');
   document.getElementById('schm_period').innerHTML = [1,2,3,4,5,6,7,8].map(p=>`<option>${p}</option>`).join('');
   document.getElementById('schm_class').innerHTML = allClasses().map(c=>`<option>${esc(c)}</option>`).join('');
   document.getElementById('schm_teacher').innerHTML = '<option value="">— ไม่ระบุ —</option>'+
-    (state.teachers||[]).filter(t=>t.role!=='admin').map(t=>`<option>${esc(t.name)}</option>`).join('');
+    teacherOptionNames().map(n=>`<option>${esc(n)}</option>`).join('');
   document.getElementById('schmSubjects').innerHTML = [...new Set((state.subjects||[]).map(s=>s.name))].map(n=>`<option value="${esc(n)}">`).join('');
   document.getElementById('schm_day').value = rec?String(rec.day).trim():(day||'จันทร์');
   document.getElementById('schm_period').value = rec?Number(rec.period):(period||1);
@@ -5547,12 +5559,13 @@ function renderExams(){
       }).join('')+'</tbody></table></div></div>';
   }).join('');
 }
-function openExam(id){
+async function openExam(id){
   state._exEditId=id||null;
+  await ensureTeachers();
   const rec=id?(state.exams||[]).find(x=>x.ID===id):null;
   document.getElementById('exmTitle').textContent=id?'แก้ไขรายการสอบ':'เพิ่มรายการสอบ';
   document.getElementById('exm_class').innerHTML=allClasses().map(c=>`<option>${esc(c)}</option>`).join('');
-  const tOpts='<option value="">— ไม่ระบุ —</option>'+(state.teachers||[]).filter(t=>t.role!=='admin').map(t=>`<option>${esc(t.name)}</option>`).join('');
+  const tOpts='<option value="">— ไม่ระบุ —</option>'+teacherOptionNames().map(n=>`<option>${esc(n)}</option>`).join('');
   document.getElementById('exm_p1').innerHTML=tOpts;
   document.getElementById('exm_p2').innerHTML=tOpts;
   document.getElementById('schmSubjects').innerHTML=[...new Set((state.subjects||[]).map(x=>x.name))].map(n=>`<option value="${esc(n)}">`).join('');
