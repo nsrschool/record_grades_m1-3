@@ -777,7 +777,7 @@
     <div id="att-period" class="attpane hidden">
       <div class="card p-4 mb-4">
         <div class="flex flex-wrap gap-3 items-end">
-          <div><label class="text-xs text-slate-500">วันที่</label><input type="date" id="att_period_date" class="inp mt-1" onchange="fillPeriodSlots()"></div>
+          <div><label class="text-xs text-slate-500">วันที่</label><input type="date" id="att_period_date" class="inp mt-1" onchange="onPdDateChange()"></div>
           <div class="flex-1 min-w-[200px]"><label class="text-xs text-slate-500">คาบเรียน</label><select id="att_period_slot" class="inp mt-1"></select></div>
           <button onclick="loadPeriod()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 text-sm">โหลดรายชื่อ</button>
         </div>
@@ -787,6 +787,15 @@
         <div id="periodSummary" class="text-xs text-slate-500 mb-2"></div>
         <div id="periodList"></div>
         <div class="text-right mt-3"><button onclick="savePeriod()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-sm">💾 บันทึกเช็คชื่อรายคาบ</button></div>
+      </div>
+      <div class="card p-4 mb-4">
+        <div class="flex items-center gap-2 mb-2">
+          <button onclick="pdMonthShift(-1)" class="btn bg-slate-100 hover:bg-slate-200 text-slate-600 w-8 h-8 rounded-lg">‹</button>
+          <span id="pdMonthLabel" class="text-sm font-medium text-teal-700"></span>
+          <button onclick="pdMonthShift(1)" class="btn bg-slate-100 hover:bg-slate-200 text-slate-600 w-8 h-8 rounded-lg">›</button>
+        </div>
+        <div id="pdStrip" class="flex flex-wrap gap-1.5"></div>
+        <p class="text-[11px] text-slate-400 mt-2"><span class="inline-block w-3 h-3 rounded bg-emerald-500 align-middle"></span> เช็คครบทุกคาบ • <span class="inline-block w-3 h-3 rounded bg-amber-400 align-middle"></span> เช็คบางคาบ • <span class="inline-block w-3 h-3 rounded border border-slate-300 align-middle"></span> มีคาบแต่ยังไม่เช็ค • <span class="inline-block w-3 h-3 rounded bg-slate-100 align-middle"></span> ไม่มีคาบสอน • <span class="text-rose-500">เลขสีแดง = วันหยุด</span></p>
       </div>
       <div id="periodEmpty" class="card p-8 text-center text-slate-400">เลือกวันที่และคาบ แล้วกดโหลดรายชื่อ</div>
     </div>
@@ -3003,6 +3012,7 @@ function byNumber(a,b){ return Number(a.number)-Number(b.number); }
 async function initAttendance(){
   if(!val('att_flag_date')) document.getElementById('att_flag_date').value=todayISO();
   if(!val('att_period_date')) document.getElementById('att_period_date').value=todayISO();
+  loadPeriodStrip();
   fillFlagClasses();
   // แอดมินต้องมีตารางสอนทั้งหมดเพื่อเลือกคาบ
   if(state.currentUser && state.currentUser.role==='admin' && (!state.schedule || !state.schedule.length)){
@@ -3038,6 +3048,64 @@ function attSummary(students, draft){
   const c={}; ATT_STATUSES.forEach(([st])=>c[st]=0);
   students.forEach(s=>{ const st=draft[s.ID]||'มา'; c[st]=(c[st]||0)+1; });
   return ATT_STATUSES.map(([st])=>st+' '+c[st]).join(' • ');
+}
+
+/* ---- แถบปฏิทินรายคาบ (สีตามความครบของคาบตามตารางสอน) ---- */
+state.pdMonth=null; state.pdDays={};
+async function loadPeriodStrip(){
+  const u=state.currentUser||{};
+  const month=state.pdMonth || (val('att_period_date')||todayISO()).slice(0,7);
+  state.pdMonth=month;
+  try{
+    const r=await GAS.call('getPeriodCheckedDates',{month, teacher:(u.role==='teacher'?u.name:'')});
+    state.pdDays=(r&&r.days)||{};
+  }catch(e){ state.pdDays={}; }
+  renderPeriodStrip();
+}
+function renderPeriodStrip(){
+  const strip=document.getElementById('pdStrip'); if(!strip) return;
+  const month=state.pdMonth;
+  const [y,m]=month.split('-').map(Number);
+  const days=new Date(y, m, 0).getDate();
+  const sel=val('att_period_date');
+  const TH_MONTHS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('pdMonthLabel').textContent=TH_MONTHS[m-1]+' '+(y+543);
+  let html='';
+  for(let d=1; d<=days; d++){
+    const ymd=month+'-'+String(d).padStart(2,'0');
+    const isHoliday=!isSchoolDay(ymd);
+    const info=state.pdDays[ymd]||{exp:0,done:0};
+    const isSel=(ymd===sel);
+    let cls='w-9 h-9 rounded-lg text-sm flex items-center justify-center border transition ';
+    if(isSel) cls+='ring-2 ring-teal-500 ';
+    let title;
+    if(isHoliday){ cls+='bg-rose-50 text-rose-500 border-rose-200 font-semibold'; title=schoolDayReason(ymd)||'วันหยุด'; }
+    else if(!info.exp){ cls+='bg-slate-100 text-slate-400 border-slate-200'; title='ไม่มีคาบสอน'; }
+    else if(info.done>=info.exp){ cls+='bg-emerald-500 text-white border-emerald-500 font-semibold'; title='เช็คครบ '+info.done+'/'+info.exp+' คาบ'; }
+    else if(info.done>0){ cls+='bg-amber-400 text-white border-amber-400 font-semibold'; title='เช็คแล้ว '+info.done+'/'+info.exp+' คาบ'; }
+    else { cls+='bg-white text-slate-600 border-slate-300 hover:border-teal-400'; title='ยังไม่เช็ค (มี '+info.exp+' คาบ)'; }
+    html+=`<button onclick="setPdDate('${ymd}')" title="${esc(title)}" class="${cls}">${d}</button>`;
+  }
+  strip.innerHTML=html;
+}
+function setPdDate(ymd){
+  document.getElementById('att_period_date').value=ymd;
+  const mo=ymd.slice(0,7);
+  if(mo!==state.pdMonth){ state.pdMonth=mo; loadPeriodStrip(); }
+  else renderPeriodStrip();
+  fillPeriodSlots();
+}
+function onPdDateChange(){
+  fillPeriodSlots();
+  const mo=(val('att_period_date')||'').slice(0,7);
+  if(mo && mo!==state.pdMonth){ state.pdMonth=mo; loadPeriodStrip(); }
+  else renderPeriodStrip();
+}
+function pdMonthShift(n){
+  const [y,m]=state.pdMonth.split('-').map(Number);
+  const d=new Date(y, m-1+n, 1);
+  state.pdMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  loadPeriodStrip();
 }
 
 /* ---- แถบปฏิทินหน้าเสาธง (คลิกวันที่ = โหลดรายชื่อทันที) ---- */
@@ -3196,6 +3264,7 @@ async function savePeriod(){
   const records=state.periodStudents.map(s=>({studentID:s.ID, status:state.periodDraft[s.ID]||'มา'}));
   try{ showLoading(true);
     await GAS.call('saveAttendance',{date, classLevel:slot.classLevel, period:slot.period, checkedBy:state.currentUser.name, records});
+    loadPeriodStrip();
     toast('บันทึกเช็คชื่อคาบ '+slot.period+' แล้ว');
     showAttResult({classLevel:slot.classLevel, date, subtitle:'คาบ '+slot.period+' • '+(slot.subject||''), students:state.periodStudents, draft:state.periodDraft});
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
