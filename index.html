@@ -4434,20 +4434,26 @@ function tCoreFE(n){
   return String(n||'').replace(/\s+/g,' ').trim()
     .replace(/^(นางสาว|นาง|นาย|ครู|ว่าที่ ?ร\.?ต\.?|ว่าที่|ดร\.)/,'').trim().split(' ')[0];
 }
+const SCH_NO_TEACHER='(ไม่ระบุครู)';
 function schTeacherList(rows){
-  const seen={}; const out=[];
+  const seen={}; const out=[]; let hasBlank=false;
   (rows||[]).forEach(r=>{
-    const t=String(r.teacher||'').trim(); if(!t) return;
+    const t=String(r.teacher||'').trim();
+    if(!t){ hasBlank=true; return; }
     const c=tCoreFE(t); if(seen[c]) return; seen[c]=1; out.push(t);
   });
-  return out.sort();
+  out.sort();
+  if(hasBlank) out.push(SCH_NO_TEACHER);   // คาบที่ยังไม่ระบุครู — ให้แอดมินเห็น/แก้ได้
+  return out;
 }
 function renderSchedulePick(){
   const key=document.getElementById('schPick').value;
   const hint=document.getElementById('schHint');
   if(state.schMode==='teacher'){
     const kc=tCoreFE(key);
-    const rows=(state.schAll||[]).filter(r=>tCoreFE(r.teacher)===kc);
+    const rows=(key===SCH_NO_TEACHER)
+      ? (state.schAll||[]).filter(r=>!String(r.teacher||'').trim())
+      : (state.schAll||[]).filter(r=>tCoreFE(r.teacher)===kc);
     hint.textContent='ตารางสอนของ '+esc(key);
     renderScheduleGrid(rows,'teacher');
   }else{
