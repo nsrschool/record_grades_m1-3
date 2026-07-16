@@ -956,7 +956,6 @@
     <!-- sub-tabs -->
     <div class="flex gap-2 mb-4 overflow-x-auto nav-scroll pb-1">
       <button data-sub="school"  class="subbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🏫 ข้อมูลสถานศึกษา</button>
-      <button data-sub="students" class="subbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🧑‍🎓 จัดการรายชื่อนักเรียน</button>
       <button data-sub="mapping"  class="subbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🎚️ ตารางแปลงเกรด</button>
     </div>
 
@@ -1033,8 +1032,53 @@
       </div>
     </div>
 
-    <!-- sub: students -->
-    <div id="sub-students" class="subpane hidden">
+
+    <!-- sub: mapping -->
+    <div id="sub-mapping" class="subpane hidden">
+      <div class="card p-4">
+        <h2 class="font-bold text-teal-700 mb-1">ตารางแปลงเกรด (ร้อยละ → เกรด 2551)</h2>
+        <p class="text-xs text-slate-400 mb-3">เกณฑ์ตัดสินผลการเรียน 8 ระดับ ตามหลักสูตรฯ 2551 — แก้ไขได้ตามบริบทโรงเรียน</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-400 border-b">
+              <th class="py-2 px-2">ร้อยละต่ำสุด</th><th class="px-2">ร้อยละสูงสุด</th>
+              <th class="px-2">เกรด</th><th class="px-2">ความหมาย</th><th class="px-2"></th>
+            </tr></thead>
+            <tbody id="mappingBody"></tbody>
+          </table>
+        </div>
+        <div class="flex justify-between mt-4">
+          <button onclick="addMappingRow()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">➕ เพิ่มแถว</button>
+          <button onclick="saveMapping()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-sm">💾 บันทึกตารางแปลงเกรด</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- TAB: ADMIN ---------- -->
+  <section id="tab-admin" class="tabpane hidden">
+    <div class="flex gap-2 mb-4 overflow-x-auto nav-scroll pb-1">
+      <button data-asub="roster"   class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🧑‍🎓 จัดการนักเรียน</button>
+      <button data-asub="schedule" class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">📅 นำเข้าตารางสอน</button>
+      <button data-asub="teachers" class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">👤 จัดการครู / PIN</button>
+      <button data-asub="docs"     class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">📄 คำอธิบายรายวิชา</button>
+      <button data-asub="backup"   class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">💾 สำรองข้อมูลอัตโนมัติ</button>
+      <button data-asub="locks"    class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🔒 อนุมัติ/ล็อกผล</button>
+    </div>
+
+    <!-- asub: roster -->
+    <div id="asub-roster" class="asubpane hidden">
+      <div class="card p-4">
+        <h3 class="font-bold text-teal-700 mb-1">นำเข้ารายชื่อนักเรียน (ทั้งโรงเรียน)</h3>
+        <p class="text-xs text-slate-400 mb-3">ไฟล์ Excel คอลัมน์: A=ชั้น(ม.1/1) • B=เลขที่ • C=เลขประจำตัว • D=คำนำหน้า • E=ชื่อ • F=นามสกุล<br><b class="text-rose-500">การนำเข้าจะแทนที่รายชื่อเดิมทั้งหมด</b> และเรียงเลขที่ทุกห้องให้ต่อเนื่องอัตโนมัติ</p>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="downloadRosterTemplate()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">📥 ดาวน์โหลดฟอร์ม (A-F)</button>
+          <button onclick="document.getElementById('rosterFile').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 เลือกไฟล์นำเข้า</button>
+          <input type="file" id="rosterFile" accept=".xlsx,.xls,.csv" class="hidden" onchange="importRoster(event)">
+        </div>
+      </div>
+    </div>
+
       <div class="card p-4 mb-4">
         <h2 class="font-bold text-teal-700 mb-3">นำเข้า / เพิ่มรายชื่อนักเรียน</h2>
         <div class="flex flex-wrap gap-2 mb-4">
@@ -1090,53 +1134,7 @@
           <tbody id="movedBody"></tbody>
         </table></div>
       </div>
-    </div>
 
-    <!-- sub: mapping -->
-    <div id="sub-mapping" class="subpane hidden">
-      <div class="card p-4">
-        <h2 class="font-bold text-teal-700 mb-1">ตารางแปลงเกรด (ร้อยละ → เกรด 2551)</h2>
-        <p class="text-xs text-slate-400 mb-3">เกณฑ์ตัดสินผลการเรียน 8 ระดับ ตามหลักสูตรฯ 2551 — แก้ไขได้ตามบริบทโรงเรียน</p>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr class="text-left text-slate-400 border-b">
-              <th class="py-2 px-2">ร้อยละต่ำสุด</th><th class="px-2">ร้อยละสูงสุด</th>
-              <th class="px-2">เกรด</th><th class="px-2">ความหมาย</th><th class="px-2"></th>
-            </tr></thead>
-            <tbody id="mappingBody"></tbody>
-          </table>
-        </div>
-        <div class="flex justify-between mt-4">
-          <button onclick="addMappingRow()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">➕ เพิ่มแถว</button>
-          <button onclick="saveMapping()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-sm">💾 บันทึกตารางแปลงเกรด</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ---------- TAB: ADMIN ---------- -->
-  <section id="tab-admin" class="tabpane hidden">
-    <div class="flex gap-2 mb-4 overflow-x-auto nav-scroll pb-1">
-      <button data-asub="roster"   class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🧑‍🎓 นำเข้ารายชื่อนักเรียน</button>
-      <button data-asub="schedule" class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">📅 นำเข้าตารางสอน</button>
-      <button data-asub="teachers" class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">👤 จัดการครู / PIN</button>
-      <button data-asub="docs"     class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">📄 คำอธิบายรายวิชา</button>
-      <button data-asub="backup"   class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">💾 สำรองข้อมูลอัตโนมัติ</button>
-      <button data-asub="locks"    class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🔒 อนุมัติ/ล็อกผล</button>
-    </div>
-
-    <!-- asub: roster -->
-    <div id="asub-roster" class="asubpane hidden">
-      <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-1">นำเข้ารายชื่อนักเรียน (ทั้งโรงเรียน)</h3>
-        <p class="text-xs text-slate-400 mb-3">ไฟล์ Excel คอลัมน์: A=ชั้น(ม.1/1) • B=เลขที่ • C=เลขประจำตัว • D=คำนำหน้า • E=ชื่อ • F=นามสกุล<br><b class="text-rose-500">การนำเข้าจะแทนที่รายชื่อเดิมทั้งหมด</b> และเรียงเลขที่ทุกห้องให้ต่อเนื่องอัตโนมัติ</p>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="downloadRosterTemplate()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">📥 ดาวน์โหลดฟอร์ม (A-F)</button>
-          <button onclick="document.getElementById('rosterFile').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 เลือกไฟล์นำเข้า</button>
-          <input type="file" id="rosterFile" accept=".xlsx,.xls,.csv" class="hidden" onchange="importRoster(event)">
-        </div>
-      </div>
-    </div>
 
     <!-- asub: schedule -->
     <div id="asub-schedule" class="asubpane hidden">
@@ -1570,7 +1568,7 @@ function switchTab(name){
   if(name==='ability') initAbility();
   if(name==='report'){ fillReportClasses(); fillPP5Classes(); }
   if(name==='stats') loadStats();
-  if(name==='admin') switchAsub('roster');
+  if(name==='admin'){ switchAsub('roster'); if(typeof fillStudentClassInputs==='function') fillStudentClassInputs(); loadStudents().catch(()=>{}); }
   if(name==='attendance') initAttendance();
   if(name==='calendar') initCalendar();
   if(name==='risk') initRisk();
