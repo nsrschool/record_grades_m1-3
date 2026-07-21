@@ -1647,34 +1647,51 @@ document.querySelectorAll('.absubbtn').forEach(b=>b.onclick=()=>switchAbsub(b.da
 /* ============================================================
    BOOTSTRAP
    ============================================================ */
+const BOOT_CACHE_KEY='nsr_m13_boot_v1';
+async function applyBootstrap(data){
+  state.settings=data.settings||{};
+  state.mapping=data.mapping||[];
+  state.semester=String(state.settings.currentSemester||'1');
+  state.calendar=data.calendar||[];
+  state.locks=data.locks||[];
+  await loadStudents(data.students||[]);
+  await loadSubjects(data.subjects||[]);
+  if(data.schedule) state.mySchedule=data.schedule;
+  if(data.myTeach)  state.myTeach=data.myTeach;
+  if(data.teachers&&data.teachers.length) state.teachers=data.teachers;
+  const gsel=document.getElementById('globalSem'); if(gsel) gsel.value=state.semester;
+  applySettingsToUI();
+  applyFavicon();
+  renderMapping();
+  renderHome();
+}
 async function bootstrap(){
   // เติม dropdown กลุ่มสาระ
   ['su_area','es_area'].forEach(id=>{
     const sel=document.getElementById(id);
     sel.innerHTML='<option value="">— กลุ่มสาระ —</option>'+LEARNING_AREAS.map(a=>`<option>${a}</option>`).join('');
   });
+  const u=state.currentUser||{};
+  const fetchFresh=async ()=>{
+    const data=await GAS.call('getBootstrap',{teacher:u.name||'', role:u.role||''});
+    await applyBootstrap(data);
+    try{ localStorage.setItem(BOOT_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+    setStatus(true);
+    await seedDemoIfEmpty();
+  };
+  // เปิดปุ๊บเห็นปั๊บ: วาดจากข้อมูลล่าสุดในเครื่องก่อน แล้วดึงของจริงมาแทนเบื้องหลัง
+  let hadCache=false;
+  try{
+    const c=JSON.parse(localStorage.getItem(BOOT_CACHE_KEY)||'null');
+    if(c && c.settings){ await applyBootstrap(c); setStatus(true); hadCache=true; }
+  }catch(e){}
+  if(hadCache){
+    fetchFresh().catch(()=>{ setStatus(false); });
+    return;
+  }
   try{
     showLoading(true);
-    // เรียกข้อมูลตั้งต้นทั้งหมดพร้อมกันในจังหวะเดียว (เดิมเรียกทีละอันทำให้ช้า)
-    const [data, , , cal, locks] = await Promise.all([
-      GAS.call('getBootstrap'),
-      loadStudents(),
-      loadSubjects(),
-      GAS.call('getCalendar').catch(()=>[]),
-      GAS.call('getLocks').catch(()=>[])
-    ]);
-    state.settings=data.settings||{};
-    state.mapping=data.mapping||[];
-    state.semester=String(state.settings.currentSemester||'1');
-    state.calendar=cal||[];
-    state.locks=locks||[];
-    var gsel=document.getElementById('globalSem'); if(gsel) gsel.value=state.semester;
-    applySettingsToUI();
-    applyFavicon();
-    setStatus(true);
-    renderMapping();
-    await seedDemoIfEmpty();
-    renderHome();
+    await fetchFresh();
   }catch(e){
     setStatus(false);
     toast(e.message,'error');
@@ -1745,7 +1762,7 @@ function uploadImg(ev, settingKey, previewId){
 /* ============================================================
    STUDENTS
    ============================================================ */
-async function loadStudents(){ state.students=await GAS.call('getStudents'); renderStudents();
+async function loadStudents(pre){ state.students=pre||await GAS.call('getStudents'); renderStudents();
   if((state.currentUser||{}).role==='admin' && !state.moved && document.getElementById('movedBody')) loadMoved();
 }
 
@@ -1894,7 +1911,7 @@ function importStudents(ev){
 /* ============================================================
    SUBJECTS
    ============================================================ */
-async function loadSubjects(){ state.subjects=await GAS.call('getSubjects'); renderSubjects(); }
+async function loadSubjects(pre){ state.subjects=pre||await GAS.call('getSubjects'); renderSubjects(); }
 
 function renderSubjects(){
   const f=document.getElementById('su_filter').value;
@@ -2775,16 +2792,14 @@ async function doLogin(){
     try{ localStorage.setItem('kps_session_m13', JSON.stringify({id:u.id||'', name:u.name, role:u.role, homeroomClass:u.homeroomClass||''})); }catch(e){}
     const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
     applyRole();
-    const schedP=(u.role!=='admin') ? GAS.call('getSchedule',{teacher:u.name}) : Promise.resolve([]);
-    const teachP=(u.role==='teacher') ? GAS.call('getMyTeach',{teacher:u.name}).catch(()=>[]) : Promise.resolve([]);
-    const [sched, myTeach]=await Promise.all([schedP, teachP, bootstrap()]);
-    state.mySchedule=sched||[]; state.myTeach=myTeach||[];
+    await bootstrap();   // ก้อนเดียว รวมตารางสอน+สิทธิ์ครูแล้ว
     switchTab('home');
   }catch(e){ toast(e.message,'error'); }
   finally{ showLoading(false); }
 }
 
 function logout(){
+  try{ localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
   state.currentUser=null; state.mySchedule=[];
   try{ localStorage.removeItem('kps_session_m13'); }catch(e){}
   showLoginScreen();
@@ -2800,11 +2815,7 @@ async function initApp(){
       state.currentUser=saved;
       const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
       applyRole();
-      // โหลดตารางสอนของครูพร้อมกับ bootstrap (เดิมรอทีละขั้นทำให้ช้า)
-      const schedP=(saved.role!=='admin') ? GAS.call('getSchedule',{teacher:saved.name}) : Promise.resolve([]);
-      const teachP=(saved.role==='teacher') ? GAS.call('getMyTeach',{teacher:saved.name}).catch(()=>[]) : Promise.resolve([]);
-      const [sched, myTeach]=await Promise.all([schedP, teachP, bootstrap()]);
-      state.mySchedule=sched||[]; state.myTeach=myTeach||[];
+    await bootstrap();   // ก้อนเดียว รวมตารางสอน+สิทธิ์ครูแล้ว
       switchTab('home');
       return;
     }catch(e){ /* ถ้ากู้สถานะไม่ได้ ค่อยให้ล็อกอินใหม่ */ }
