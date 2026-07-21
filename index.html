@@ -188,7 +188,7 @@
     <span class="nav-cat" data-role="all">📚 งานวิชาการ</span>
     <button data-tab="subjects" data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
     <button data-tab="scores"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📝 บันทึกผลการเรียน</button>
-    <button data-tab="ability"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🎓 ความสามารถ/คุณลักษณะ</button>
+    <button data-tab="ability"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🎓 สมรรถนะ/คุณลักษณะ</button>
     <button data-tab="teaching" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📤 ส่งเอกสารการสอน</button>
     <button data-tab="remed"    data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🩹 สอบแก้ตัว 0/ร/มส/มผ</button>
     <button data-tab="approve"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🔏 ส่ง/อนุมัติผล</button>
@@ -719,14 +719,24 @@
         <div class="overflow-x-auto"><table class="w-full text-sm" id="charTable"></table></div>
       </div>
       <div id="absub-readthink" class="absubpane hidden card p-4">
+        <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+          <p class="text-xs text-slate-400">การอ่าน คิดวิเคราะห์ และเขียน (ผ่าน/ไม่ผ่าน)</p>
+          <button onclick="absAllPass('readthink','#rtTable','ผ่าน')" class="btn bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 text-xs whitespace-nowrap">✅ ผ่านทั้งหมด (ทุกคน ทุกข้อ)</button>
+        </div>
         <div class="overflow-x-auto"><table class="w-full text-sm" id="rtTable"></table></div>
       </div>
       <div id="absub-activity" class="absubpane hidden card p-4">
-        <p class="text-xs text-slate-400 mb-2">กิจกรรมพัฒนาผู้เรียน (ผ่าน/ไม่ผ่าน) + ชื่อชุมนุม + สมรรถนะสำคัญ (สรุปรวม — เติมให้อัตโนมัติจากแท็บสมรรถนะ 5 ประการ)</p>
+        <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+          <p class="text-xs text-slate-400">กิจกรรมพัฒนาผู้เรียน (ผ่าน/ไม่ผ่าน) + ชื่อชุมนุม + สมรรถนะสำคัญ (สรุปรวม — เติมให้อัตโนมัติจากแท็บสมรรถนะ 5 ประการ)</p>
+          <button onclick="absAllPass('activity','#actTable','ผ่าน')" class="btn bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 text-xs whitespace-nowrap">✅ ผ่านทั้งหมด (ทุกคน ทุกกิจกรรม)</button>
+        </div>
         <div class="overflow-x-auto"><table class="w-full text-sm" id="actTable"></table></div>
       </div>
       <div id="absub-comp" class="absubpane hidden card p-4">
-        <p class="text-xs text-slate-400 mb-2">สมรรถนะสำคัญของผู้เรียน 5 ประการ ตามหลักสูตรฯ 2551 — ประเมิน 4 ระดับ (ดีเยี่ยม/ดี/ผ่าน/ไม่ผ่าน) • ช่อง "สรุป" คิดจากระดับต่ำสุด และเติมลงช่องสมรรถนะรวมให้อัตโนมัติ</p>
+        <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+          <p class="text-xs text-slate-400">สมรรถนะสำคัญของผู้เรียน 5 ประการ ตามหลักสูตรฯ 2551 — ประเมิน 4 ระดับ (ดีเยี่ยม/ดี/ผ่าน/ไม่ผ่าน) • ช่อง "สรุป" คิดจากระดับต่ำสุด และเติมลงช่องสมรรถนะรวมให้อัตโนมัติ</p>
+          <button onclick="absAllPass('competency5','#compTable','ผ่าน')" class="btn bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 text-xs whitespace-nowrap">✅ ผ่านทั้งหมด (ทุกคน ทุกด้าน)</button>
+        </div>
         <div class="overflow-x-auto"><table class="w-full text-sm" id="compTable"></table></div>
       </div>
 
@@ -2148,7 +2158,7 @@ function renderScoreTable(){
   document.getElementById('scoreHead').innerHTML=`<tr class="text-left text-slate-400 border-b">
     <th class="py-2 px-1">เลขที่</th><th class="px-1">ชื่อ</th><th class="px-1">นามสกุล</th>
     ${units.map(u=>`<th class="px-1 text-center">${esc(u.unitName)}<br><span class="text-[10px] text-slate-300">(${u.maxScore})</span></th>`).join('')}
-    <th class="px-1 text-center">รวม</th><th class="px-1 text-center">%</th><th class="px-1 text-center">ระดับ68</th><th class="px-1 text-center">เกรด</th>
+    <th class="px-1 text-center">รวม</th><th class="px-1 text-center">%</th><th class="px-1 text-center">เกรด</th>
   </tr>`;
   document.getElementById('scoreBody').innerHTML = (students.length && units.length) ? students.map(st=>`
     <tr class="border-b" data-sid="${st.ID}">
@@ -2158,9 +2168,8 @@ function renderScoreTable(){
       ${units.map(u=>`<td class="px-1"><input type="number" class="inp w-14 text-sm text-center scoreCell" data-unit="${u.ID}" value="${(sm[st.ID]&&sm[st.ID][u.ID]!=null&&sm[st.ID][u.ID]!=='')?sm[st.ID][u.ID]:''}" oninput="calcRow(this)"></td>`).join('')}
       <td class="px-1 text-center sumCell font-semibold">0</td>
       <td class="px-1 text-center pctCell">-</td>
-      <td class="px-1 text-center lvlCell text-xs">-</td>
       <td class="px-1 text-center grdCell font-bold text-teal-700">-</td>
-    </tr>`).join('') : `<tr><td colspan="${units.length+7}" class="text-center text-slate-400 py-6">${units.length?'ไม่มีนักเรียนในชั้นนี้':'กรุณาเพิ่มและบันทึกหน่วยก่อน'}</td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="${units.length+6}" class="text-center text-slate-400 py-6">${units.length?'ไม่มีนักเรียนในชั้นนี้':'กรุณาเพิ่มและบันทึกหน่วยก่อน'}</td></tr>`;
   document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>calcRowTr(tr));
 }
 function calcRow(input){ calcRowTr(input.closest('tr')); }
@@ -2173,7 +2182,6 @@ function calcRowTr(tr){
   const g=gradeFromPercent(pct);
   tr.querySelector('.sumCell').textContent=sum;
   tr.querySelector('.pctCell').textContent=(totalMax>0&&hasInput)?pct+'%':'-';
-  tr.querySelector('.lvlCell').textContent=(totalMax>0&&hasInput)?(g.grade51!==''?g.grade51:'-'):'-';
   tr.querySelector('.grdCell').textContent=(totalMax>0&&hasInput)?(g.grade51+' ('+g.letter51+')'):'-';
 }
 async function saveScoresFn(){
@@ -2317,14 +2325,15 @@ function passSel(group,item,cur,sid,withSummary){
   return `<select class="inp text-xs ab-cell" data-sid="${sid}" data-group="${group}" data-item="${esc(item)}"${oc}>`+
     PASS_OPTS.map(([v,l])=>`<option value="${v}" ${String(cur==null?'':cur)===v?'selected':''}>${l}</option>`).join('')+'</select>';
 }
-// ตั้ง "ผ่าน" ให้นักเรียนทุกคน ทุกข้อ ในตารางคุณลักษณะ (ยังต้องกดบันทึกเพื่อยืนยัน)
-function charAllPass(){
-  const cells=[...document.querySelectorAll('#charTable select.ab-cell[data-group="characteristic"]')];
+// ตั้ง "ผ่าน" ให้นักเรียนทุกคน ทุกข้อ ของกลุ่มที่ระบุ (ยังต้องกดบันทึกเพื่อยืนยัน)
+function absAllPass(group, tableSel, value){
+  const cells=[...document.querySelectorAll(tableSel+' select.ab-cell[data-group="'+group+'"]')];
   if(!cells.length){ toast('กดโหลดรายชื่อก่อน','error'); return; }
-  cells.forEach(c=>c.value='ผ่าน');
+  cells.forEach(c=>c.value=value);
   (state.abStudents||[]).forEach(s=>updateAbSummary(s.ID));
-  toast('ตั้ง "ผ่าน" ให้ทุกคนครบ 8 ข้อแล้ว — กด 💾 บันทึก เพื่อยืนยัน','success');
+  toast('ตั้ง "'+value+'" ให้ทุกคนทุกข้อแล้ว — กด 💾 บันทึก เพื่อยืนยัน','success');
 }
+function charAllPass(){ absAllPass('characteristic','#charTable','ผ่าน'); }
 function renderAbilityTables(){
   const sts=state.abStudents, map=state.abDetailMap;
   const g=(sid,key)=> (map[sid]||{})[key];
