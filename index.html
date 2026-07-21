@@ -547,6 +547,10 @@
         <div><label class="text-xs text-slate-500">ชื่อผู้ปกครอง</label><input id="prf_guardianName" class="inp mt-1"></div>
         <div><label class="text-xs text-slate-500">เกี่ยวข้องเป็น</label><input id="prf_guardianRelation" class="inp mt-1" placeholder="เช่น มารดา"></div>
         <div><label class="text-xs text-slate-500">โทรผู้ปกครอง</label><input id="prf_guardianPhone" class="inp mt-1"></div>
+        <div><label class="text-xs text-slate-500">อาชีพผู้ปกครอง</label><input id="prf_guardianJob" class="inp mt-1"></div>
+        <div><label class="text-xs text-slate-500">อาชีพบิดา</label><input id="prf_fatherJob" class="inp mt-1"></div>
+        <div><label class="text-xs text-slate-500">อาชีพมารดา</label><input id="prf_motherJob" class="inp mt-1"></div>
+        <div><label class="text-xs text-slate-500">ความด้อยโอกาส</label><input id="prf_disadvantaged" class="inp mt-1" placeholder="เช่น เด็กยากจน"></div>
       </div>
       <div class="flex justify-end gap-2 mt-4">
         <button onclick="document.getElementById('prfModal').classList.add('hidden')" class="btn bg-slate-100 text-slate-600 px-4 py-2 text-sm">ปิด</button>
@@ -4958,7 +4962,7 @@ async function resolveRemed(i){
 // ============================================================
 //   ประวัตินักเรียน (รูป/ชื่อเล่น/ข้อมูล 15 ช่อง + นำเข้า DMC)
 // ============================================================
-const PROFILE_FIELDS_FE=['nickname','citizenId','birthDate','religion','nationality','ethnicity','bloodGroup','weight','height','address','fatherName','motherName','guardianName','guardianRelation','guardianPhone'];
+const PROFILE_FIELDS_FE=['nickname','citizenId','birthDate','religion','nationality','ethnicity','bloodGroup','weight','height','address','fatherName','motherName','guardianName','guardianRelation','guardianPhone','guardianJob','fatherJob','motherJob','disadvantaged'];
 state.profiles=null; state._prfSid=null;
 function pfCanEdit(room){
   const u=state.currentUser||{};
@@ -5122,7 +5126,51 @@ function importDMCFile(ev){
           if(hits>=3 && (!best||hits>best.hits)) best={sn,aoa,ri,map,hits};
         }
       });
-      if(!best){ toast('ไม่พบหัวตารางที่รู้จักในไฟล์ (ต้องมีคอลัมน์ เช่น เลขประจำตัวนักเรียน/ชื่อ/วันเกิด)','error'); return; }
+      // ฟอร์ม DMC มาตรฐาน (ไม่มีหัวตาราง): ตรวจลายเซ็น เลขบัตร 13 หลัก + ชั้น ม./ป. + วันเกิด dd/mm/ปี
+      if(!best){
+        for(const sn of wb.SheetNames){
+          const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:false});
+          const sig=(aoa||[]).findIndex(r=>r && /^\d{13}$/.test(String(r[2]||'').trim())
+            && /^(ม|ป)\.?\s*\d/.test(String(r[3]||'').trim())
+            && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(String(r[10]||'').trim()));
+          if(sig>=0){ best={sn, aoa, ri:sig-1, map:null, hits:0, positional:true}; break; }
+        }
+      }
+      if(!best){ toast('ไม่พบหัวตารางที่รู้จักในไฟล์ (ต้องมีคอลัมน์ เช่น เลขประจำตัวนักเรียน/ชื่อ/วันเกิด) และไม่ตรงฟอร์ม DMC มาตรฐาน','error'); return; }
+      if(best.positional){
+        const {aoa}=best; const rows=[];
+        const cv=x=>{ const t=String(x==null?'':x).trim(); return (t==='-')?'':t; };
+        for(const r of aoa){
+          if(!r || !/^\d{13}$/.test(String(r[2]||'').trim())) continue;
+          const addr=['บ้านเลขที่ '+cv(r[18]), cv(r[19])?('หมู่ '+cv(r[19])):'', cv(r[20]),
+            cv(r[21])?('ต.'+cv(r[21])):'', cv(r[22])?('อ.'+cv(r[22])):'', cv(r[23])?('จ.'+cv(r[23])):'']
+            .filter(Boolean).join(' ');
+          rows.push({
+            studentCode:cv(r[5]), citizenId:cv(r[2]).replace(/\D/g,''),
+            fullName:(cv(r[7])+cv(r[8])+' '+cv(r[9])).trim(),
+            birthDate:dmcBirth(cv(r[10])),
+            weight:cv(r[12]), height:cv(r[13]), bloodGroup:cv(r[14]),
+            religion:cv(r[15]), ethnicity:cv(r[16]), nationality:cv(r[17]),
+            address:cv(r[18])?addr:'',
+            guardianName:(cv(r[24])+cv(r[25])+' '+cv(r[26])).trim(), guardianJob:cv(r[27]), guardianRelation:cv(r[28]),
+            fatherName:(cv(r[29])+cv(r[30])+' '+cv(r[31])).trim(), fatherJob:cv(r[32]),
+            motherName:(cv(r[33])+cv(r[34])+' '+cv(r[35])).trim(), motherJob:cv(r[36]),
+            disadvantaged:cv(r[37]), guardianPhone:cv(r[38]).replace(/[^\d\-\s]/g,'').trim()
+          });
+        }
+        if(!rows.length){ toast('ไม่พบข้อมูลนักเรียนในไฟล์','error'); return; }
+        if(!confirm('พบข้อมูลฟอร์ม DMC มาตรฐาน '+rows.length+' รายการ (ชีต "'+best.sn+'")\nนำเข้าโดยจับคู่ด้วย รหัสนักเรียน → เลขบัตร → ชื่อ-นามสกุล?')) return;
+        showLoading(true);
+        const res=await GAS.call('importDMC',{rows});
+        showLoading(false);
+        toast('นำเข้าแล้ว '+res.matched+' คน'+(res.unmatchedCount?(' • จับคู่ไม่ได้ '+res.unmatchedCount+' คน'):''), res.unmatchedCount?'error':'success');
+        if(res.unmatched && res.unmatched.length){
+          document.getElementById('pf_area').insertAdjacentHTML('afterbegin',
+            '<div class="p-2 mb-2 rounded bg-amber-50 border border-amber-200 text-xs text-amber-700">จับคู่ไม่ได้: '+res.unmatched.map(esc).join(', ')+(res.unmatchedCount>res.unmatched.length?' …':'')+'</div>');
+        }
+        await loadProfiles();
+        return;
+      }
       const {aoa,ri,map}=best;
       const rows=[];
       for(let i=ri+1;i<aoa.length;i++){
@@ -5844,7 +5892,9 @@ function printProfileRecord(){
       <tr><td style="padding:3px 6px;color:#475569;width:22%">ที่อยู่</td><td colspan="3" style="padding:3px 6px;border-bottom:1px dotted #94a3b8">${g(r.address)}</td></tr>
       ${row('ชื่อบิดา',g(r.fatherName),'ชื่อมารดา',g(r.motherName))}
       ${row('ชื่อผู้ปกครอง',g(r.guardianName),'เกี่ยวข้องเป็น',g(r.guardianRelation))}
-      ${row('โทรศัพท์ผู้ปกครอง',g(r.guardianPhone),'','')}
+      ${row('อาชีพบิดา',g(r.fatherJob),'อาชีพมารดา',g(r.motherJob))}
+      ${row('อาชีพผู้ปกครอง',g(r.guardianJob),'โทรศัพท์ผู้ปกครอง',g(r.guardianPhone))}
+      ${row('ความด้อยโอกาส',g(r.disadvantaged),'','')}
     </table>
     <div style="display:flex;justify-content:space-around;margin-top:18mm;text-align:center;font-size:13px">
       <div><div>ลงชื่อ.............................................</div><div>(.............................................)</div><div>ครูประจำชั้น</div></div>
