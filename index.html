@@ -2182,7 +2182,7 @@ function calcRowTr(tr){
   const g=gradeFromPercent(pct);
   tr.querySelector('.sumCell').textContent=sum;
   tr.querySelector('.pctCell').textContent=(totalMax>0&&hasInput)?pct+'%':'-';
-  tr.querySelector('.grdCell').textContent=(totalMax>0&&hasInput)?(g.grade51+' ('+g.letter51+')'):'-';
+  tr.querySelector('.grdCell').textContent=(totalMax>0&&hasInput&&g&&g.grade51!==''&&g.grade51!=null)?(g.grade51+(g.letter51?' ('+g.letter51+')':'')):'-';
 }
 async function saveScoresFn(){
   if(blockedByLock(state.scoreRoom)) return;
