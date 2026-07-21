@@ -712,7 +712,10 @@
       </div>
 
       <div id="absub-char" class="absubpane hidden card p-4">
-        <p class="text-xs text-slate-400 mb-2">1.รักชาติ ศาสน์ กษัตริย์ • 2.ซื่อสัตย์สุจริต • 3.มีวินัย • 4.อยู่อย่างพอเพียง • 5.มีจิตสาธารณะ</p>
+        <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
+          <p class="text-xs text-slate-400">คุณลักษณะอันพึงประสงค์ 8 ประการ (หลักสูตรฯ 2551): 1.รักชาติ ศาสน์ กษัตริย์ • 2.ซื่อสัตย์สุจริต • 3.มีวินัย • 4.ใฝ่เรียนรู้ • 5.อยู่อย่างพอเพียง • 6.มุ่งมั่นในการทำงาน • 7.รักความเป็นไทย • 8.มีจิตสาธารณะ</p>
+          <button onclick="charAllPass()" class="btn bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 text-xs whitespace-nowrap">✅ ผ่านทั้งหมด (ทุกคน ทุกข้อ)</button>
+        </div>
         <div class="overflow-x-auto"><table class="w-full text-sm" id="charTable"></table></div>
       </div>
       <div id="absub-readthink" class="absubpane hidden card p-4">
@@ -2246,11 +2249,15 @@ async function saveModeB(){
 /* ============================================================
    WP1 : ประเมินรายตัวชี้วัด (คุณลักษณะ/อ่านคิดเขียน/กิจกรรม)
    ============================================================ */
-const CHAR_68=[
+// คุณลักษณะอันพึงประสงค์ 8 ประการ ตามหลักสูตรแกนกลางฯ พ.ศ. 2551
+const CHAR_2551=[
   {f:'รักชาติ ศาสน์ กษัตริย์', s:'รักชาติฯ'},
   {f:'ซื่อสัตย์สุจริต', s:'ซื่อสัตย์'},
   {f:'มีวินัย', s:'มีวินัย'},
+  {f:'ใฝ่เรียนรู้', s:'ใฝ่เรียนรู้'},
   {f:'อยู่อย่างพอเพียง', s:'พอเพียง'},
+  {f:'มุ่งมั่นในการทำงาน', s:'มุ่งมั่น'},
+  {f:'รักความเป็นไทย', s:'รักความเป็นไทย'},
   {f:'มีจิตสาธารณะ', s:'จิตสาธารณะ'}
 ];
 const READTHINK=[{f:'การอ่าน',s:'การอ่าน'},{f:'การคิดวิเคราะห์',s:'คิดวิเคราะห์'},{f:'การเขียน',s:'การเขียน'}];
@@ -2310,15 +2317,23 @@ function passSel(group,item,cur,sid,withSummary){
   return `<select class="inp text-xs ab-cell" data-sid="${sid}" data-group="${group}" data-item="${esc(item)}"${oc}>`+
     PASS_OPTS.map(([v,l])=>`<option value="${v}" ${String(cur==null?'':cur)===v?'selected':''}>${l}</option>`).join('')+'</select>';
 }
+// ตั้ง "ผ่าน" ให้นักเรียนทุกคน ทุกข้อ ในตารางคุณลักษณะ (ยังต้องกดบันทึกเพื่อยืนยัน)
+function charAllPass(){
+  const cells=[...document.querySelectorAll('#charTable select.ab-cell[data-group="characteristic"]')];
+  if(!cells.length){ toast('กดโหลดรายชื่อก่อน','error'); return; }
+  cells.forEach(c=>c.value='ผ่าน');
+  (state.abStudents||[]).forEach(s=>updateAbSummary(s.ID));
+  toast('ตั้ง "ผ่าน" ให้ทุกคนครบ 8 ข้อแล้ว — กด 💾 บันทึก เพื่อยืนยัน','success');
+}
 function renderAbilityTables(){
   const sts=state.abStudents, map=state.abDetailMap;
   const g=(sid,key)=> (map[sid]||{})[key];
   // คุณลักษณะ
   document.getElementById('charTable').innerHTML=
     `<thead><tr class="text-left text-slate-400 border-b"><th class="py-2 px-1">เลขที่</th><th class="px-1">ชื่อ</th><th class="px-1">นามสกุล</th>`+
-    CHAR_68.map((c,i)=>`<th class="px-1 text-center" title="${esc(c.f)}">${i+1}</th>`).join('')+`<th class="px-1 text-center">สรุป</th></tr></thead><tbody>`+
+    CHAR_2551.map((c,i)=>`<th class="px-1 text-center" title="${esc(c.f)}">${i+1}</th>`).join('')+`<th class="px-1 text-center">สรุป</th></tr></thead><tbody>`+
     sts.map(s=>`<tr class="border-b"><td class="px-1 py-1">${esc(s.number)}</td><td class="px-1 whitespace-nowrap">${esc(nmFirst(s))}</td><td class="px-1 whitespace-nowrap">${esc(nmLast(s))}</td>`+
-      CHAR_68.map(c=>`<td class="px-1">${passSel('characteristic',c.f,g(s.ID,'characteristic|'+c.f),s.ID,true)}</td>`).join('')+
+      CHAR_2551.map(c=>`<td class="px-1">${passSel('characteristic',c.f,g(s.ID,'characteristic|'+c.f),s.ID,true)}</td>`).join('')+
       `<td class="px-1 text-center font-semibold text-teal-700" id="charsum-${s.ID}">-</td></tr>`).join('')+`</tbody>`;
   // อ่านคิดเขียน
   document.getElementById('rtTable').innerHTML=
@@ -2587,7 +2602,7 @@ async function exportMIS(){
   try{ showLoading(true);
     const rows=await GAS.call('exportSchoolMIS',{classLevel:cls});
     if(!rows.length){ toast('ไม่มีข้อมูลให้ส่งออก','error'); return; }
-    const aoa=[['เลขประจำตัว','เลขที่','ชื่อ-นามสกุล','ชั้น/ห้อง','รหัสวิชา','ชื่อวิชา','ร้อยละ','เกรด (51)','ระดับ (68)']];
+    const aoa=[['เลขประจำตัว','เลขที่','ชื่อ-นามสกุล','ชั้น/ห้อง','รหัสวิชา','ชื่อวิชา','ร้อยละ','ระดับผลการเรียน']];
     rows.forEach(r=>aoa.push([r.studentCode,r.number,r.fullName,r.classLevel,r.subjectCode,r.subjectName,r.percent,r.grade51]));
     const ws=XLSX.utils.aoa_to_sheet(aoa); const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'SchoolMIS');
@@ -2708,7 +2723,7 @@ async function seedDemoIfEmpty(){
 
     // ผลการประเมินตัวอย่าง (รายตัวชี้วัด — ระบบใหม่)
     const demoRows=(sid)=>[
-      ...CHAR_68.map(c=>({studentID:sid,group:'characteristic',item:c.f,value:'ผ่าน'})),
+      ...CHAR_2551.map(c=>({studentID:sid,group:'characteristic',item:c.f,value:'ผ่าน'})),
       ...READTHINK.map(c=>({studentID:sid,group:'readthink',item:c.f,value:'ผ่าน'})),
       ...ACT.map(c=>({studentID:sid,group:'activity',item:c.f,value:'ผ่าน'})),
       {studentID:sid,group:'activity',item:'ชื่อชุมนุม',value:'การละเล่นพื้นบ้าน'},
@@ -3643,7 +3658,7 @@ async function buildPP5Book(){
     if(pages.has('scores'))     parts.push(pp5ScoresPage(d));
     if(pages.has('attMonth'))   parts.push(pp5AttMonthPages(d));
     if(pages.has('attSummary')) parts.push(pp5AttSummaryPage(d));
-    if(pages.has('char'))       parts.push(pp5AbilityPage(d,'characteristic',CHAR_68,'คุณลักษณะอันพึงประสงค์'));
+    if(pages.has('char'))       parts.push(pp5AbilityPage(d,'characteristic',CHAR_2551,'คุณลักษณะอันพึงประสงค์'));
     if(pages.has('readthink'))  parts.push(pp5AbilityPage(d,'readthink',READTHINK,'การอ่าน คิดวิเคราะห์ และเขียน'));
     if(pages.has('comp'))       parts.push(pp5Comp5Page(d));
     document.getElementById('pp5Area').innerHTML=parts.join('');
