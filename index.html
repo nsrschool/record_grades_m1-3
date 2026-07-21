@@ -959,7 +959,7 @@
       <div class="flex flex-wrap gap-2 items-end">
         <div>
           <label class="text-xs text-slate-500">เลือกห้อง</label>
-          <select id="ex_class" class="inp mt-1 w-auto"><option value="">— เลือกห้อง —</option></select>
+          <select id="mis_class" class="inp mt-1 w-auto"><option value="">— เลือกห้อง —</option></select>
         </div>
         <button onclick="exportMISWide()" class="btn bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 text-sm">📤 ส่งออกแบบ School MIS (รายห้อง)</button>
         <button onclick="exportMIS()" class="btn bg-white border border-slate-200 text-slate-600 px-4 py-2 text-sm">📄 ส่งออกแบบยาว (รายวิชา)</button>
@@ -2609,13 +2609,13 @@ async function loadStats(){
 }
 
 function fillExClass(){
-  const sel=document.getElementById('ex_class'); if(!sel) return;
+  const sel=document.getElementById('mis_class'); if(!sel) return;
   const rooms=allClasses(); const cur=sel.value;
   sel.innerHTML='<option value="">— เลือกห้อง —</option>'+rooms.map(r=>`<option>${esc(r)}</option>`).join('');
   if(cur) sel.value=cur;
 }
 async function exportMISWide(){
-  const cls=document.getElementById('ex_class').value;
+  const cls=document.getElementById('mis_class').value;
   if(!cls){ toast('เลือกห้องก่อน','error'); return; }
   try{ showLoading(true);
     const d=await GAS.call('exportSchoolMISWide',{classLevel:cls});
@@ -2628,7 +2628,7 @@ async function exportMISWide(){
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 async function exportMIS(){
-  const cls=document.getElementById('ex_class').value;
+  const cls=document.getElementById('mis_class').value;
   try{ showLoading(true);
     const rows=await GAS.call('exportSchoolMIS',{classLevel:cls});
     if(!rows.length){ toast('ไม่มีข้อมูลให้ส่งออก','error'); return; }
@@ -5215,77 +5215,6 @@ function importDMCFile(ev){
     finally{ ev.target.value=''; }
   };
   reader.readAsArrayBuffer(file);
-}
-
-// ============================================================
-//   📊 รายงานสารสนเทศ / SAR
-// ============================================================
-state.sar=null;
-async function loadSAR(){
-  try{ showLoading(true);
-    const scope=(document.getElementById('sar_scope')||{}).value||state.semester;
-    state.sar=await GAS.call('getSARData',{scope});
-    document.getElementById('sar_area').innerHTML=sarBodyHTML(state.sar,false);
-  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
-}
-function sarScopeLabel(d){ return d.scope==='year'?'ทั้งปีการศึกษา '+d.academicYear:'ภาคเรียนที่ '+d.scope+' ปีการศึกษา '+d.academicYear; }
-function sarBodyHTML(d, forPrint){
-  const card=(title,inner)=>forPrint
-    ? `<div style="margin-top:5mm;break-inside:avoid"><div style="font-weight:700;border-left:4px solid #0d9488;padding-left:6px;margin-bottom:2mm">${title}</div>${inner}</div>`
-    : `<div class="card p-4 mb-4"><div class="font-bold text-teal-700 mb-2">${title}</div>${inner}</div>`;
-  const T=(head,rows)=>`<table style="width:100%;border-collapse:collapse;font-size:${forPrint?'12px':'13px'}">`+
-    `<tr style="background:#f1f5f9">${head.map(h=>`<th style="border:1px solid ${forPrint?'#000':'#e2e8f0'};padding:3px 6px">${h}</th>`).join('')}</tr>`+
-    rows.map(r=>`<tr>${r.map((c,i)=>`<td style="border:1px solid ${forPrint?'#000':'#e2e8f0'};padding:3px 6px;text-align:${i===0?'left':'center'}">${c}</td>`).join('')}</tr>`).join('')+'</table>';
-  const b=d.basic;
-  // 1) ข้อมูลทั่วไป
-  const basic=card('๑. ข้อมูลพื้นฐาน',
-    T(['ห้องเรียน','จำนวนนักเรียน (คน)'],
-      b.rooms.map(r=>[esc(r.room),r.n]).concat(b.byGrade.map(g=>['<b>รวม '+esc(g.grade)+'</b>','<b>'+g.n+'</b>']),[['<b>รวมทั้งหมด</b>','<b>'+b.totalStudents+'</b>'],['ครูผู้สอน',b.teachers+' คน']])));
-  // 2) ผลสัมฤทธิ์
-  const distRow=['4','3.5','3','2.5','2','1.5','1','0','ร','มส','มผ'];
-  const totalG=distRow.reduce((a,k)=>a+d.dist[k],0);
-  const ach=card('๒. ผลสัมฤทธิ์ทางการเรียน',
-    T(['ระดับผลการเรียน'].concat(distRow),[['จำนวน (รายการ)'].concat(distRow.map(k=>d.dist[k]))])+
-    '<div style="height:6px"></div>'+
-    T(['ห้อง','นักเรียน','ผลการเรียน (รายการ)','GPA เฉลี่ย','ได้เกรด ≥3 (%)','ติด 0/ร/มส/มผ'],
-      d.achievement.map(a2=>[esc(a2.room),a2.students,a2.gradeEntries,a2.gpa!=null?a2.gpa.toFixed(2):'—',a2.gradeEntries?a2.ge3pct+'%':'—',a2.special||'-']))+
-    `<div style="font-size:11px;color:#64748b;margin-top:2px">รวมผลการเรียนทั้งหมด ${totalG} รายการ • GPA ถ่วงน้ำหนักด้วยชั่วโมงเรียน</div>`);
-  // 3) เวลาเรียน
-  const att=card('๓. การมาเรียน (เช็คชื่อหน้าเสาธง)',
-    T(['ห้อง','จำนวนบันทึก','มาเรียน (%)'],
-      d.attendance.map(a2=>[esc(a2.room),a2.records,a2.pct!=null?a2.pct+'%':'—'])));
-  // 4) 0/ร/มส/มผ
-  const sp=card('๔. นักเรียนติด 0 / ร / มส / มผ และการสอบแก้ตัว',
-    T(['0','ร','มส','มผ','รวมรอแก้ไข','แก้ไขแล้ว'],
-      [[d.special.z,d.special.r,d.special.ms,d.special.mp,'<b>'+d.special.pending+'</b>','<b>'+d.special.resolved+'</b>']]));
-  // 5) ระบบดูแล
-  const careC=card('๕. ระบบดูแลช่วยเหลือนักเรียน',
-    T(['รายการ','ผลดำเนินงาน'],[
-      ['คัดกรอง SDQ', d.sdq.assessed+'/'+b.totalStudents+' คน — ปกติ '+d.sdq.normal+' • เสี่ยง '+d.sdq.risk+' • มีปัญหา '+d.sdq.problem],
-      ['เยี่ยมบ้านนักเรียน', d.homeVisit.visited+'/'+d.homeVisit.total+' คน ('+(d.homeVisit.total?Math.round(d.homeVisit.visited/d.homeVisit.total*100):0)+'%)']]));
-  // 6) งานครู
-  const teach=card('๖. การส่งเอกสารการสอนและการนิเทศ',
-    T(['รายการ','ผลดำเนินงาน'],
-      d.teaching.map(t=>['ส่งเอกสารครบ (ภาคเรียนที่ '+t.semester+')', t.complete+' คน • ยังไม่ครบ '+t.incomplete+' คน'])
-      .concat([['การนิเทศชั้นเรียน', d.supervision.total+' ครั้ง — ดีมาก '+d.supervision.byRating['ดีมาก']+' • ดี '+d.supervision.byRating['ดี']+' • พอใช้ '+d.supervision.byRating['พอใช้']+' • ปรับปรุง '+d.supervision.byRating['ปรับปรุง']]])));
-  return basic+ach+att+sp+careC+teach;
-}
-function printSAR(){
-  const d=state.sar;
-  if(!d){ toast('กดรีเฟรชข้อมูลก่อน','error'); return; }
-  const logo=d.logoURL?`<img src="${esc(d.logoURL)}" style="width:52px;height:52px;object-fit:contain">`:'';
-  document.getElementById('memoPrintArea').innerHTML=
-    `<div class="rp-page" style="width:210mm;min-height:297mm;padding:16mm 14mm;background:#fff;color:#000;font-size:13px;line-height:1.6;page-break-after:always">
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px">${logo}
-        <div style="text-align:center"><div style="font-weight:700;font-size:17px">รายงานสารสนเทศทางการศึกษา</div>
-        <div>${esc(d.schoolName)} • ${sarScopeLabel(d)}</div></div></div>
-      ${sarBodyHTML(d,true)}
-      <div style="display:flex;justify-content:space-around;margin-top:12mm;text-align:center;font-size:13px">
-        <div><div>ลงชื่อ.............................................</div><div>(.............................................)</div><div>ผู้จัดทำรายงาน</div></div>
-        <div><div>ลงชื่อ.............................................</div><div>(${esc(d.directorName||'.............................................')})</div><div>ผู้อำนวยการ${esc(d.schoolName)}</div></div>
-      </div>
-    </div>`;
-  printOnly('memoPrintArea');
 }
 
 // ============================================================
