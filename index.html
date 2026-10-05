@@ -61,6 +61,7 @@
   .inp{border:1px solid #cbd5e1;border-radius:.6rem;padding:.5rem .75rem;width:100%;outline:none;transition:.15s;}
   .inp:focus{border-color:var(--kps-primary);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
   .badge{font-size:.72rem;padding:.12rem .5rem;border-radius:99px;font-weight:600;}
+  .subnav .navbtn{padding:.4rem .8rem}
   .nav-cat{font-size:11px;font-weight:700;color:#94a3b8;padding-left:.5rem;border-left:2px solid #e2e8f0;align-self:center;white-space:nowrap;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
   .cal-cell{min-height:84px;border:1px solid #e2e8f0;border-radius:10px;padding:5px 6px;background:#fff;display:flex;flex-direction:column;gap:3px;transition:.15s;}
@@ -236,37 +237,54 @@
   </div>
 </div>
 
-<!-- ====================== NAV TABS ====================== -->
+<!-- ====================== NAV TABS (2 ชั้น: หมวด → เมนูย่อย) ====================== -->
 <nav class="max-w-6xl mx-auto px-3 mt-4">
-  <div class="flex flex-wrap items-center gap-2">
-    <button data-tab="home"     data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏠 หน้าแรก</button>
-    <button data-tab="schedule" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📅 ตารางสอน</button>
-    <button data-tab="overview" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📊 แดชบอร์ดผู้บริหาร</button>
-    <span class="nav-cat" data-role="all">📚 งานวิชาการ</span>
-    <button data-tab="subjects" data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
-    <button data-tab="scores"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📝 บันทึกผลการเรียน</button>
-    <button data-tab="ability"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🎓 สมรรถนะ/คุณลักษณะ</button>
-    <button data-tab="teaching" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📤 ส่งเอกสารการสอน</button>
-    <button data-tab="remed"    data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🩹 สอบแก้ตัว 0/ร/มส/มผ</button>
-    <button data-tab="approve"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🔏 ส่ง/อนุมัติผล</button>
-    <button data-tab="supervise" data-role="all"  class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🧭 นิเทศชั้นเรียน</button>
-    <button data-tab="docs"     data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📁 เอกสาร/แบบฟอร์ม</button>
-    <button data-tab="profile"  data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📇 ประวัตินักเรียน</button>
-    <button data-tab="exams"    data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📅 ตารางสอบ</button>
-    <button data-tab="care"     data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">💚 ดูแลนักเรียน</button>
-    <button data-tab="sar"      data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📊 สารสนเทศ/SAR</button>
-    <button data-tab="assign"   data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">👩‍🏫 จัดครูผู้สอน</button>
-    <button data-tab="report"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🖨️ พิมพ์ใบรายงาน</button>
-    <button data-tab="summary68" data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📋 สรุปผลการเรียน</button>
-    <button data-tab="stats"    data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📊 รายงานสรุป</button>
-    <span class="nav-cat" data-role="all">🕒 งานปกครอง</span>
-    <button data-tab="attendance" data-role="all"  class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">✅ เช็คชื่อ</button>
-    <button data-tab="calendar"  data-role="all"  class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📅 ปฏิทินวิชาการ</button>
-    <button data-tab="risk"      data-role="all"  class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">⚠️ นักเรียนเสี่ยง</button>
-    <span class="nav-cat" data-role="admin">⚙️ ผู้ดูแลระบบ</span>
-    <button data-tab="admin"    data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">🛠️ แอดมิน</button>
-    <button data-tab="settings" data-role="admin" class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">⚙️ ตั้งค่าระบบ</button>
-    <button data-tab="manual"   data-role="all"   class="navbtn btn whitespace-nowrap px-4 py-2 text-sm bg-white border border-slate-200">📖 คู่มือ</button>
+  <div id="catRow" class="flex flex-wrap items-center gap-2">
+    <button data-tab="home" class="navbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">🏠 หน้าแรก</button>
+    <button data-cat="record" class="catbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">📝 บันทึกผล</button>
+    <button data-cat="schedule" class="catbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">📅 ตาราง/ปฏิทิน</button>
+    <button data-cat="student" class="catbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">🧑‍🎓 นักเรียน</button>
+    <button data-cat="report" class="catbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">🖨️ รายงาน/เอกสาร</button>
+    <button data-cat="manage" class="catbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">📊 บริหารงาน</button>
+    <button data-cat="admin" class="catbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">⚙️ ผู้ดูแลระบบ</button>
+    <button data-tab="manual" class="navbtn btn whitespace-nowrap px-3 sm:px-4 py-2 text-sm bg-white border border-slate-200">📖 คู่มือ</button>
+  </div>
+  <div id="subRow" class="hidden mt-2 rounded-xl bg-white/80 border border-slate-200 px-2 py-2">
+    <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="record" data-label="📝 บันทึกผล">
+      <button data-tab="scores" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📝 บันทึกผลการเรียน</button>
+      <button data-tab="ability" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🎓 สมรรถนะ/คุณลักษณะ</button>
+      <button data-tab="remed" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🩹 สอบแก้ตัว 0/ร/มส/มผ</button>
+      <button data-tab="teaching" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📤 ส่งเอกสารการสอน</button>
+      <button data-tab="approve" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🔏 ส่ง/อนุมัติผล</button>
+    </div>
+    <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="schedule" data-label="📅 ตาราง/ปฏิทิน">
+      <button data-tab="schedule" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ตารางสอน</button>
+      <button data-tab="exams" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ตารางสอบ</button>
+      <button data-tab="calendar" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ปฏิทินวิชาการ</button>
+    </div>
+    <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="student" data-label="🧑‍🎓 นักเรียน">
+      <button data-tab="attendance" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">✅ เช็คชื่อ</button>
+      <button data-tab="profile" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📇 ประวัตินักเรียน</button>
+      <button data-tab="care" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">💚 ดูแลนักเรียน</button>
+      <button data-tab="risk" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">⚠️ นักเรียนเสี่ยง</button>
+    </div>
+    <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="report" data-label="🖨️ รายงาน/เอกสาร">
+      <button data-tab="report" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🖨️ พิมพ์ใบรายงาน</button>
+      <button data-tab="summary68" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📋 สรุปผลการเรียน</button>
+      <button data-tab="sar" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📊 สารสนเทศ/SAR</button>
+      <button data-tab="stats" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📊 รายงานสรุป</button>
+      <button data-tab="docs" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📁 เอกสาร/แบบฟอร์ม</button>
+    </div>
+    <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="manage" data-label="📊 บริหารงาน">
+      <button data-tab="overview" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📊 แดชบอร์ดผู้บริหาร</button>
+      <button data-tab="supervise" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🧭 นิเทศชั้นเรียน</button>
+    </div>
+    <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="admin" data-label="⚙️ ผู้ดูแลระบบ">
+      <button data-tab="subjects" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
+      <button data-tab="assign" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">👩‍🏫 จัดครูผู้สอน</button>
+      <button data-tab="admin" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🛠️ แอดมิน</button>
+      <button data-tab="settings" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">⚙️ ตั้งค่าระบบ</button>
+    </div>
   </div>
 </nav>
 
@@ -1800,6 +1818,7 @@ function switchTab(name){
   document.querySelectorAll('.navbtn').forEach(b=>{
     b.classList.toggle('tab-active', b.dataset.tab===name);
   });
+  navSync(name);
   if(name==='home') renderHome();
   if(name==='settings'){ switchSub('school'); fillExClass(); }
   if(name==='scores') fillScoreSubjects();
@@ -1824,6 +1843,36 @@ function switchTab(name){
   if(name==='assign') loadAssign();
   if(name==='summary68') initSummary68();
   if(name==='manual') window.scrollTo(0,0);
+}
+
+/* ---------- เมนู 2 ชั้น: หมวด → เมนูย่อย ---------- */
+const NAV_LAST={};   // จำเมนูย่อยล่าสุดที่เปิดในแต่ละหมวด
+function navRefresh(){   // ซ่อนทั้งหมวดถ้าผู้ใช้ไม่มีเมนูย่อยสักอัน
+  document.querySelectorAll('.subnav').forEach(g=>{
+    const vis=[...g.querySelectorAll('.navbtn')].some(b=>b.style.display!=='none');
+    const cb=document.querySelector('.catbtn[data-cat="'+g.dataset.cat+'"]');
+    if(cb) cb.style.display=vis?'':'none';
+  });
+}
+function navSync(name){
+  navRefresh();
+  const btn=document.querySelector('.navbtn[data-tab="'+name+'"]');
+  const grp=btn?btn.closest('.subnav'):null;
+  const cat=grp?grp.dataset.cat:'';
+  if(cat) NAV_LAST[cat]=name;
+  document.querySelectorAll('.catbtn').forEach(c=>c.classList.toggle('tab-active', c.dataset.cat===cat));
+  document.querySelectorAll('.subnav').forEach(g=>{ const on=g.dataset.cat===cat; g.classList.toggle('hidden',!on); g.classList.toggle('flex',on); });
+  const sr=document.getElementById('subRow'); if(sr) sr.classList.toggle('hidden',!cat);
+  try{ if(btn&&btn.scrollIntoView) btn.scrollIntoView({block:'nearest',inline:'center'}); }catch(e){}
+}
+function openCat(cat){
+  const g=document.querySelector('.subnav[data-cat="'+cat+'"]'); if(!g) return;
+  const cur=document.querySelector('.navbtn.tab-active');
+  if(cur && g.contains(cur)) return;   // อยู่ในหมวดนี้อยู่แล้ว
+  const ok=b=>b&&b.style.display!=='none';
+  const last=NAV_LAST[cat] && g.querySelector('.navbtn[data-tab="'+NAV_LAST[cat]+'"]');
+  const first=ok(last)?last:[...g.querySelectorAll('.navbtn')].find(ok);
+  if(first) switchTab(first.dataset.tab);
 }
 
 // สลับภาคเรียนทั้งระบบ — บันทึกเป็นค่าตั้งต้น แล้วรีเฟรชแท็บปัจจุบัน
@@ -1854,6 +1903,7 @@ function switchAsub(name){
   if(name==='locks') renderLocksAdmin();
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+document.querySelectorAll('.catbtn').forEach(b=>b.onclick=()=>openCat(b.dataset.cat));
 document.querySelectorAll('.subbtn').forEach(b=>b.onclick=()=>switchSub(b.dataset.sub));
 document.querySelectorAll('.asubbtn').forEach(b=>b.onclick=()=>switchAsub(b.dataset.asub));
 function switchAtt(name){
@@ -3193,6 +3243,7 @@ function applyRole(){
   });
   document.getElementById('userChip').textContent='👤 '+(u.name||'')+' • '+roleLabel(role);
   document.getElementById('userBar').classList.remove('hidden');
+  navRefresh();
 }
 
 /* ---------- นำเข้ารายชื่อ (A-F) ---------- */
@@ -7092,10 +7143,14 @@ function renderAccess(){
   document.getElementById('acc_link').value=location.href.split(/[?#]/)[0]+'?check';
   const skip=['home','manual','admin','settings','subjects','assign'];
   const btns=[...document.querySelectorAll('.navbtn')].filter(b=>skip.indexOf(b.dataset.tab)<0);
+  let lastCat='';
   document.getElementById('acc_body').innerHTML=btns.map(b=>{
     const tab=b.dataset.tab, label=b.textContent.trim();
+    const g=b.closest('.subnav'), cat=g?g.dataset.label:'';
     const ck=(role)=>`<td class="px-2 text-center"><input type="checkbox" class="acc-ck" data-role-name="${role}" data-tab="${tab}" ${(TAB_ACCESS[role]||[]).indexOf(tab)>=0?'checked':''}></td>`;
-    return `<tr class="border-b"><td class="py-1.5 px-2">${esc(label)}</td>${ck('teacher')}${ck('director')}</tr>`;
+    let head='';
+    if(cat && cat!==lastCat){ lastCat=cat; head=`<tr class="bg-slate-50"><td colspan="3" class="py-1 px-2 text-xs font-semibold text-slate-500">${esc(cat)}</td></tr>`; }
+    return head+`<tr class="border-b"><td class="py-1.5 px-2 pl-4">${esc(label)}</td>${ck('teacher')}${ck('director')}</tr>`;
   }).join('');
 }
 async function toggleLookup(on){
