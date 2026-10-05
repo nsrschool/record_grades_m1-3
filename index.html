@@ -1505,32 +1505,6 @@
   </section>
 
   <!-- ---------- TAB: MANUAL ---------- -->
-  <section id="tab-manual" class="tabpane hidden">
-    <div class="card p-5 space-y-4 text-sm leading-relaxed">
-      <h2 class="font-bold text-teal-700 text-lg">📖 คู่มือการใช้งาน</h2>
-      <div>
-        <h3 class="font-semibold text-teal-600">ขั้นตอนการใช้งานโดยย่อ</h3>
-        <ol class="list-decimal ml-5 mt-1 space-y-1 text-slate-600">
-          <li>ตั้งค่า <b>ข้อมูลสถานศึกษา</b> (โลโก้ ชื่อโรงเรียน ปีการศึกษา ผอ./รองผอ. ลายเซ็น)</li>
-          <li>เพิ่ม/นำเข้า <b>รายชื่อนักเรียน</b> (ดาวน์โหลดฟอร์มตัวอย่างไปกรอกแล้วนำเข้า)</li>
-          <li>ตั้ง <b>รายวิชา</b> ตามโครงสร้างหลักสูตร แยกพื้นฐาน/เพิ่มเติม + เวลาเรียน</li>
-          <li><b>บันทึกผลการเรียน</b> — กรอกคะแนนรายหน่วย (ระบบคิดเกรดให้) หรือกรอกร้อยละ/เลือกเกรดเอง แยกภาคเรียน</li>
-          <li><b>พิมพ์ใบรายงาน</b> — แสดงผลการเรียนแยกภาค 1/2 + GPA ตามหลักสูตร 2551 ใน A4 เดียว</li>
-        </ol>
-      </div>
-      <div>
-        <h3 class="font-semibold text-teal-600">วิธี Deploy เป็น Web App (สำหรับครูที่นำโค้ดไปใช้ต่อ)</h3>
-        <ol class="list-decimal ml-5 mt-1 space-y-1 text-slate-600">
-          <li>สร้าง Google Sheet ใหม่ → Extensions → Apps Script → วาง <code>Code.gs</code></li>
-          <li>รันฟังก์ชัน <code>INIT</code> 1 ครั้งเพื่อให้สิทธิ์และสร้างชีต</li>
-          <li>Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone</li>
-          <li>คัดลอก Web App URL มาวางในไฟล์ <code>index.html</code> ที่ตัวแปร <code>GAS.URL</code></li>
-          <li>อัปโหลด <code>index.html</code> ขึ้น GitHub Pages</li>
-        </ol>
-      </div>
-    </div>
-  </section>
-
   <!-- ---------- TAB: MANUAL ---------- -->
   <section id="tab-manual" class="tabpane hidden">
     <div class="card p-4 mb-4">
