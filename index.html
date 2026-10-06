@@ -717,13 +717,6 @@
           </select>
         </div>
         <div id="sc_timeCheck" class="hidden mb-2"></div>
-      <div id="sc_modeWrap" class="hidden">
-          <label class="text-xs text-slate-500">โหมดการกรอก</label>
-          <div class="flex gap-1 mt-1 bg-slate-100 rounded-lg p-1">
-            <button id="modeA" class="btn px-3 py-1.5 text-xs" onclick="setScoreMode('A')">📊 คะแนนรายหน่วย</button>
-            <button id="modeB" class="btn px-3 py-1.5 text-xs" onclick="setScoreMode('B')">🎚️ ระดับ/ร้อยละ</button>
-          </div>
-        </div>
       </div>
       <div id="sc_docs" class="mt-3"></div>
       <div id="sc_lockBanner" class="hidden mt-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm px-3 py-2">🔒 ห้องนี้ถูกล็อก (อนุมัติผลแล้ว) — แก้ไขไม่ได้ จนกว่าแอดมินจะปลดล็อก</div>
@@ -734,7 +727,7 @@
       <div class="card p-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-bold text-teal-700">หน่วย/ผลลัพธ์การเรียนรู้ <span class="text-xs font-normal text-slate-400">(ตั้งชื่ออิสระ)</span></h3>
-          <span class="text-xs text-slate-500">คะแนนเต็มรวม: <b id="sc_totalMax" class="text-teal-700">0</b></span>
+          <span class="text-xs text-slate-500">คะแนนเต็มรวม: <b id="sc_totalMax" class="text-teal-700">0</b> <span id="sc_totalBreak" class="text-[10px] text-slate-400"></span></span>
         </div>
         <div id="unitsWrap" class="space-y-2"></div>
         <div class="flex justify-between mt-3">
@@ -743,7 +736,17 @@
         </div>
       </div>
       <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(ทศนิยมได้ไม่เกิน 2 ตำแหน่ง • ระบบคิดร้อยละ → เกรด 2551 ให้อัตโนมัติ)</span></h3>
+        <h3 class="font-bold text-teal-700 mb-1">📝 คะแนนสอบกลางภาค / ปลายภาค <span class="text-xs font-normal text-slate-400">(ตั้งคะแนนเต็มเอง • 0 = ไม่ใช้)</span></h3>
+        <p class="text-[11px] text-slate-400 mb-2">สองช่องนี้แยกจากหน่วยคะแนนเก็บ ไม่นำไปรวมในสัดส่วนของหน่วยด้านบน — ตอนคิดเกรดจะรวม คะแนนเก็บ + กลางภาค + ปลายภาค เทียบกับคะแนนเต็มรวมทั้งสามส่วน</p>
+        <div class="flex flex-wrap items-end gap-3">
+          <div><label class="text-xs text-slate-500">สอบกลางภาค (เต็ม)</label><input id="ex_mid" type="text" inputmode="decimal" autocomplete="off" maxlength="6" class="inp w-28 text-sm numcell mt-1" onfocus="this.select()" oninput="onExamInput(this)" placeholder="0"></div>
+          <div><label class="text-xs text-slate-500">สอบปลายภาค (เต็ม)</label><input id="ex_final" type="text" inputmode="decimal" autocomplete="off" maxlength="6" class="inp w-28 text-sm numcell mt-1" onfocus="this.select()" oninput="onExamInput(this)" placeholder="0"></div>
+          <button onclick="saveExamFn()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 text-sm">💾 บันทึกสัดส่วนสอบ</button>
+        </div>
+        <div id="ex_summary" class="text-xs text-slate-500 mt-2"></div>
+      </div>
+      <div class="card p-4">
+        <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(จำนวนเต็มหรือลงท้าย .5 เช่น 5 / 5.5 • ระบบคิดร้อยละ → เกรด 2551 ให้อัตโนมัติ • ช่อง "ผลพิเศษ" เลือก ร/มส เฉพาะนักเรียนที่มีปัญหา)</span></h3>
         <div id="scoreErrBox" class="hidden mb-3 p-3 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 text-xs"></div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -753,26 +756,6 @@
         </div>
         <div class="text-right mt-3">
           <button onclick="saveScoresFn()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-sm">💾 บันทึกคะแนน + คำนวณเกรด</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mode B -->
-    <div id="sc_modeB" class="hidden">
-      <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-1">กรอกร้อยละ หรือเลือกระดับโดยตรง</h3>
-        <p class="text-xs text-slate-400 mb-3">กรอกร้อยละ → ระบบแปลงเป็นเกรด 2551 ให้อัตโนมัติ • หรือเลือกเกรดเองโดยไม่กรอกร้อยละก็ได้</p>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead><tr class="text-left text-slate-400 border-b">
-              <th class="py-2 px-2">เลขที่</th><th class="px-2">ชื่อ</th><th class="px-2">นามสกุล</th>
-              <th class="px-2">ร้อยละ</th><th class="px-2">เกรด (เลือกเอง)</th><th class="px-2 text-center">เกรด</th>
-            </tr></thead>
-            <tbody id="modeBBody"></tbody>
-          </table>
-        </div>
-        <div class="text-right mt-3">
-          <button onclick="saveModeB()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 text-sm">💾 บันทึกผลการเรียน</button>
         </div>
       </div>
     </div>
@@ -1666,7 +1649,7 @@
 /* ============================================================
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
-const FE_VERSION = '2026-10-05d';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = '2026-10-06b';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -2322,7 +2305,7 @@ async function doClear(){
 /* ============================================================
    PART 3 : บันทึกผลการเรียน (2 โหมด)
    ============================================================ */
-Object.assign(state, { units:{}, scoreSubject:null, scoreMode:'A', scores:[], grades:[] });
+Object.assign(state, { exam:{}, units:{}, scoreSubject:null, scoreMode:'A', scores:[], grades:[] });
 
 const GRADE_OPTS = ['','4','3.5','3','2.5','2','1.5','1','0','ร','มส','มผ','ผ'];  // รวมผลการเรียนพิเศษตามหลักสูตร 2551
 
@@ -2411,26 +2394,22 @@ async function onSelectScoreSubject(){
   }
   if(!id){
     document.getElementById('sc_empty').classList.remove('hidden');
-    document.getElementById('sc_modeWrap').classList.add('hidden');
     document.getElementById('sc_modeA').classList.add('hidden');
-    document.getElementById('sc_modeB').classList.add('hidden');
     return;
   }
   try{
     showLoading(true);
-    const [units, scores, grades]=await Promise.all([
+    const [units, scores, grades, exam]=await Promise.all([
       GAS.call('getUnits',{subjectID:id, semester:state.semester}),
       GAS.call('getScores',{subjectID:id, semester:state.semester}),
-      GAS.call('getGrades',{semester:state.semester})
+      GAS.call('getGrades',{semester:state.semester}),
+      GAS.call('getExamConfig',{subjectID:id, semester:state.semester})
     ]);
-    state.units[id]=units; state.scores=scores; state.grades=grades;
+    state.units[id]=units; state.scores=scores; state.grades=grades; state.exam[id]=exam||{midMax:0,finalMax:0};
     GAS.call('getSubjectDocs',{subjectID:id}).then(docs=>renderDocList(docs,'sc_docs',false)).catch(()=>{});
     document.getElementById('sc_lockBanner').classList.toggle('hidden', !isRoomLocked(state.scoreRoom));
-    document.getElementById('sc_modeWrap').classList.remove('hidden');
     document.getElementById('sc_empty').classList.add('hidden');
-    const subGrades=grades.filter(g=>String(g.subjectID)===String(id));
-    const mode = units.length ? 'A' : (subGrades.some(g=>g.mode==='B')?'B':'A');
-    setScoreMode(mode);
+    setScoreMode('A');
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 
@@ -2443,7 +2422,7 @@ function renderTimeCheckBadge(){
   el.classList.remove('hidden');
   el.innerHTML=`<div class="flex flex-wrap items-center gap-2 text-xs rounded-lg px-3 py-2 ${n?'bg-rose-50 border border-rose-200':'bg-emerald-50 border border-emerald-200'}">
     <span>${n?'⚠️':'✅'} เวลาเรียนภาคเรียนนี้ (${tc.periodsTotal} คาบ): ${n?`<b class="text-rose-700">ต่ำกว่า 80% จำนวน ${n} คน</b> — ตามระเบียบ 2551 ควรได้ "มส" เว้นแต่ได้รับผ่อนผัน`:'ทุกคนถึงเกณฑ์ 80%'}</span>
-    ${n?`<button onclick="applyMsForLowTime()" class="btn bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 text-xs">ตั้ง "มส" ให้ ${n} คน (โหมดระดับ/ร้อยละ)</button>
+    ${n?`<button onclick="applyMsForLowTime()" class="btn bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 text-xs">ตั้ง "มส" ให้ ${n} คน</button>
     <button onclick="switchTab('attendance');setTimeout(()=>switchAtt('subject'),50)" class="btn bg-white border border-rose-200 text-rose-700 px-3 py-1 text-xs">ดูรายละเอียดเวลาเรียน</button>`:''}
   </div>`;
 }
@@ -2454,7 +2433,7 @@ function timeTag(sid){
 }
 function markTimeCheckRows(){
   const tc=state.timeCheck; if(!tc||!tc.students) return;
-  document.querySelectorAll('#scoreBody tr[data-sid], #modeBBody tr[data-sid]').forEach(tr=>{
+  document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>{
     const sid=tr.dataset.sid; const t=tc.students[sid]; if(!t||t.pct==null||t.pct>=80) return;
     const cell=tr.children[1]; if(cell && !cell.querySelector('.ttag')){ const sp=document.createElement('span'); sp.className='ttag'; sp.innerHTML=timeTag(sid); cell.appendChild(sp); }
     tr.classList.add('bg-rose-50/40');
@@ -2462,28 +2441,24 @@ function markTimeCheckRows(){
 }
 function applyMsForLowTime(){
   const tc=state.timeCheck; if(!tc||!tc.below||!tc.below.length) return;
-  if(!confirm('ตั้งผลการเรียนเป็น "มส" ให้นักเรียนที่เวลาเรียนต่ำกว่า 80% จำนวน '+tc.below.length+' คน?\n(ระบบจะสลับไปโหมดระดับ/ร้อยละ — แก้รายคนได้ก่อนกดบันทึก)')) return;
-  setScoreMode('B');
+  if(!confirm('ตั้งช่อง "ผลพิเศษ" เป็น "มส" ให้นักเรียนที่เวลาเรียนต่ำกว่า 80% จำนวน '+tc.below.length+' คน?\n(แก้รายคนได้ก่อนกดบันทึก)')) return;
   let n=0;
   tc.below.forEach(sid=>{
-    const tr=document.querySelector('#modeBBody tr[data-sid="'+sid+'"]'); if(!tr) return;
-    const sel=tr.querySelector('select.bLvl'); if(!sel) return;
-    if([...sel.options].some(o=>o.value==='มส')){ sel.value='มส'; n++; if(typeof calcModeBRow==='function') calcModeBRow(sel); }
+    const tr=document.querySelector('#scoreBody tr[data-sid="'+sid+'"]'); if(!tr) return;
+    const sel=tr.querySelector('select.spCell'); if(!sel) return;
+    sel.value='มส'; n++; onSpecialChange(sel);
   });
   markTimeCheckRows();
   toast('ตั้ง "มส" แล้ว '+n+' คน — ตรวจแล้วกด 💾 บันทึก','success');
 }
 function setScoreMode(mode){
-  state.scoreMode=mode;
-  document.getElementById('modeA').classList.toggle('tab-active',mode==='A');
-  document.getElementById('modeB').classList.toggle('tab-active',mode==='B');
-  document.getElementById('sc_modeA').classList.toggle('hidden',mode!=='A');
-  document.getElementById('sc_modeB').classList.toggle('hidden',mode!=='B');
-  if(mode==='A'){ renderUnits(); renderScoreTable(); } else { renderModeB(); }
+  state.scoreMode='A';
+  document.getElementById('sc_modeA').classList.remove('hidden');
+  renderExamInputs(); renderUnits(); renderScoreTable();
   markTimeCheckRows(); renderTimeCheckBadge();
 }
 
-/* ---- ช่องคะแนน: พิมพ์เอง (ไม่มีปุ่มเพิ่ม/ลด) ทศนิยมได้ไม่เกิน 2 ตำแหน่ง • ค่าผิดพลาดแสดงสีแดง + ข้อความ และห้ามบันทึกจนกว่าจะแก้ ---- */
+/* ---- ช่องคะแนน: พิมพ์เอง (ไม่มีปุ่มเพิ่ม/ลด) จำนวนเต็มหรือ .5 • ค่าผิดพลาดแสดงสีแดง + ข้อความ และห้ามบันทึกจนกว่าจะแก้ ---- */
 function normNum(el){   // เลขไทย→อารบิก, "," → ".", ตัดช่องว่าง (ไม่ลบเครื่องหมาย/อักขระอื่น: ปล่อยให้ตรวจแล้วฟ้องเป็นสีแดง)
   const v=String(el.value).replace(/[๐-๙]/g,c=>String(c.charCodeAt(0)-0x0E50)).replace(/,/g,'.').replace(/\s+/g,'');
   if(el.value!==v) el.value=v;
@@ -2499,13 +2474,24 @@ function numErr(v,max){   // คืนข้อความผิดพลาด
   if(max!=null && Number(v)>max+1e-9) return 'เกินคะแนนเต็ม ('+max+')';
   return '';
 }
+// ช่องคะแนนนักเรียน: ต้องเป็นจำนวนเต็มหรือลงท้าย .5 เท่านั้น (ทศนิยมอื่นฟ้องสีแดง)
+function halfErr(v,max){
+  const e=numErr(v,max); if(e) return e;
+  v=String(v); if(v==='') return '';
+  const x=Number(v)*2; if(Math.abs(x-Math.round(x))>1e-9) return 'ทศนิยมต้องเป็น .5 เท่านั้น (เช่น 5.5)';
+  return '';
+}
 function setCellErr(c,msg){ c.classList.toggle('bad',!!msg); if(msg){ c.title=msg; c.setAttribute('aria-invalid','true'); } else { c.removeAttribute('title'); c.removeAttribute('aria-invalid'); } }
 function round2(n){ return Math.round(n*100)/100; }
+function examCfg(){ const sub=state.scoreSubject; const e=sub&&state.exam[sub.ID]; return {midMax:Number(e&&e.midMax)||0, finalMax:Number(e&&e.finalMax)||0}; }
 function unitMaxOf(unitID){
   const sub=state.scoreSubject; if(!sub) return null;
+  if(unitID==='MID'){ const m=examCfg().midMax; return m>0?m:null; }
+  if(unitID==='FINAL'){ const m=examCfg().finalMax; return m>0?m:null; }
   const u=(state.units[sub.ID]||[]).find(x=>String(x.ID)===String(unitID)); return u?Number(u.maxScore||0):null;
 }
 function unitNameOf(unitID){
+  if(unitID==='MID') return 'สอบกลางภาค'; if(unitID==='FINAL') return 'สอบปลายภาค';
   const sub=state.scoreSubject; const u=sub&&(state.units[sub.ID]||[]).find(x=>String(x.ID)===String(unitID)); return u?u.unitName:'';
 }
 // ตรวจทุกช่องคะแนน + ผลรวมรายคน → แสดงกล่องสรุปสีแดง คืนจำนวนข้อผิดพลาด
@@ -2515,7 +2501,7 @@ function validateScoreTable(){
     const no=tr.children[0].textContent.trim(), nm=(tr.children[1].textContent+' '+tr.children[2].textContent).trim();
     let sum=0, totalMax=0;
     tr.querySelectorAll('.scoreCell').forEach(c=>{
-      const mx=unitMaxOf(c.dataset.unit); const e=numErr(c.value,mx);
+      const mx=unitMaxOf(c.dataset.unit); const e=halfErr(c.value,mx);
       setCellErr(c,e); if(mx!=null) totalMax+=mx;
       if(e) errs.push({el:c,msg:'เลขที่ '+no+' '+nm+' • '+unitNameOf(c.dataset.unit)+': '+e});
       else if(c.value!=='') sum+=Number(c.value);
@@ -2566,7 +2552,37 @@ function renderUnits(){
 function updateTotalMax(){
   const id=state.scoreSubject.ID;
   const total=(state.units[id]||[]).reduce((s,u)=>s+Number(u.maxScore||0),0);
-  document.getElementById('sc_totalMax').textContent=round2(total);
+  const ex=examCfg(); const all=round2(total+ex.midMax+ex.finalMax);
+  document.getElementById('sc_totalMax').textContent=all;
+  const br=document.getElementById('sc_totalBreak');
+  if(br) br.textContent=(ex.midMax>0||ex.finalMax>0)?('(คะแนนเก็บ '+round2(total)+(ex.midMax>0?' + กลางภาค '+ex.midMax:'')+(ex.finalMax>0?' + ปลายภาค '+ex.finalMax:'')+')'):'';
+  const exs=document.getElementById('ex_summary');
+  if(exs) exs.textContent=(ex.midMax>0||ex.finalMax>0)?('รวมคะแนนเต็ม '+all+' = คะแนนเก็บ '+round2(total)+' + กลางภาค '+ex.midMax+' + ปลายภาค '+ex.finalMax+' (สัดส่วน '+(all>0?Math.round(total/all*100):0)+'% / '+(all>0?Math.round(ex.midMax/all*100):0)+'% / '+(all>0?Math.round(ex.finalMax/all*100):0)+'%)'):'ยังไม่ได้ตั้งสอบกลางภาค/ปลายภาค — เกรดคิดจากคะแนนเก็บอย่างเดียว';
+}
+function onExamInput(el){
+  const v=normNum(el); const e=(v===''?'':numErr(v,999)); setCellErr(el,e);
+}
+function renderExamInputs(){
+  const sub=state.scoreSubject; if(!sub) return; const ex=examCfg();
+  const m=document.getElementById('ex_mid'), f=document.getElementById('ex_final');
+  if(m){ m.value=ex.midMax>0?ex.midMax:''; setCellErr(m,''); } if(f){ f.value=ex.finalMax>0?ex.finalMax:''; setCellErr(f,''); }
+}
+async function saveExamFn(){
+  if(blockedByLock(state.scoreRoom)) return;
+  const sub=state.scoreSubject; if(!sub) return;
+  const m=document.getElementById('ex_mid'), f=document.getElementById('ex_final');
+  const em=m.value===''?'':numErr(normNum(m),999), ef=f.value===''?'':numErr(normNum(f),999);
+  setCellErr(m,em); setCellErr(f,ef);
+  if(em||ef){ (em?m:f).focus(); toast('คะแนนเต็มสอบต้องเป็นตัวเลข 0–999 ทศนิยมไม่เกิน 2 ตำแหน่ง (ช่องสีแดง) — ไม่ได้บันทึก','error'); return; }
+  if(document.querySelector('#scoreBody .scoreCell.bad') && !confirm('ตารางคะแนนมีช่องสีแดงที่ยังไม่แก้ และตารางจะถูกโหลดใหม่หลังบันทึกสัดส่วน — ทำต่อไหม?')) return;
+  try{ showLoading(true);
+    const r=await GAS.call('saveExamConfig',{subjectID:sub.ID, semester:state.semester, midMax:m.value===''?0:Number(m.value), finalMax:f.value===''?0:Number(f.value)});
+    state.exam[sub.ID]=r;
+    state.scores=await GAS.call('getScores',{subjectID:sub.ID, semester:state.semester});
+    state.grades=await GAS.call('getGrades',{semester:state.semester});
+    renderExamInputs(); updateTotalMax(); renderScoreTable();
+    toast('บันทึกสัดส่วนสอบแล้ว');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 function addUnitRow(){
   const id=state.scoreSubject.ID;
@@ -2592,10 +2608,14 @@ function renderScoreTable(){
   const students=scoreStudents();
   const sm={};
   state.scores.forEach(s=>{ (sm[s.studentID]=sm[s.studentID]||{})[s.unitID]=s.score; });
+  const exCols=[]; { const ex=examCfg(); if(ex.midMax>0) exCols.push({key:'MID',label:'กลางภาค',max:ex.midMax}); if(ex.finalMax>0) exCols.push({key:'FINAL',label:'ปลายภาค',max:ex.finalMax}); }
+  const spm={};   // ผลพิเศษ ร/มส ที่ตั้งไว้ (mode S ใหม่ / mode B เดิม)
+  state.grades.filter(g=>String(g.subjectID)===String(sub.ID)&&(g.mode==='S'||g.mode==='B')&&(g.grade51==='ร'||g.grade51==='มส')).forEach(g=>spm[g.studentID]=g.grade51);
   document.getElementById('scoreHead').innerHTML=`<tr class="text-left text-slate-400 border-b">
     <th class="py-2 px-1">เลขที่</th><th class="px-1">ชื่อ</th><th class="px-1">นามสกุล</th>
     ${units.map(u=>`<th class="px-1 text-center">${esc(u.unitName)}<br><span class="text-[10px] text-slate-300">(${u.maxScore})</span></th>`).join('')}
-    <th class="px-1 text-center">รวม</th><th class="px-1 text-center">%</th><th class="px-1 text-center">เกรด</th>
+    ${exCols.map(c=>`<th class="px-1 text-center text-amber-600">${c.label}<br><span class="text-[10px] text-slate-300">(${c.max})</span></th>`).join('')}
+    <th class="px-1 text-center">รวม</th><th class="px-1 text-center">%</th><th class="px-1 text-center">เกรด</th><th class="px-1 text-center">ผลพิเศษ<br><span class="text-[10px] text-slate-300">(ถ้ามี)</span></th>
   </tr>`;
   document.getElementById('scoreBody').innerHTML = (students.length && units.length) ? students.map(st=>`
     <tr class="border-b" data-sid="${st.ID}">
@@ -2603,10 +2623,14 @@ function renderScoreTable(){
       <td class="px-1 font-medium whitespace-nowrap">${esc(nmFirst(st))}</td>
       <td class="px-1 whitespace-nowrap">${esc(nmLast(st))}</td>
       ${units.map(u=>`<td class="px-1"><input type="text" inputmode="decimal" autocomplete="off" maxlength="7" class="inp w-16 text-sm text-center numcell scoreCell" onfocus="this.select()" data-unit="${u.ID}" value="${(sm[st.ID]&&sm[st.ID][u.ID]!=null&&sm[st.ID][u.ID]!=='')?sm[st.ID][u.ID]:''}" oninput="onScoreInput(this)"></td>`).join('')}
+      ${exCols.map(c=>`<td class="px-1"><input type="text" inputmode="decimal" autocomplete="off" maxlength="7" class="inp w-16 text-sm text-center numcell scoreCell examCell" onfocus="this.select()" data-unit="${c.key}" value="${(sm[st.ID]&&sm[st.ID][c.key]!=null&&sm[st.ID][c.key]!=='')?sm[st.ID][c.key]:''}" oninput="onScoreInput(this)"></td>`).join('')}
       <td class="px-1 text-center sumCell font-semibold">0</td>
       <td class="px-1 text-center pctCell">-</td>
       <td class="px-1 text-center grdCell font-bold text-teal-700">-</td>
-    </tr>`).join('') : `<tr><td colspan="${units.length+6}" class="text-center text-slate-400 py-6">${units.length?'ไม่มีนักเรียนในชั้นนี้':'กรุณาเพิ่มและบันทึกหน่วยก่อน'}</td></tr>`;
+      <td class="px-1 text-center"><select class="inp text-sm spCell" data-orig="${spm[st.ID]||''}" onchange="onSpecialChange(this)">
+        <option value="" ${spm[st.ID]?'':'selected'}>—</option><option value="ร" ${spm[st.ID]==='ร'?'selected':''}>ร</option><option value="มส" ${spm[st.ID]==='มส'?'selected':''}>มส</option>
+      </select></td>
+    </tr>`).join('') : `<tr><td colspan="${units.length+exCols.length+7}" class="text-center text-slate-400 py-6">${units.length?'ไม่มีนักเรียนในชั้นนี้':'กรุณาเพิ่มและบันทึกหน่วยก่อน'}</td></tr>`;
   document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>calcRowTr(tr));
   const nBad=validateScoreTable();
   if(nBad) toast('พบคะแนนที่ไม่ถูกต้อง '+nBad+' จุด (สีแดง) — กรุณาแก้ก่อนบันทึก','error');
@@ -2614,8 +2638,9 @@ function renderScoreTable(){
 function calcRow(input){ calcRowTr(input.closest('tr')); }
 function calcRowTr(tr){
   const sub=state.scoreSubject;
-  const totalMax=(state.units[sub.ID]||[]).reduce((s,u)=>s+Number(u.maxScore||0),0);
-  let sum=0; tr.querySelectorAll('.scoreCell').forEach(c=>{ if(!numErr(c.value)) sum+=Number(c.value||0); });
+  const exm=examCfg();
+  const totalMax=(state.units[sub.ID]||[]).reduce((s,u)=>s+Number(u.maxScore||0),0)+exm.midMax+exm.finalMax;
+  let sum=0; tr.querySelectorAll('.scoreCell').forEach(c=>{ if(!halfErr(c.value)) sum+=Number(c.value||0); });
   sum=round2(sum);
   const hasInput=[...tr.querySelectorAll('.scoreCell')].some(c=>c.value!=='');
   const pct = totalMax>0 ? Math.round(sum/totalMax*100) : 0;   // (ร้อยละปัดเป็นจำนวนเต็มเหมือนเดิม)
@@ -2623,7 +2648,16 @@ function calcRowTr(tr){
   tr.querySelector('.sumCell').textContent=sum;
   tr.querySelector('.pctCell').textContent=(totalMax>0&&hasInput)?pct+'%':'-';
   tr.querySelector('.grdCell').textContent=(totalMax>0&&hasInput&&g&&g.grade51!==''&&g.grade51!=null)?(g.grade51+(g.letter51?' ('+g.letter51+')':'')):'-';
+  applySpecialView(tr);
 }
+// ถ้าเลือกผลพิเศษ → ช่องเกรดแสดงผลนั้นแทน (ใช้ตามนี้ในแบบรายงาน)
+function applySpecialView(tr){
+  const sp=tr.querySelector('select.spCell'); const gc=tr.querySelector('.grdCell'); if(!sp||!gc) return;
+  gc.classList.toggle('text-rose-600',!!sp.value); gc.classList.toggle('text-teal-700',!sp.value);
+  if(sp.value) gc.textContent=sp.value;
+  sp.classList.toggle('bg-amber-100',!!sp.value);
+}
+function onSpecialChange(sel){ const tr=sel.closest('tr'); calcRowTr(tr); }
 async function saveScoresFn(){
   if(blockedByLock(state.scoreRoom)) return;
   const sub=state.scoreSubject;
@@ -2631,7 +2665,7 @@ async function saveScoresFn(){
   if(!units.length){ toast('กรุณาเพิ่มและบันทึกหน่วยก่อน','error'); return; }
   if(units.some(u=>!u.ID)){ toast('กรุณากด “บันทึกหน่วย” ก่อนกรอกคะแนน','error'); return; }
   const nBad=validateScoreTable();
-  if(nBad){ focusScoreErr(0); toast('มี '+nBad+' จุดที่ไม่ถูกต้อง (สีแดง) — คะแนนต้องเป็นตัวเลข ≥ 0 ทศนิยมไม่เกิน 2 ตำแหน่ง และไม่เกินคะแนนเต็มของหน่วย แก้ก่อนบันทึก','error'); return; }
+  if(nBad){ focusScoreErr(0); toast('มี '+nBad+' จุดที่ไม่ถูกต้อง (สีแดง) — คะแนนต้องเป็นตัวเลข ≥ 0 เป็นจำนวนเต็มหรือลงท้าย .5 และไม่เกินคะแนนเต็มของหน่วย แก้ก่อนบันทึก','error'); return; }
   const out=[], ids=[];
   document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>{
     const sid=tr.dataset.sid; ids.push(sid);
@@ -2641,74 +2675,15 @@ async function saveScoresFn(){
   try{ showLoading(true);
     // studentIDs = นักเรียนทั้งห้องที่แสดงอยู่ → เซิร์ฟเวอร์แทนที่เฉพาะคนกลุ่มนี้ (ห้องอื่นของวิชาเดียวกันไม่ถูกแตะ)
     await GAS.call('saveScores',{subjectID:sub.ID, scores:out, studentIDs:ids, semester:state.semester});
+    const marks=[];
+    document.querySelectorAll('#scoreBody select.spCell').forEach(sel=>{
+      if(sel.value!==sel.dataset.orig) marks.push({studentID:sel.closest('tr').dataset.sid, mark:sel.value});
+    });
+    if(marks.length) await GAS.call('saveSpecialMarks',{subjectID:sub.ID, semester:state.semester, marks:marks});
     state.scores=await GAS.call('getScores',{subjectID:sub.ID, semester:state.semester});
     state.grades=await GAS.call('getGrades',{semester:state.semester});
-    toast('บันทึกคะแนนและคำนวณเกรดแล้ว');
-  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
-}
-
-/* ---- Mode B: direct ---- */
-function pctErr(v){ return numErr(v,100); }
-function onPctInput(el){ const v=normNum(el); setCellErr(el,pctErr(v)); if(!pctErr(v)) calcModeBRow(el); modeBSummary(); }
-function modeBSummary(){
-  const bad=[...document.querySelectorAll('#modeBBody .bPct')].filter(c=>c.classList.contains('bad'));
-  let box=document.getElementById('modeBErrBox');
-  if(!box){ box=document.createElement('div'); box.id='modeBErrBox'; box.className='hidden mb-3 p-3 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 text-xs'; const tb=document.getElementById('modeBBody'); const wrap=tb&&tb.closest('table'); if(wrap&&wrap.parentNode) wrap.parentNode.insertBefore(box,wrap); }
-  if(bad.length){ box.innerHTML='<b>⚠️ พบข้อผิดพลาด '+bad.length+' ช่อง — ร้อยละต้องเป็นตัวเลข 0–100 ทศนิยมไม่เกิน 2 ตำแหน่ง แก้ช่องสีแดงก่อนกดบันทึก</b>'; box.classList.remove('hidden'); } else box.classList.add('hidden');
-  return bad.length;
-}
-function renderModeBMark_(){ document.querySelectorAll('#modeBBody .bPct').forEach(c=>setCellErr(c,pctErr(c.value))); modeBSummary(); }
-function renderModeB(){
-  const sub=state.scoreSubject;
-  const students=scoreStudents();
-  const gmap={};
-  state.grades.filter(g=>String(g.subjectID)===String(sub.ID)).forEach(g=>gmap[g.studentID]=g);
-  document.getElementById('modeBBody').innerHTML = students.length ? students.map(st=>{
-    const g=gmap[st.ID]||{};
-    const grdTxt=(g.grade51!=null&&g.grade51!=='')?(g.grade51+(g.letter51?' ('+g.letter51+')':'')):'-';
-    return `<tr class="border-b" data-sid="${st.ID}">
-      <td class="px-2 py-1">${esc(st.number)}</td>
-      <td class="px-2 font-medium whitespace-nowrap">${esc(nmFirst(st))}</td>
-      <td class="px-2 whitespace-nowrap">${esc(nmLast(st))}</td>
-      <td class="px-2"><input type="text" inputmode="decimal" autocomplete="off" maxlength="6" class="inp w-20 text-sm numcell bPct" onfocus="this.select()" value="${(g.percent!=null&&g.percent!=='')?g.percent:''}" oninput="onPctInput(this)" placeholder="%"></td>
-      <td class="px-2"><select class="inp text-sm bLvl" onchange="calcModeBRow(this)">
-        ${GRADE_OPTS.map(l=>`<option value="${l}" ${String(g.grade51)===l?'selected':''}>${l===''?'—':l}</option>`).join('')}
-      </select></td>
-      <td class="px-2 text-center bGrd font-bold text-teal-700">${grdTxt}</td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="5" class="text-center text-slate-400 py-6">ไม่มีนักเรียนในชั้นนี้</td></tr>`;
-  renderModeBMark_();
-}
-function calcModeBRow(el){
-  const tr=el.closest('tr');
-  const pct=tr.querySelector('.bPct').value;
-  const lvlSel=tr.querySelector('.bLvl');
-  if(pct!==''){ const g=gradeFromPercent(pct); lvlSel.value=String(g.grade51); tr.querySelector('.bGrd').textContent=(g.grade51!==''?g.grade51:'-')+(g.letter51?' ('+g.letter51+')':''); }
-  else if(lvlSel.value!==''){ tr.querySelector('.bGrd').textContent=lvlSel.value+(letterForGrade(lvlSel.value)?' ('+letterForGrade(lvlSel.value)+')':''); }
-  else tr.querySelector('.bGrd').textContent='-';
-}
-async function saveModeB(){
-  if(blockedByLock(state.scoreRoom)) return;
-  const sub=state.scoreSubject;
-  document.querySelectorAll('#modeBBody .bPct').forEach(c=>setCellErr(c,pctErr(c.value)));
-  const nBadB=modeBSummary();
-  if(nBadB){ const f=document.querySelector('#modeBBody .bPct.bad'); if(f) f.focus(); toast('ร้อยละต้องเป็นตัวเลข 0–100 ทศนิยมไม่เกิน 2 ตำแหน่ง — แก้ช่องสีแดงก่อนบันทึก','error'); return; }
-  const tasks=[];
-  document.querySelectorAll('#modeBBody tr[data-sid]').forEach(tr=>{
-    const sid=tr.dataset.sid;
-    const pct=tr.querySelector('.bPct').value;
-    const lvl=tr.querySelector('.bLvl').value;
-    if(pct==='' && !lvl) return;
-    const payload={ studentID:sid, subjectID:sub.ID, mode:'B' };
-    if(pct!==''){ payload.percent=round2(Number(pct)); }
-    else { payload.percent=''; payload.grade51=lvl; payload.letter51=letterForGrade(lvl); payload.manualOverride=true; }
-    tasks.push(payload);
-  });
-  if(!tasks.length){ toast('ยังไม่มีข้อมูลให้บันทึก','error'); return; }
-  try{ showLoading(true);
-    await GAS.call('saveGradesBatch',{grades:tasks, semester:state.semester});
-    state.grades=await GAS.call('getGrades',{semester:state.semester});
-    toast('บันทึกผลการเรียนแล้ว ('+tasks.length+' คน)');
+    document.querySelectorAll('#scoreBody select.spCell').forEach(sel=>{ sel.dataset.orig=sel.value; });
+    toast('บันทึกคะแนนและคำนวณเกรดแล้ว'+(marks.length?' (ผลพิเศษ '+marks.length+' คน)':''));
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 
