@@ -14,7 +14,7 @@
      ตัวอย่าง: 'https://script.google.com/macros/s/AKfycb..../exec'
      ============================================================ -->
 <script>
-  window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_bZ3uWDMeW9Nv96yhjYMYzxyP2VxZterIy5nH2Y0uf-_DljrHuuebSqe0Wikr5FdjpQ/exec';
+  window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby2iQpK1cmxzn_YOqFCkEapAOhq4_oO8pv2QYslQeqyj1rnW-3Fkhw38XQfjuJ_v0eVhQ/exec';
 </script>
 
 <!-- Tailwind CSS -->
@@ -103,6 +103,10 @@
     .report-page{box-shadow:none !important;margin:0 !important;page-break-after:always;}
     .pp5-land{page:land;}
   }
+  /* ---- ช่องกรอกคะแนน: พิมพ์ตัวเลขเอง (ไม่มีปุ่มเพิ่ม/ลด) ช่องที่ค่าไม่ถูกต้องเป็นสีแดง ---- */
+  input.numcell{-moz-appearance:textfield;appearance:textfield;}
+  input.numcell::-webkit-outer-spin-button,input.numcell::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .inp.bad{border-color:#e11d48 !important;background:#fff1f2 !important;color:#be123c;}
   /* ---- พาร์ท 3: หน้าตรวจผลผู้ปกครอง / แถบสถานะ ---- */
   .hl-pill{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:600;}
   .hl-green{background:#d1fae5;color:#047857;} .hl-yellow{background:#fef3c7;color:#b45309;} .hl-red{background:#ffe4e6;color:#be123c;}
@@ -128,6 +132,7 @@
   </div>
 </div>
 <div id="svcBanner" class="hidden fixed top-0 inset-x-0 z-[96] bg-amber-500 text-white text-sm text-center py-2 px-3 noprint"></div>
+<div id="verBanner" class="hidden fixed bottom-0 inset-x-0 z-[97] bg-rose-600 text-white text-sm text-center py-3 px-3 noprint"></div>
 
 <!-- ====================== ผู้ปกครองตรวจผลการเรียน ====================== -->
 <div id="lookupScreen" class="fixed inset-0 z-[82] bg-gradient-to-br from-teal-50 via-white to-amber-50 hidden overflow-y-auto">
@@ -738,7 +743,8 @@
         </div>
       </div>
       <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(ระบบคิดร้อยละ → เกรด 2551 ให้อัตโนมัติ)</span></h3>
+        <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(ทศนิยมได้ไม่เกิน 2 ตำแหน่ง • ระบบคิดร้อยละ → เกรด 2551 ให้อัตโนมัติ)</span></h3>
+        <div id="scoreErrBox" class="hidden mb-3 p-3 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 text-xs"></div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead id="scoreHead"></thead>
@@ -1376,7 +1382,14 @@
           <h3 class="font-bold text-teal-700">🩺 สุขภาพระบบ <span id="hl_level"></span></h3>
           <button onclick="loadHealth()" class="btn bg-white border border-slate-200 px-3 py-1 text-xs">🔄 ตรวจใหม่</button>
         </div>
+        <div id="hl_sheet" class="text-xs text-slate-500 mb-2"></div>
         <div id="hl_box" class="text-sm text-slate-500">กำลังตรวจ…</div>
+      </div>
+      <div class="card p-4 mb-4">
+        <h3 class="font-bold text-teal-700 mb-1">🛟 กู้คะแนนจากเวอร์ชันเก่า</h3>
+        <p class="text-[11px] text-slate-400 mb-2">ใช้เมื่อคะแนนรายหน่วยหาย: เปิดชีต → ไฟล์ → ประวัติเวอร์ชัน → เลือกเวอร์ชันที่คะแนนยังครบ → ⋮ “สร้างสำเนา” → วางลิงก์ของสำเนาด้านล่าง ระบบเติมกลับ <b>เฉพาะแถวที่ยังไม่มี</b> (ไม่ทับ ไม่ลบของเดิม ข้ามห้องที่ล็อก)</p>
+        <div class="flex gap-2"><input id="rc_src" class="inp text-xs flex-1" placeholder="วางลิงก์ Google Sheets ของสำเนาเวอร์ชันเก่า"><button onclick="recoverPreview()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 text-sm whitespace-nowrap">🔍 ตรวจสอบ</button></div>
+        <div id="rc_box" class="mt-3 text-sm"></div>
       </div>
       <div class="card p-4 mb-4">
         <h3 class="font-bold text-teal-700 mb-1">🚀 เผยแพร่ข้อมูลนิ่งขึ้น GitHub (Sheets + Edge)</h3>
@@ -1653,6 +1666,7 @@
 /* ============================================================
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
+const FE_VERSION = '2026-10-05d';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -1660,18 +1674,21 @@ const GAS = {
       throw new Error('ยังไม่ได้ตั้งค่า Web App URL ในไฟล์ index.html (ตัวแปร WEB_APP_URL)');
     }
     // สิทธิ์ (บทบาท/ชื่อผู้ใช้) ตัดสินที่เซิร์ฟเวอร์จาก token เท่านั้น — หน้าเว็บส่งแค่ token
-    // DIRTY: หลังบันทึกข้อมูล ภายใน 90 วินาทีทุกการอ่านแนบ noCache ทะลุแคชทุกชั้น (Worker/CacheService)
     const isRead = GAS.isRead(action);
+    // กันบันทึกเมื่อหน้าเว็บกับ Code.gs คนละเวอร์ชัน (ตรวจซ้ำแบบทะลุแคชก่อนตัดสิน)
+    if (!isRead && GAS.verBad) { await GAS.recheck(); if (GAS.verBad) throw GAS.verError(); }
+    // DIRTY: หลังบันทึกข้อมูล ภายใน 90 วินาทีทุกการอ่านแนบ noCache ทะลุแคชทุกชั้น (Worker/CacheService)
     if (/^(get|export)/.test(action) && GAS.dirty() && payload.noCache === undefined) payload = Object.assign({}, payload, { noCache: true });
     let res;
     try {
       res = await fetch(GAS.URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain เลี่ยง CORS preflight
-        body: JSON.stringify({ action, payload, token: (state.currentUser||{}).token || '' })
+        body: JSON.stringify({ action, payload, token: (state.currentUser||{}).token || '', fv: FE_VERSION })
       });
     } finally { if (!isRead) GAS.markDirty(); }
     const json = await res.json();
+    GAS.noteVersion(json.v);
     if (!json.ok) {
       const err = new Error(json.error || 'เกิดข้อผิดพลาด');
       err.code = json.code || '';
@@ -1682,6 +1699,22 @@ const GAS = {
     }
     hideMaint();
     return json.data;
+  },
+  beVersion: null, verBad: false,
+  noteVersion(v){
+    GAS.beVersion = v || '';
+    GAS.verBad = (GAS.beVersion !== FE_VERSION);
+    showVerBanner();
+  },
+  verError(){
+    const e = new Error('เวอร์ชันหน้าเว็บ ('+FE_VERSION+') ไม่ตรงกับ Code.gs ('+(GAS.beVersion||'เก่า')+') — ระบบหยุดการบันทึกเพื่อป้องกันข้อมูลเสียหาย');
+    e.code = 'VERSION'; return e;
+  },
+  async recheck(){   // ถามเวอร์ชันสดจากเซิร์ฟเวอร์ (noCache) เผื่อเพิ่ง Deploy ใหม่
+    try{
+      const r = await fetch(GAS.URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ action:'ping', payload:{noCache:true}, token:'', fv: FE_VERSION }) });
+      const j = await r.json(); GAS.noteVersion(j.v);
+    }catch(e){}
   },
   // action อ่านอย่างเดียว (ไม่ทำให้ติดธง DIRTY)
   isRead(a){ return /^(get|export|ping$|login$|logout$|studentLookup$|subjectHealthCheck$)/.test(a); },
@@ -2450,7 +2483,74 @@ function setScoreMode(mode){
   markTimeCheckRows(); renderTimeCheckBadge();
 }
 
-/* ---- Mode A: units ---- */
+/* ---- ช่องคะแนน: พิมพ์เอง (ไม่มีปุ่มเพิ่ม/ลด) ทศนิยมได้ไม่เกิน 2 ตำแหน่ง • ค่าผิดพลาดแสดงสีแดง + ข้อความ และห้ามบันทึกจนกว่าจะแก้ ---- */
+function normNum(el){   // เลขไทย→อารบิก, "," → ".", ตัดช่องว่าง (ไม่ลบเครื่องหมาย/อักขระอื่น: ปล่อยให้ตรวจแล้วฟ้องเป็นสีแดง)
+  const v=String(el.value).replace(/[๐-๙]/g,c=>String(c.charCodeAt(0)-0x0E50)).replace(/,/g,'.').replace(/\s+/g,'');
+  if(el.value!==v) el.value=v;
+  return v;
+}
+function numErr(v,max){   // คืนข้อความผิดพลาด หรือ '' ถ้าใช้ได้ (ช่องว่าง = ไม่กรอก ถือว่าใช้ได้)
+  v=String(v);
+  if(v==='') return '';
+  if(/^-/.test(v)) return 'ติดลบไม่ได้';
+  if(!/^[0-9.]+$/.test(v)) return 'ต้องเป็นตัวเลขเท่านั้น';
+  if(/^\d+\.\d{3,}$/.test(v)) return 'ทศนิยมได้ไม่เกิน 2 ตำแหน่ง';
+  if(!/^\d+(\.\d{0,2})?$/.test(v)) return 'รูปแบบตัวเลขไม่ถูกต้อง';
+  if(max!=null && Number(v)>max+1e-9) return 'เกินคะแนนเต็ม ('+max+')';
+  return '';
+}
+function setCellErr(c,msg){ c.classList.toggle('bad',!!msg); if(msg){ c.title=msg; c.setAttribute('aria-invalid','true'); } else { c.removeAttribute('title'); c.removeAttribute('aria-invalid'); } }
+function round2(n){ return Math.round(n*100)/100; }
+function unitMaxOf(unitID){
+  const sub=state.scoreSubject; if(!sub) return null;
+  const u=(state.units[sub.ID]||[]).find(x=>String(x.ID)===String(unitID)); return u?Number(u.maxScore||0):null;
+}
+function unitNameOf(unitID){
+  const sub=state.scoreSubject; const u=sub&&(state.units[sub.ID]||[]).find(x=>String(x.ID)===String(unitID)); return u?u.unitName:'';
+}
+// ตรวจทุกช่องคะแนน + ผลรวมรายคน → แสดงกล่องสรุปสีแดง คืนจำนวนข้อผิดพลาด
+function validateScoreTable(){
+  const errs=[];
+  document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>{
+    const no=tr.children[0].textContent.trim(), nm=(tr.children[1].textContent+' '+tr.children[2].textContent).trim();
+    let sum=0, totalMax=0;
+    tr.querySelectorAll('.scoreCell').forEach(c=>{
+      const mx=unitMaxOf(c.dataset.unit); const e=numErr(c.value,mx);
+      setCellErr(c,e); if(mx!=null) totalMax+=mx;
+      if(e) errs.push({el:c,msg:'เลขที่ '+no+' '+nm+' • '+unitNameOf(c.dataset.unit)+': '+e});
+      else if(c.value!=='') sum+=Number(c.value);
+    });
+    const pc=tr.querySelector('.pctCell'); const over=totalMax>0&&sum>totalMax+1e-9;
+    if(pc) pc.classList.toggle('text-rose-600',over);
+    if(over) errs.push({el:tr.querySelector('.scoreCell'),msg:'เลขที่ '+no+' '+nm+': คะแนนรวมเกินคะแนนเต็ม (เกินร้อยละ 100)'});
+  });
+  const box=document.getElementById('scoreErrBox');
+  if(box){
+    if(errs.length){
+      box.innerHTML='<b>⚠️ พบข้อผิดพลาด '+errs.length+' จุด — แก้ช่องสีแดงก่อนกดบันทึก</b><ul class="list-disc ml-5 mt-1">'+errs.slice(0,6).map((e,i)=>`<li><a href="#" class="underline" onclick="focusScoreErr(${i});return false">${esc(e.msg)}</a></li>`).join('')+(errs.length>6?`<li>… และอีก ${errs.length-6} จุด</li>`:'')+'</ul>';
+      box.classList.remove('hidden');
+    } else box.classList.add('hidden');
+  }
+  window._scoreErrs=errs;
+  return errs.length;
+}
+function focusScoreErr(i){ const e=(window._scoreErrs||[])[i]; if(e&&e.el){ e.el.focus(); try{ e.el.scrollIntoView({block:'center'}); }catch(x){} } }
+function onScoreInput(el){ normNum(el); validateScoreTable(); calcRow(el); }
+function unitMaxErr(v){ if(v==='') return 'กรอกคะแนนเต็มของหน่วย'; const e=numErr(v,999); if(e) return e; return Number(v)<=0?'ต้องมากกว่า 0':''; }
+function onUnitMaxInput(el,id,i){
+  const v=normNum(el); const e=unitMaxErr(v);
+  setCellErr(el,e); state.units[id][i].maxScore=(v===''||isNaN(Number(v)))?0:Number(v); updateTotalMax(); validateScoreTable();
+  document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>calcRowTr(tr));
+}
+function unitErrCount(){
+  let n=0; document.querySelectorAll('#unitsWrap .unitMax').forEach(el=>{
+    const e=unitMaxErr(el.value);
+    setCellErr(el,e); if(e) n++;
+  });
+  return n;
+}
+
+/* ---- Mode A: units ---- *//* ---- Mode A: units ---- */
 function renderUnits(){
   const id=state.scoreSubject.ID;
   const units=state.units[id]||[];
@@ -2458,15 +2558,15 @@ function renderUnits(){
     <div class="flex gap-2 items-center">
       <span class="text-xs text-slate-400 w-5">${i+1}</span>
       <input class="inp flex-1 text-sm" value="${esc(u.unitName)}" oninput="state.units['${id}'][${i}].unitName=this.value">
-      <input type="number" class="inp w-24 text-sm" value="${u.maxScore}" oninput="state.units['${id}'][${i}].maxScore=Number(this.value);updateTotalMax()" placeholder="เต็ม">
+      <input type="text" inputmode="decimal" autocomplete="off" maxlength="6" class="inp w-24 text-sm numcell unitMax" onfocus="this.select()" value="${u.maxScore}" oninput="onUnitMaxInput(this,'${id}',${i})" placeholder="เต็ม">
       <button onclick="state.units['${id}'].splice(${i},1);renderUnits()" class="text-rose-500 px-1">🗑️</button>
     </div>`).join('') : '<p class="text-xs text-slate-400">ยังไม่มีหน่วย — กด “เพิ่มหน่วย” เพื่อเริ่ม</p>';
-  updateTotalMax();
+  updateTotalMax(); unitErrCount();
 }
 function updateTotalMax(){
   const id=state.scoreSubject.ID;
   const total=(state.units[id]||[]).reduce((s,u)=>s+Number(u.maxScore||0),0);
-  document.getElementById('sc_totalMax').textContent=total;
+  document.getElementById('sc_totalMax').textContent=round2(total);
 }
 function addUnitRow(){
   const id=state.scoreSubject.ID;
@@ -2477,6 +2577,8 @@ function addUnitRow(){
 async function saveUnitsFn(){
   if(blockedByLock(state.scoreRoom)) return;
   const id=state.scoreSubject.ID;
+  const badU=unitErrCount();
+  if(badU){ const f=document.querySelector('#unitsWrap .unitMax.bad'); if(f) f.focus(); toast('มี '+badU+' หน่วยที่คะแนนเต็มไม่ถูกต้อง (สีแดง) — ต้องเป็นตัวเลขมากกว่า 0 ทศนิยมไม่เกิน 2 ตำแหน่ง ไม่ได้บันทึก','error'); return; }
   try{ showLoading(true);
     state.units[id]=await GAS.call('saveUnits',{subjectID:id, units:state.units[id]||[], semester:state.semester});
     renderUnits(); renderScoreTable(); toast('บันทึกหน่วยแล้ว');
@@ -2500,20 +2602,23 @@ function renderScoreTable(){
       <td class="px-1">${esc(st.number)}</td>
       <td class="px-1 font-medium whitespace-nowrap">${esc(nmFirst(st))}</td>
       <td class="px-1 whitespace-nowrap">${esc(nmLast(st))}</td>
-      ${units.map(u=>`<td class="px-1"><input type="number" class="inp w-14 text-sm text-center scoreCell" data-unit="${u.ID}" value="${(sm[st.ID]&&sm[st.ID][u.ID]!=null&&sm[st.ID][u.ID]!=='')?sm[st.ID][u.ID]:''}" oninput="calcRow(this)"></td>`).join('')}
+      ${units.map(u=>`<td class="px-1"><input type="text" inputmode="decimal" autocomplete="off" maxlength="7" class="inp w-16 text-sm text-center numcell scoreCell" onfocus="this.select()" data-unit="${u.ID}" value="${(sm[st.ID]&&sm[st.ID][u.ID]!=null&&sm[st.ID][u.ID]!=='')?sm[st.ID][u.ID]:''}" oninput="onScoreInput(this)"></td>`).join('')}
       <td class="px-1 text-center sumCell font-semibold">0</td>
       <td class="px-1 text-center pctCell">-</td>
       <td class="px-1 text-center grdCell font-bold text-teal-700">-</td>
     </tr>`).join('') : `<tr><td colspan="${units.length+6}" class="text-center text-slate-400 py-6">${units.length?'ไม่มีนักเรียนในชั้นนี้':'กรุณาเพิ่มและบันทึกหน่วยก่อน'}</td></tr>`;
   document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>calcRowTr(tr));
+  const nBad=validateScoreTable();
+  if(nBad) toast('พบคะแนนที่ไม่ถูกต้อง '+nBad+' จุด (สีแดง) — กรุณาแก้ก่อนบันทึก','error');
 }
 function calcRow(input){ calcRowTr(input.closest('tr')); }
 function calcRowTr(tr){
   const sub=state.scoreSubject;
   const totalMax=(state.units[sub.ID]||[]).reduce((s,u)=>s+Number(u.maxScore||0),0);
-  let sum=0; tr.querySelectorAll('.scoreCell').forEach(c=>{ sum+=Number(c.value||0); });
+  let sum=0; tr.querySelectorAll('.scoreCell').forEach(c=>{ if(!numErr(c.value)) sum+=Number(c.value||0); });
+  sum=round2(sum);
   const hasInput=[...tr.querySelectorAll('.scoreCell')].some(c=>c.value!=='');
-  const pct = totalMax>0 ? Math.round(sum/totalMax*100) : 0;
+  const pct = totalMax>0 ? Math.round(sum/totalMax*100) : 0;   // (ร้อยละปัดเป็นจำนวนเต็มเหมือนเดิม)
   const g=gradeFromPercent(pct);
   tr.querySelector('.sumCell').textContent=sum;
   tr.querySelector('.pctCell').textContent=(totalMax>0&&hasInput)?pct+'%':'-';
@@ -2525,13 +2630,17 @@ async function saveScoresFn(){
   const units=state.units[sub.ID]||[];
   if(!units.length){ toast('กรุณาเพิ่มและบันทึกหน่วยก่อน','error'); return; }
   if(units.some(u=>!u.ID)){ toast('กรุณากด “บันทึกหน่วย” ก่อนกรอกคะแนน','error'); return; }
-  const out=[];
+  const nBad=validateScoreTable();
+  if(nBad){ focusScoreErr(0); toast('มี '+nBad+' จุดที่ไม่ถูกต้อง (สีแดง) — คะแนนต้องเป็นตัวเลข ≥ 0 ทศนิยมไม่เกิน 2 ตำแหน่ง และไม่เกินคะแนนเต็มของหน่วย แก้ก่อนบันทึก','error'); return; }
+  const out=[], ids=[];
   document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>{
-    const sid=tr.dataset.sid;
+    const sid=tr.dataset.sid; ids.push(sid);
     tr.querySelectorAll('.scoreCell').forEach(c=>{ if(c.value!=='') out.push({studentID:sid, unitID:c.dataset.unit, score:Number(c.value)}); });
   });
+  if(!ids.length){ toast('ไม่พบรายชื่อนักเรียนในห้องนี้ — ไม่ได้บันทึก','error'); return; }
   try{ showLoading(true);
-    await GAS.call('saveScores',{subjectID:sub.ID, scores:out, semester:state.semester});
+    // studentIDs = นักเรียนทั้งห้องที่แสดงอยู่ → เซิร์ฟเวอร์แทนที่เฉพาะคนกลุ่มนี้ (ห้องอื่นของวิชาเดียวกันไม่ถูกแตะ)
+    await GAS.call('saveScores',{subjectID:sub.ID, scores:out, studentIDs:ids, semester:state.semester});
     state.scores=await GAS.call('getScores',{subjectID:sub.ID, semester:state.semester});
     state.grades=await GAS.call('getGrades',{semester:state.semester});
     toast('บันทึกคะแนนและคำนวณเกรดแล้ว');
@@ -2539,6 +2648,16 @@ async function saveScoresFn(){
 }
 
 /* ---- Mode B: direct ---- */
+function pctErr(v){ return numErr(v,100); }
+function onPctInput(el){ const v=normNum(el); setCellErr(el,pctErr(v)); if(!pctErr(v)) calcModeBRow(el); modeBSummary(); }
+function modeBSummary(){
+  const bad=[...document.querySelectorAll('#modeBBody .bPct')].filter(c=>c.classList.contains('bad'));
+  let box=document.getElementById('modeBErrBox');
+  if(!box){ box=document.createElement('div'); box.id='modeBErrBox'; box.className='hidden mb-3 p-3 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 text-xs'; const tb=document.getElementById('modeBBody'); const wrap=tb&&tb.closest('table'); if(wrap&&wrap.parentNode) wrap.parentNode.insertBefore(box,wrap); }
+  if(bad.length){ box.innerHTML='<b>⚠️ พบข้อผิดพลาด '+bad.length+' ช่อง — ร้อยละต้องเป็นตัวเลข 0–100 ทศนิยมไม่เกิน 2 ตำแหน่ง แก้ช่องสีแดงก่อนกดบันทึก</b>'; box.classList.remove('hidden'); } else box.classList.add('hidden');
+  return bad.length;
+}
+function renderModeBMark_(){ document.querySelectorAll('#modeBBody .bPct').forEach(c=>setCellErr(c,pctErr(c.value))); modeBSummary(); }
 function renderModeB(){
   const sub=state.scoreSubject;
   const students=scoreStudents();
@@ -2551,13 +2670,14 @@ function renderModeB(){
       <td class="px-2 py-1">${esc(st.number)}</td>
       <td class="px-2 font-medium whitespace-nowrap">${esc(nmFirst(st))}</td>
       <td class="px-2 whitespace-nowrap">${esc(nmLast(st))}</td>
-      <td class="px-2"><input type="number" class="inp w-20 text-sm bPct" value="${(g.percent!=null&&g.percent!=='')?g.percent:''}" oninput="calcModeBRow(this)" placeholder="%"></td>
+      <td class="px-2"><input type="text" inputmode="decimal" autocomplete="off" maxlength="6" class="inp w-20 text-sm numcell bPct" onfocus="this.select()" value="${(g.percent!=null&&g.percent!=='')?g.percent:''}" oninput="onPctInput(this)" placeholder="%"></td>
       <td class="px-2"><select class="inp text-sm bLvl" onchange="calcModeBRow(this)">
         ${GRADE_OPTS.map(l=>`<option value="${l}" ${String(g.grade51)===l?'selected':''}>${l===''?'—':l}</option>`).join('')}
       </select></td>
       <td class="px-2 text-center bGrd font-bold text-teal-700">${grdTxt}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="5" class="text-center text-slate-400 py-6">ไม่มีนักเรียนในชั้นนี้</td></tr>`;
+  renderModeBMark_();
 }
 function calcModeBRow(el){
   const tr=el.closest('tr');
@@ -2570,6 +2690,9 @@ function calcModeBRow(el){
 async function saveModeB(){
   if(blockedByLock(state.scoreRoom)) return;
   const sub=state.scoreSubject;
+  document.querySelectorAll('#modeBBody .bPct').forEach(c=>setCellErr(c,pctErr(c.value)));
+  const nBadB=modeBSummary();
+  if(nBadB){ const f=document.querySelector('#modeBBody .bPct.bad'); if(f) f.focus(); toast('ร้อยละต้องเป็นตัวเลข 0–100 ทศนิยมไม่เกิน 2 ตำแหน่ง — แก้ช่องสีแดงก่อนบันทึก','error'); return; }
   const tasks=[];
   document.querySelectorAll('#modeBBody tr[data-sid]').forEach(tr=>{
     const sid=tr.dataset.sid;
@@ -2577,7 +2700,7 @@ async function saveModeB(){
     const lvl=tr.querySelector('.bLvl').value;
     if(pct==='' && !lvl) return;
     const payload={ studentID:sid, subjectID:sub.ID, mode:'B' };
-    if(pct!==''){ payload.percent=Number(pct); }
+    if(pct!==''){ payload.percent=round2(Number(pct)); }
     else { payload.percent=''; payload.grade51=lvl; payload.letter51=letterForGrade(lvl); payload.manualOverride=true; }
     tasks.push(payload);
   });
@@ -7039,6 +7162,14 @@ function showMaint(msg){
   const b=document.getElementById('svcBanner'); if(!b) return;
   b.textContent='🔧 '+(msg||'ระบบปิดปรับปรุงชั่วคราว'); b.classList.remove('hidden');
 }
+function showVerBanner(){
+  const b=document.getElementById('verBanner'); if(!b) return;
+  if(!GAS.verBad){ b.classList.add('hidden'); return; }
+  const be=GAS.beVersion||'', newer=be>FE_VERSION;
+  b.innerHTML='⚠️ <b>เวอร์ชันไม่ตรงกัน</b> — หน้าเว็บ '+esc(FE_VERSION)+' / Code.gs '+esc(be||'เก่า (ไม่มีเลขเวอร์ชัน)')+' • <b>ระบบหยุดการบันทึกเพื่อกันข้อมูลเสียหาย</b><br>'+
+    (newer?'วิธีแก้: ปิดแล้วเปิดเว็บใหม่ / รีเฟรชล้างแคช (หน้าเว็บที่ค้างอยู่เป็นเวอร์ชันเก่า)':'วิธีแก้ (แอดมิน): วาง Code.gs ใหม่ แล้ว Deploy → Manage deployments → ✏️ Edit “ตัวเดิม” → New version');
+  b.classList.remove('hidden');
+}
 function hideMaint(){ const b=document.getElementById('svcBanner'); if(b&&!b.classList.contains('hidden')) b.classList.add('hidden'); }
 
 /* ---------- ผู้ปกครองตรวจผลการเรียน ---------- */
@@ -7105,9 +7236,11 @@ async function loadHealth(){
   box.textContent='กำลังตรวจ…';
   try{
     const h=await GAS.call('getHealthStatus');
+    const hs=document.getElementById('hl_sheet');
+    if(hs) hs.innerHTML='📄 ชีตที่เชื่อมอยู่: '+(h.sheet&&h.sheet.url?`<a class="underline text-teal-700" target="_blank" rel="noopener" href="${esc(h.sheet.url)}">${esc(h.sheet.name||'เปิดชีต')}</a>`:esc((h.sheet&&h.sheet.name)||'-'))+' • Code.gs <b>'+esc(h.appVersion||'-')+'</b> • หน้าเว็บ <b>'+esc(FE_VERSION)+'</b>'+((h.appVersion&&h.appVersion!==FE_VERSION)?' <span class="text-rose-600 font-semibold">⚠️ ไม่ตรงกัน</span>':' ✅ ตรงกัน');
     const T={green:'ปกติ',yellow:'ควรดู',red:'ผิดปกติ'};
     lv.innerHTML=`<span class="hl-pill hl-${h.level}">● ${T[h.level]}</span>`;
-    box.innerHTML=h.checks.map(c=>`<div class="flex items-start gap-2 py-1 border-b last:border-0"><span class="hl-pill hl-${c.level} shrink-0">${T[c.level]}</span><div><b>${esc(c.name)}</b> <span class="text-slate-500">${esc(c.msg)}</span></div></div>`).join('');
+    box.innerHTML=h.checks.map(c=>`<div class="flex items-start gap-2 py-1 border-b last:border-0"><span class="hl-pill hl-${c.level} shrink-0">${T[c.level]}</span><div class="flex-1"><b>${esc(c.name)}</b> <span class="text-slate-500">${esc(c.msg)}</span>${c.fix==='repairGradesLayout'?' <button onclick="runRepairGrades()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 text-xs ml-1">🔧 ซ่อมโครงชีตเกรด</button>':''}</div></div>`).join('');
   }catch(e){ box.innerHTML='<span class="text-rose-600">'+esc(e.message)+'</span>'; }
 }
 
@@ -7251,6 +7384,54 @@ async function loadArchives(){
   }catch(e){ el.innerHTML='<span class="text-rose-600">'+esc(e.message)+'</span>'; }
 }
 
+
+/* ---------- ซ่อมโครงชีตเกรด / กู้คะแนนจากเวอร์ชันเก่า (แอดมิน) ---------- */
+async function runRepairGrades(){
+  try{
+    showLoading(true);
+    const pv=await GAS.call('repairGradesLayout',{dryRun:true});
+    showLoading(false);
+    if(!pv.needed){ toast('โครงชีตเกรดถูกต้องแล้ว'); loadHealth(); return; }
+    if(!confirm('ซ่อมโครงชีตเกรด\n\nแถวเกรดทั้งหมด '+pv.total+'\n• โครงเก่าที่ต้องแทรกคอลัมน์: '+pv.legacyConverted+'\n• ตำแหน่งถูกอยู่แล้ว: '+pv.alreadyOk+'\n\nระบบสำรองชีตเป็นแท็บ “สำรอง_Grades_…” ก่อน และไม่ลบข้อมูล ดำเนินการ?')) return;
+    showLoading(true);
+    const r=await GAS.call('repairGradesLayout',{});
+    toast('ซ่อมเรียบร้อย ('+r.legacyConverted+' แถวปรับโครง • สำรองที่แท็บ '+r.backupSheet+')');
+    try{ localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
+    await bootstrap(); loadHealth();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+const RC={src:'',toAdd:0};
+function renderRecover(r){
+  const sk=r.skipped||{}, gc=r.gradeCheck||{};
+  let h=`<div class="p-3 rounded-lg ${r.toAdd?'bg-emerald-50 border border-emerald-200':'bg-slate-50 border'}">
+    <div>ไฟล์: <b>${esc(r.source||'-')}</b> • แถวคะแนนในไฟล์ ${r.scanned}</div>
+    <div class="font-semibold mt-1">${r.dryRun?'จะเติมกลับ':'เติมกลับแล้ว'} ${r.dryRun?r.toAdd:r.applied} แถว</div>
+    <div class="text-xs text-slate-500 mt-1">ข้าม: มีอยู่แล้ว ${sk.alreadyThere||0} • หน่วยไม่มีแล้ว ${sk.unitGone||0} • นักเรียนไม่มีแล้ว ${sk.studentGone||0} • กลุ่มที่มีคะแนนอยู่แล้ว ${sk.groupHasData||0} • ห้องล็อก ${sk.roomLocked||0} • ค่าไม่ถูกต้อง (ติดลบ/เกินเต็ม) ${sk.invalidScore||0}</div>`;
+  if(gc.checked) h+=`<div class="text-xs text-slate-500">เทียบกับเกรดเดิม: ร้อยละตรงกัน ${gc.same} • ต่างกัน ${gc.different} (จาก ${gc.checked} คน×วิชา)</div>`;
+  if(r.groups&&r.groups.length) h+=`<div class="overflow-x-auto mt-2"><table class="w-full text-xs"><thead><tr class="text-left text-slate-400 border-b"><th class="py-1 pr-2">ห้อง</th><th class="pr-2">วิชา</th><th class="pr-2">ภาค</th><th class="pr-2">นักเรียน</th><th>แถว</th></tr></thead><tbody>`+
+    r.groups.map(g=>`<tr class="border-b"><td class="py-1 pr-2">${esc(g.room)}</td><td class="pr-2">${esc(g.subject)}</td><td class="pr-2">${esc(g.semester)}</td><td class="pr-2">${g.students}</td><td>${g.rows}</td></tr>`).join('')+`</tbody></table></div>`;
+  if(r.dryRun&&r.toAdd) h+=`<div class="mt-3"><button onclick="recoverApply()" class="btn bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 text-sm">♻️ เติมคะแนนกลับ ${r.toAdd} แถว</button> <span class="text-[11px] text-slate-400">เติมเฉพาะแถวที่ยังไม่มี ไม่ทับของเดิม</span></div>`;
+  if(!r.toAdd) h+=`<div class="mt-2 text-xs text-slate-500">ไม่มีแถวที่ต้องเติม — ลองเลือกเวอร์ชันที่เก่ากว่านี้</div>`;
+  return h+'</div>';
+}
+async function recoverPreview(){
+  const src=document.getElementById('rc_src').value.trim(); const box=document.getElementById('rc_box');
+  if(!src){ toast('วางลิงก์ของสำเนาเวอร์ชันเก่าก่อน','error'); return; }
+  box.textContent='กำลังตรวจสอบ… (อ่านไฟล์ต้นทาง)';
+  try{ const r=await GAS.call('recoverScores',{source:src,dryRun:true}); RC.src=src; RC.toAdd=r.toAdd; box.innerHTML=renderRecover(r); }
+  catch(e){ box.innerHTML='<div class="text-rose-600">'+esc(e.message)+'</div>'; }
+}
+async function recoverApply(){
+  const box=document.getElementById('rc_box'); const src=RC.src||document.getElementById('rc_src').value.trim();
+  if(!src||!RC.toAdd){ toast('ตรวจสอบก่อนเติมกลับ','error'); return; }
+  if(!confirm('เติมคะแนนกลับ '+RC.toAdd+' แถว?\n(เติมเฉพาะแถวที่ยังไม่มี ไม่ทับ ไม่ลบของเดิม)')) return;
+  try{ showLoading(true);
+    const r=await GAS.call('recoverScores',{source:src,dryRun:false});
+    box.innerHTML=renderRecover(r); RC.toAdd=0;
+    toast('เติมคะแนนกลับ '+r.applied+' แถวแล้ว — เปิดแท็บบันทึกผลการเรียนแล้วกดบันทึกเพื่อคำนวณเกรดซ้ำได้');
+    try{ localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
 initApp();
 </script>
 </body>
