@@ -103,6 +103,22 @@
     .report-page{box-shadow:none !important;margin:0 !important;page-break-after:always;}
     .pp5-land{page:land;}
   }
+  /* ---- เล่มรายงานครูประจำวิชา (พิมพ์) ---- */
+  #bookPrintArea{display:none;}
+  .bk-page{width:210mm;height:296mm;box-sizing:border-box;padding:11mm 12mm;background:#fff;color:#000;font-size:11px;line-height:1.35;overflow:hidden;page-break-after:always;break-after:page;}
+  .bk-page.bk-land{width:297mm;height:209mm;page:land;}
+  .bk-page h1{font-size:18px;font-weight:700;text-align:center;margin:0 0 2px;} .bk-page h2{font-size:14px;font-weight:700;margin:0 0 4px;}
+  .bk-sub{text-align:center;font-size:11px;margin-bottom:6px;}
+  .bk-t{border-collapse:collapse;width:100%;} .bk-t th,.bk-t td{border:1px solid #333;padding:1px 3px;font-size:9.5px;height:5.4mm;}
+  .bk-t th{background:#eef2f6;font-weight:600;text-align:center;} .bk-t td.c{text-align:center;} .bk-t td.l{text-align:left;white-space:nowrap;}
+  .bk-t th.v{writing-mode:vertical-rl;transform:rotate(180deg);height:30mm;padding:2px 1px;font-size:8.5px;white-space:nowrap;}
+  .bk-note{font-size:9px;color:#444;margin-top:3px;}
+  .bk-kv{display:grid;grid-template-columns:42mm 1fr;gap:3px 8px;font-size:12px;margin:8px 0;} .bk-kv b{font-weight:600;}
+  .bk-sign{display:flex;justify-content:space-around;margin-top:22mm;font-size:11px;text-align:center;} .bk-sign div{width:60mm;}
+  @media print{
+    body.printing-book > *:not(#bookPrintArea){display:none !important;}
+    body.printing-book #bookPrintArea{display:block !important;}
+  }
   /* ---- ช่องกรอกคะแนน: พิมพ์ตัวเลขเอง (ไม่มีปุ่มเพิ่ม/ลด) ช่องที่ค่าไม่ถูกต้องเป็นสีแดง ---- */
   input.numcell{-moz-appearance:textfield;appearance:textfield;}
   input.numcell::-webkit-outer-spin-button,input.numcell::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
@@ -132,6 +148,7 @@
   </div>
 </div>
 <div id="svcBanner" class="hidden fixed top-0 inset-x-0 z-[96] bg-amber-500 text-white text-sm text-center py-2 px-3 noprint"></div>
+<div id="intBanner" class="hidden fixed top-0 inset-x-0 z-[96] bg-rose-600 text-white text-xs sm:text-sm py-2 px-3 noprint"></div>
 <div id="verBanner" class="hidden fixed bottom-0 inset-x-0 z-[97] bg-rose-600 text-white text-sm text-center py-3 px-3 noprint"></div>
 
 <!-- ====================== ผู้ปกครองตรวจผลการเรียน ====================== -->
@@ -259,30 +276,23 @@
       <button data-tab="scores" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📝 บันทึกผลการเรียน</button>
       <button data-tab="ability" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🎓 สมรรถนะ/คุณลักษณะ</button>
       <button data-tab="remed" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🩹 สอบแก้ตัว 0/ร/มส/มผ</button>
-      <button data-tab="teaching" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📤 ส่งเอกสารการสอน</button>
       <button data-tab="approve" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🔏 ส่ง/อนุมัติผล</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="schedule" data-label="📅 ตาราง/ปฏิทิน">
       <button data-tab="schedule" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ตารางสอน</button>
-      <button data-tab="exams" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ตารางสอบ</button>
       <button data-tab="calendar" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ปฏิทินวิชาการ</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="student" data-label="🧑‍🎓 นักเรียน">
       <button data-tab="attendance" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">✅ เช็คชื่อ</button>
-      <button data-tab="profile" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📇 ประวัตินักเรียน</button>
-      <button data-tab="care" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">💚 ดูแลนักเรียน</button>
       <button data-tab="risk" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">⚠️ นักเรียนเสี่ยง</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="report" data-label="🖨️ รายงาน/เอกสาร">
       <button data-tab="report" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🖨️ พิมพ์ใบรายงาน</button>
       <button data-tab="summary68" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📋 สรุปผลการเรียน</button>
-      <button data-tab="sar" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📊 สารสนเทศ/SAR</button>
       <button data-tab="stats" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📊 รายงานสรุป</button>
-      <button data-tab="docs" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📁 เอกสาร/แบบฟอร์ม</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="manage" data-label="📊 บริหารงาน">
       <button data-tab="overview" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📊 แดชบอร์ดผู้บริหาร</button>
-      <button data-tab="supervise" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🧭 นิเทศชั้นเรียน</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="admin" data-label="⚙️ ผู้ดูแลระบบ">
       <button data-tab="subjects" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
@@ -665,6 +675,15 @@
 
   <!-- ---------- TAB: SUBJECTS ---------- -->
   <section id="tab-subjects" class="tabpane hidden">
+    <div class="card p-4 mb-4 border-l-4 border-amber-400">
+      <h2 class="font-bold text-amber-700 mb-1">📥 นำเข้าโครงสร้างหลักสูตร (รายวิชา + ครูผู้สอน + ตัวชี้วัด)</h2>
+      <p class="text-xs text-slate-500 mb-3">ดาวน์โหลดฟอร์ม Excel → กรอก/แก้ → อัปโหลด ระบบจะแสดงตัวอย่างก่อนบันทึก • เพิ่ม/แก้เฉพาะที่อยู่ในไฟล์ ไม่ลบรายวิชา หน่วย หรือคะแนนใดๆ • ครูผู้สอนจับคู่จากชื่อในบัญชีครู (ไม่ใช้ตารางสอน)</p>
+      <div class="flex flex-wrap gap-2">
+        <button onclick="downloadCurriculumForm()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-sm">⬇️ ดาวน์โหลดฟอร์ม Excel</button>
+        <button onclick="document.getElementById('cur_file').click()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 text-sm">⬆️ อัปโหลดฟอร์มที่กรอกแล้ว</button>
+        <input id="cur_file" type="file" accept=".xlsx,.xls" class="hidden" onchange="curImportFile(this)">
+      </div>
+    </div>
     <div class="card p-4 mb-4">
       <h2 class="font-bold text-teal-700 mb-3">➕ เพิ่มรายวิชา</h2>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -717,6 +736,7 @@
           </select>
         </div>
         <div id="sc_timeCheck" class="hidden mb-2"></div>
+        <button onclick="openBookModal()" class="btn bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 text-sm whitespace-nowrap">🖨️ เล่มรายงานครูประจำวิชา</button>
       </div>
       <div id="sc_docs" class="mt-3"></div>
       <div id="sc_lockBanner" class="hidden mt-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm px-3 py-2">🔒 ห้องนี้ถูกล็อก (อนุมัติผลแล้ว) — แก้ไขไม่ได้ จนกว่าแอดมินจะปลดล็อก</div>
@@ -724,6 +744,7 @@
 
     <!-- Mode A -->
     <div id="sc_modeA" class="hidden space-y-4">
+      <div id="sc_orphan" class="hidden"></div>
       <div class="card p-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-bold text-teal-700">หน่วย/ผลลัพธ์การเรียนรู้ <span class="text-xs font-normal text-slate-400">(ตั้งชื่ออิสระ)</span></h3>
@@ -732,7 +753,7 @@
         <div id="unitsWrap" class="space-y-2"></div>
         <div class="flex justify-between mt-3">
           <button onclick="addUnitRow()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 text-xs">➕ เพิ่มหน่วย</button>
-          <button onclick="saveUnitsFn()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 text-sm">💾 บันทึกหน่วย</button>
+          <button id="btnSaveUnits" onclick="saveUnitsFn()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed">💾 บันทึกหน่วย</button>
         </div>
       </div>
       <div class="card p-4">
@@ -747,6 +768,12 @@
       </div>
       <div class="card p-4">
         <h3 class="font-bold text-teal-700 mb-3">กรอกคะแนนนักเรียน <span class="text-xs font-normal text-slate-400">(จำนวนเต็มหรือลงท้าย .5 เช่น 5 / 5.5 • ระบบคิดร้อยละ → เกรด 2551 ให้อัตโนมัติ • ช่อง "ผลพิเศษ" เลือก ร/มส เฉพาะนักเรียนที่มีปัญหา)</span></h3>
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <button onclick="downloadScoreForm()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs">⬇️ ดาวน์โหลดฟอร์ม Excel</button>
+          <label class="btn bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 text-xs cursor-pointer">⬆️ นำเข้าคะแนนจาก Excel<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importScoreForm(this)"></label>
+          <span class="text-[11px] text-slate-400">เพิ่มหน่วยและกด “บันทึกหน่วย” แล้วดาวน์โหลดฟอร์ม → กรอก → นำเข้า → ตรวจในตาราง → 💾 บันทึก (ช่องว่างในไฟล์ = ไม่เปลี่ยนค่าเดิม)</span>
+        </div>
+        <div id="sc_importMsg" class="hidden mb-3 p-3 rounded-lg bg-sky-50 border border-sky-200 text-sky-800 text-xs"></div>
         <div id="scoreErrBox" class="hidden mb-3 p-3 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 text-xs"></div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -1369,6 +1396,14 @@
         <div id="hl_box" class="text-sm text-slate-500">กำลังตรวจ…</div>
       </div>
       <div class="card p-4 mb-4">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="font-bold text-teal-700">🧩 ตรวจ/กู้หน่วยที่หาย <span class="text-xs font-normal text-slate-400">(คะแนนอยู่ในชีตแต่ไม่แสดงในหน้าเว็บ)</span></h3>
+          <button onclick="orphanScan()" class="btn bg-white border border-slate-200 px-3 py-1 text-xs">🔍 ตรวจ</button>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-2">ใช้เมื่อหน้า "คะแนนรายหน่วย" ไม่มีหน่วย/คะแนนทั้งที่เคยกรอกไว้ — ระบบเติมกลับเฉพาะหน่วยที่ขาด (ไม่ทับ ไม่ลบของเดิม) จากแท็บ สำรอง_Units หรือจากไฟล์สำรองข้อมูล .json</p>
+        <div id="ou_box" class="text-sm text-slate-500">กด 🔍 ตรวจ</div>
+      </div>
+      <div class="card p-4 mb-4">
         <h3 class="font-bold text-teal-700 mb-1">🛟 กู้คะแนนจากเวอร์ชันเก่า</h3>
         <p class="text-[11px] text-slate-400 mb-2">ใช้เมื่อคะแนนรายหน่วยหาย: เปิดชีต → ไฟล์ → ประวัติเวอร์ชัน → เลือกเวอร์ชันที่คะแนนยังครบ → ⋮ “สร้างสำเนา” → วางลิงก์ของสำเนาด้านล่าง ระบบเติมกลับ <b>เฉพาะแถวที่ยังไม่มี</b> (ไม่ทับ ไม่ลบของเดิม ข้ามห้องที่ล็อก)</p>
         <div class="flex gap-2"><input id="rc_src" class="inp text-xs flex-1" placeholder="วางลิงก์ Google Sheets ของสำเนาเวอร์ชันเก่า"><button onclick="recoverPreview()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 text-sm whitespace-nowrap">🔍 ตรวจสอบ</button></div>
@@ -1514,7 +1549,7 @@
         <li><b>เช็คชื่อ</b> หน้าเสาธง = ครูประจำชั้น • รายคาบ = ครูที่สอนห้องนั้น</li>
         <li><b>บันทึกผลการเรียน</b> เลือกภาคเรียน → วิชา → กรอกคะแนนรายหน่วย ระบบคำนวณเกรดตามตารางแปลงเกรด</li>
         <li><b>สมรรถนะ/คุณลักษณะ</b> กรอกรายห้องตามภาคเรียน</li>
-        <li><b>ส่งเอกสารการสอน</b> อัปโหลดตามประเภทที่โรงเรียนกำหนด • <b>สอบแก้ตัว</b> แก้เกรด 0/ร/มส/มผ</li>
+        <li><b>สอบแก้ตัว</b> แก้เกรด 0/ร/มส/มผ</li>
         <li><b>ส่ง/อนุมัติผล</b> เมื่อกรอกครบ กดส่งตรวจ → ผู้บริหารอนุมัติ/ล็อก (ห้องที่ล็อกแล้วแก้ไขไม่ได้)</li>
       </ol>
     </div>
@@ -1649,7 +1684,7 @@
 /* ============================================================
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
-const FE_VERSION = '2026-10-06b';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = '2026-10-08d';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -1821,15 +1856,8 @@ function switchTab(name){
   if(name==='risk') initRisk();
   if(name==='schedule') initSchedule();
   if(name==='overview') ovSwitch(state.ovSub||'class');
-  if(name==='teaching') initTeaching();
   if(name==='remed') initRemed();
   if(name==='approve') initApprove();
-  if(name==='supervise') initSupervise();
-  if(name==='docs') initDocs();
-  if(name==='profile') initProfile();
-  if(name==='exams') initExams();
-  if(name==='care') initCare();
-  if(name==='sar') loadSAR();
   if(name==='assign') loadAssign();
   if(name==='summary68') initSummary68();
   if(name==='manual') window.scrollTo(0,0);
@@ -1916,7 +1944,8 @@ document.querySelectorAll('.absubbtn').forEach(b=>b.onclick=()=>switchAbsub(b.da
 /* ============================================================
    BOOTSTRAP
    ============================================================ */
-const BOOT_CACHE_KEY='nsr_m13_boot_v1';
+const BOOT_CACHE_KEY='nsr_m13_boot_'+FE_VERSION;   // แคชเริ่มต้นแยกตามเวอร์ชัน — อัปเดตระบบแล้วไม่ใช้ข้อมูลค้างของเวอร์ชันเก่า
+try{ Object.keys(localStorage).forEach(k=>{ if(k.indexOf('nsr_m13_boot_')===0 && k!==BOOT_CACHE_KEY) localStorage.removeItem(k); }); }catch(e){}
 async function applyBootstrap(data){
   state.settings=data.settings||{};
   state.mapping=data.mapping||[];
@@ -2388,6 +2417,7 @@ async function onSelectScoreSubject(){
   state.scoreRoom=sep>=0?raw.slice(sep+1):'';
   state.scoreSubject=state.subjects.find(s=>String(s.ID)===String(id));
   state.timeCheck=null;
+  { const im=document.getElementById('sc_importMsg'); if(im) im.classList.add('hidden'); }
   if(id && state.scoreRoom && state.scoreSubject){
     GAS.call('getSubjectTimeCheck',{classLevel:state.scoreRoom, subject:state.scoreSubject.name, semester:state.semester})
       .then(r=>{ state.timeCheck=r; renderTimeCheckBadge(); markTimeCheckRows(); }).catch(()=>{});
@@ -2397,6 +2427,8 @@ async function onSelectScoreSubject(){
     document.getElementById('sc_modeA').classList.add('hidden');
     return;
   }
+  const tok=(state._scTok=(state._scTok||0)+1);   // กันผลโหลดของวิชาเก่ามาทับวิชาที่เลือกใหม่
+  state.unitsOk=false; delete state.units[id];     // ยังโหลดหน่วยไม่เสร็จ = ห้ามบันทึกหน่วย (กันส่งรายการว่างไปลบของจริง)
   try{
     showLoading(true);
     const [units, scores, grades, exam]=await Promise.all([
@@ -2405,12 +2437,20 @@ async function onSelectScoreSubject(){
       GAS.call('getGrades',{semester:state.semester}),
       GAS.call('getExamConfig',{subjectID:id, semester:state.semester})
     ]);
+    if(tok!==state._scTok) return;
     state.units[id]=units; state.scores=scores; state.grades=grades; state.exam[id]=exam||{midMax:0,finalMax:0};
+    state.unitsOk=true;
     GAS.call('getSubjectDocs',{subjectID:id}).then(docs=>renderDocList(docs,'sc_docs',false)).catch(()=>{});
+    loadIndicators(id,tok);
     document.getElementById('sc_lockBanner').classList.toggle('hidden', !isRoomLocked(state.scoreRoom));
     document.getElementById('sc_empty').classList.add('hidden');
     setScoreMode('A');
-  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+  }catch(e){
+    if(tok===state._scTok){
+      document.getElementById('sc_modeA').classList.add('hidden'); document.getElementById('sc_empty').classList.remove('hidden');
+      toast('โหลดข้อมูลวิชานี้ไม่สำเร็จ — '+e.message+' (ลองเลือกวิชาใหม่)','error');
+    }
+  } finally{ showLoading(false); }
 }
 
 // ---- 3.1 เวลาเรียน <80% ↔ มส ----
@@ -2545,9 +2585,11 @@ function renderUnits(){
       <span class="text-xs text-slate-400 w-5">${i+1}</span>
       <input class="inp flex-1 text-sm" value="${esc(u.unitName)}" oninput="state.units['${id}'][${i}].unitName=this.value">
       <input type="text" inputmode="decimal" autocomplete="off" maxlength="6" class="inp w-24 text-sm numcell unitMax" onfocus="this.select()" value="${u.maxScore}" oninput="onUnitMaxInput(this,'${id}',${i})" placeholder="เต็ม">
+      ${indBtnHtml(id,u,i)}
       <button onclick="state.units['${id}'].splice(${i},1);renderUnits()" class="text-rose-500 px-1">🗑️</button>
     </div>`).join('') : '<p class="text-xs text-slate-400">ยังไม่มีหน่วย — กด “เพิ่มหน่วย” เพื่อเริ่ม</p>';
-  updateTotalMax(); unitErrCount();
+  const sb=document.getElementById('btnSaveUnits'); if(sb) sb.disabled=!state.unitsOk;
+  updateTotalMax(); unitErrCount(); renderOrphanBanner();
 }
 function updateTotalMax(){
   const id=state.scoreSubject.ID;
@@ -2586,6 +2628,7 @@ async function saveExamFn(){
 }
 function addUnitRow(){
   const id=state.scoreSubject.ID;
+  if(!state.unitsOk){ toast('ยังโหลดหน่วยของวิชานี้ไม่เสร็จ — รอสักครู่หรือเลือกวิชาใหม่','error'); return; }
   if(!state.units[id]) state.units[id]=[];
   state.units[id].push({ID:'',unitName:'หน่วยที่ '+(state.units[id].length+1),maxScore:10});
   renderUnits();
@@ -2595,10 +2638,479 @@ async function saveUnitsFn(){
   const id=state.scoreSubject.ID;
   const badU=unitErrCount();
   if(badU){ const f=document.querySelector('#unitsWrap .unitMax.bad'); if(f) f.focus(); toast('มี '+badU+' หน่วยที่คะแนนเต็มไม่ถูกต้อง (สีแดง) — ต้องเป็นตัวเลขมากกว่า 0 ทศนิยมไม่เกิน 2 ตำแหน่ง ไม่ได้บันทึก','error'); return; }
+  if(!state.unitsOk){ toast('ยังโหลดหน่วยของวิชานี้ไม่เสร็จ/โหลดไม่สำเร็จ — ไม่ได้บันทึก (เลือกวิชาใหม่แล้วลองอีกครั้ง)','error'); return; }
   try{ showLoading(true);
-    state.units[id]=await GAS.call('saveUnits',{subjectID:id, units:state.units[id]||[], semester:state.semester});
-    renderUnits(); renderScoreTable(); toast('บันทึกหน่วยแล้ว');
+    const send=(force)=>GAS.call('saveUnits',{subjectID:id, units:state.units[id]||[], semester:state.semester, forceRemove:!!force});
+    let r;
+    try{ r=await send(false); }
+    catch(e){
+      const m=String(e.message||'');
+      if(m.indexOf('[UNIT_HAS_SCORES]')===0 || m.indexOf('[UNITS_EMPTY]')===0){
+        showLoading(false);
+        const ok=confirm(m.replace(/^\[[A-Z_]+\]\s*/,'')+'\n\nกด "ตกลง" เพื่อลบจริง (คะแนนของหน่วยที่ลบจะถูกลบด้วย แต่มีสำเนาสำรองไว้ในชีต สำรอง_Scores)\nกด "ยกเลิก" เพื่อไม่ทำอะไร');
+        if(!ok) return;
+        showLoading(true); r=await send(true);
+      } else throw e;
+    }
+    state.units[id]=r;
+    state.scores=await GAS.call('getScores',{subjectID:id, semester:state.semester});
+    renderUnits(); renderScoreTable(); toast('บันทึกหน่วยแล้ว'); loadIndicators(id,state._scTok);
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+
+/* ---- คะแนนที่ไม่มีหน่วย: แถบเตือน + กู้หน่วย ---- */
+function orphanScoreInfo(){
+  const sub=state.scoreSubject; if(!sub||!state.unitsOk) return null;
+  const have=new Set((state.units[sub.ID]||[]).map(u=>String(u.ID)));
+  const ids=new Set(); let n=0;
+  (state.scores||[]).forEach(r=>{ const u=String(r.unitID); if(u==='MID'||u==='FINAL'||have.has(u)) return; ids.add(u); n++; });
+  return n?{rows:n, units:ids.size}:null;
+}
+function renderOrphanBanner(){
+  const el=document.getElementById('sc_orphan'); if(!el) return;
+  const o=orphanScoreInfo();
+  if(!o){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML=`<div class="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800">
+    <div class="font-semibold mb-1">⚠️ พบคะแนน ${o.rows} แถว (${o.units} หน่วย) ที่หน่วยถูกลบไป — คะแนนยังอยู่ในชีตแต่ไม่แสดงในตาราง</div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <button onclick="repairOrphanFn()" class="btn bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 text-xs">🩹 กู้หน่วยอัตโนมัติ</button>
+      <label class="btn bg-white border border-rose-300 text-rose-700 px-3 py-1 text-xs cursor-pointer">📂 กู้จากไฟล์สำรอง (.json)<input type="file" accept=".json,application/json" class="hidden" onchange="repairOrphanFromFile(this,true)"></label>
+      <span class="text-[11px] text-rose-600">ระบบเติมเฉพาะหน่วยที่ขาด ไม่ทับ/ไม่ลบของเดิม</span>
+    </div></div>`;
+}
+function repairReportText(r){
+  if(!r.restored) return 'ไม่พบหน่วยที่กู้ได้'+((r.skipped&&r.skipped.length)?' — '+r.skipped.map(x=>x.subjectName+' '+x.classLevel+' ('+x.reason+')').join(', '):'');
+  return 'กู้หน่วยแล้ว '+r.restored+' หน่วย: '+r.groups.map(g=>g.subjectName+' '+g.classLevel+' ภาค '+g.semester+' ('+g.restoredUnits+' หน่วย, คะแนน '+g.scoreRows+' แถว)').join(' • ')+((r.skipped&&r.skipped.length)?' | กู้ไม่ได้: '+r.skipped.map(x=>x.subjectName+' '+x.classLevel).join(', '):'');
+}
+async function repairOrphanFn(rows, scoped){
+  const sub=state.scoreSubject; if(!sub) return;
+  try{ showLoading(true);
+    const r=await GAS.call('repairOrphanUnits',{subjectID:sub.ID, rows:rows||[]});
+    toast(repairReportText(r), r.restored?'success':'error');
+    await onSelectScoreSubject();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function readBackupUnits(file){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{ try{ const d=JSON.parse(fr.result); const D=d.data||d; const rows=D.LearningUnits; if(!Array.isArray(rows)) throw new Error('ไฟล์นี้ไม่มีข้อมูลหน่วย (LearningUnits) — ใช้ไฟล์สำรองที่ได้จากปุ่มสำรองข้อมูลของระบบ'); res(rows.map(r=>({ID:r.ID,subjectID:r.subjectID,unitName:r.unitName,maxScore:r.maxScore,sortOrder:r.sortOrder,semester:r.semester}))); }catch(e){ rej(e); } };
+    fr.onerror=()=>rej(new Error('อ่านไฟล์ไม่สำเร็จ'));
+    fr.readAsText(file);
+  });
+}
+async function repairOrphanFromFile(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  try{ const rows=await readBackupUnits(f); await repairOrphanFn(rows,true); }catch(e){ toast(e.message,'error'); }
+}
+
+/* ---- แอดมิน: ตรวจ/กู้หน่วยที่หายทั้งระบบ ---- */
+async function orphanScan(){
+  const box=document.getElementById('ou_box'); if(!box) return;
+  box.textContent='กำลังตรวจ…';
+  try{
+    const list=await GAS.call('getOrphanUnits',{});
+    state._orphanList=list;
+    if(!list.length){ box.innerHTML='<span class="text-emerald-700">✅ ไม่พบคะแนนที่หน่วยหาย</span>'; return; }
+    box.innerHTML=`<div class="text-rose-700 font-semibold mb-1">⚠️ พบ ${list.length} วิชา/ภาคเรียน ที่คะแนนไม่มีหน่วย</div>`+
+      '<table class="w-full text-xs mb-2"><thead><tr class="text-left text-slate-400 border-b"><th class="py-1">วิชา</th><th>ภาค</th><th class="text-center">คะแนน (แถว)</th><th class="text-center">หน่วยที่ขาด</th><th class="text-center">กู้ได้จากสำรอง_Units</th></tr></thead><tbody>'+
+      list.map(g=>`<tr class="border-b"><td class="py-1">${esc(g.subjectName)} ${esc(g.classLevel)}</td><td>${esc(g.semester)}</td><td class="text-center">${g.scoreRows}</td><td class="text-center">${g.unitCount}</td><td class="text-center">${g.recoverable}/${g.unitCount}</td></tr>`).join('')+
+      `</tbody></table><div class="flex flex-wrap gap-2"><button onclick="orphanRepairAll()" class="btn bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 text-xs">🩹 กู้ทั้งหมดอัตโนมัติ</button>
+      <label class="btn bg-white border border-rose-300 text-rose-700 px-3 py-1.5 text-xs cursor-pointer">📂 กู้จากไฟล์สำรอง (.json)<input type="file" accept=".json,application/json" class="hidden" onchange="orphanRepairFile(this)"></label></div>`;
+  }catch(e){ box.innerHTML='<span class="text-rose-600">'+esc(e.message)+'</span>'; }
+}
+async function orphanRepairAll(rows){
+  try{ showLoading(true);
+    const r=await GAS.call('repairOrphanUnits',{rows:rows||[]});
+    toast(repairReportText(r), r.restored?'success':'error');
+    await bootstrap(); await orphanScan();
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function orphanRepairFile(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  try{ const rows=await readBackupUnits(f); await orphanRepairAll(rows); }catch(e){ toast(e.message,'error'); }
+}
+
+
+/* ---- นำเข้า/ส่งออกคะแนนด้วยฟอร์ม Excel ---- */
+
+/* ================= โครงสร้างหลักสูตร: ตัวชี้วัด + นำเข้า Excel (Part 2) ================= */
+state.ind=state.ind||{};
+async function loadIndicators(sid,tok){
+  try{
+    const r=await GAS.call('getIndicators',{subjectID:sid, semester:state.semester});
+    if(tok!==state._scTok) return;
+    state.ind[sid]=r; renderUnits();
+  }catch(e){ /* ไม่กระทบการกรอกคะแนน */ }
+}
+function indBtnHtml(sid,u,i){
+  const d=state.ind&&state.ind[sid]; if(!d||!d.indicators||!d.indicators.length) return '';
+  if(!u.ID) return '<button disabled title="กดบันทึกหน่วยก่อน" class="text-xs px-2 py-1 rounded border border-slate-200 text-slate-300">🎯 ตัวชี้วัด</button>';
+  const n=(d.map[u.ID]||[]).length;
+  return `<button onclick="openIndModal(${i})" class="text-xs px-2 py-1 rounded border ${n?'border-teal-400 bg-teal-50 text-teal-700':'border-slate-300 text-slate-500'} whitespace-nowrap">🎯 ตัวชี้วัด${n?' ('+n+')':''}</button>`;
+}
+function closeCurModal(){ const m=document.getElementById('curModal'); if(m) m.remove(); }
+function curModal(html){
+  closeCurModal();
+  const d=document.createElement('div'); d.id='curModal';
+  d.className='fixed inset-0 z-[90] bg-black/50 flex items-end sm:items-center justify-center p-2';
+  d.innerHTML='<div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4">'+html+'</div>';
+  document.body.appendChild(d);
+}
+function openIndModal(i){
+  const sid=state.scoreSubject.ID, u=state.units[sid][i], d=state.ind[sid]; if(!u||!u.ID||!d) return;
+  const sel=new Set((d.map[u.ID]||[]).map(String));
+  state._indUnit=i;
+  curModal(`<h3 class="font-bold text-teal-700 mb-1">🎯 ตัวชี้วัดที่หน่วยนี้วัด</h3>
+    <p class="text-xs text-slate-500 mb-3">${esc(u.unitName)} • ติ๊กตัวชี้วัดที่หน่วยนี้วัดผล (ใช้สรุปผลการผ่านตัวชี้วัดในรายงาน)</p>
+    <div class="space-y-1 mb-3">${d.indicators.map(x=>`<label class="flex gap-2 items-start text-sm p-2 rounded-lg hover:bg-slate-50 cursor-pointer"><input type="checkbox" class="indChk mt-1" value="${esc(x.ID)}" ${sel.has(String(x.ID))?'checked':''}><span><b>${esc(x.code)}</b> ${esc(x.text)}</span></label>`).join('')}</div>
+    <div class="flex gap-2 justify-end"><button onclick="closeCurModal()" class="btn bg-slate-100 px-4 py-1.5 text-sm">ยกเลิก</button>
+    <button onclick="saveIndModal()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-4 py-1.5 text-sm">💾 บันทึก</button></div>`);
+}
+async function saveIndModal(){
+  const sid=state.scoreSubject.ID, u=state.units[sid][state._indUnit];
+  const ids=[...document.querySelectorAll('#curModal .indChk:checked')].map(x=>x.value);
+  try{ showLoading(true);
+    await GAS.call('saveUnitIndicators',{subjectID:sid, unitID:u.ID, indicatorIDs:ids});
+    state.ind[sid].map[u.ID]=ids; closeCurModal(); renderUnits(); toast('บันทึกตัวชี้วัดของหน่วยแล้ว');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function downloadCurriculumForm(){
+  if(!xlsxReady()) return;
+  try{ showLoading(true);
+    const d=await GAS.call('getCurriculumData');
+    const H1=['ชั้น','รหัสวิชา','ชื่อวิชา','ประเภท','ชั่วโมง','ครูผู้สอน','ห้อง','ชื่อวิชาในตารางสอน'];
+    const rows=[];
+    d.subjects.forEach(su=>{
+      const by={}; (su.assign||[]).forEach(a=>{ (by[a.teacher]=by[a.teacher]||[]).push(String(a.room).replace(/^ม\.\d\//,'')); });
+      const ts=Object.keys(by);
+      if(!ts.length) rows.push([su.classLevel,su.code,su.name,su.type,su.hours,'','',su.alias]);
+      else ts.forEach(t=>rows.push([su.classLevel,su.code,su.name,su.type,su.hours,t,by[t].join(','),su.alias]));
+    });
+    if(!rows.length){ rows.push(['ม.1','ท21101','ภาษาไทย 1','พื้นฐาน',60,'ชื่อครู (ตามบัญชีครูในระบบ)','','ไทย']); }
+    const H2=['ชั้น','รหัสวิชา','ชื่อวิชา','รหัสตัวชี้วัด','ตัวชี้วัด/ผลการเรียนรู้'];
+    const rows2=d.indicators.map(x=>[x.classLevel,x.subjectCode,x.name,x.code,x.text]);
+    if(!rows2.length) rows2.push(['ม.1','ท21101','ภาษาไทย 1','ท 1.1 ม.1/1','อ่านออกเสียงบทร้อยแก้วและร้อยกรองได้ถูกต้อง']);
+    const wb=XLSX.utils.book_new();
+    const w1=XLSX.utils.aoa_to_sheet([H1].concat(rows)); w1['!cols']=[{wch:6},{wch:10},{wch:26},{wch:10},{wch:8},{wch:30},{wch:10},{wch:22}];
+    const w2=XLSX.utils.aoa_to_sheet([H2].concat(rows2)); w2['!cols']=[{wch:6},{wch:10},{wch:26},{wch:16},{wch:70}];
+    const guide=[['วิธีกรอก'],
+      ['ชีต "รายวิชา": 1 แถว = 1 วิชา × 1 ครู (วิชาเดียวสอนหลายครูให้แยกหลายแถว ใส่ห้องของครูแต่ละคน)'],
+      ['ชั้น: ม.1–ม.6 • รหัสวิชา/ประเภท(พื้นฐาน/เพิ่มเติม)/ชั่วโมง: ไม่บังคับ'],
+      ['ครูผู้สอน: พิมพ์ชื่อให้ตรงกับบัญชีครูในระบบ (ไม่ต้องมีคำนำหน้าก็ได้) • ห้อง: เว้นว่าง = ทุกห้องของชั้นนั้น หรือพิมพ์ 1,2 / ม.1/1'],
+      ['ชื่อวิชาในตารางสอน: ไม่บังคับ ใช้เมื่อชื่อในตารางสอนต่างจากชื่อในหลักสูตร (ใช้ตอนพิมพ์รายงานเช็คชื่อรายคาบ)'],
+      ['ชีต "ตัวชี้วัด": 1 แถว = 1 ตัวชี้วัด ระบุ ชั้น + (ชื่อวิชา หรือ รหัสวิชา) • รหัสตัวชี้วัดห้ามซ้ำในวิชาเดียวกัน'],
+      ['วิชาที่มีอยู่ในชีตตัวชี้วัด = ใช้ชุดตัวชี้วัดตามไฟล์ (รหัสที่ไม่อยู่ในไฟล์จะถูกเอาออก) • วิชาที่ไม่มีในชีตตัวชี้วัดจะไม่ถูกแตะ'],
+      ['การนำเข้าไม่ลบรายวิชา หน่วยการเรียนรู้ หรือคะแนนใดๆ']];
+    XLSX.utils.book_append_sheet(wb,w1,'รายวิชา'); XLSX.utils.book_append_sheet(wb,w2,'ตัวชี้วัด');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(guide),'วิธีกรอก');
+    XLSX.writeFile(wb,'ฟอร์มโครงสร้างหลักสูตร.xlsx');
+    toast('ดาวน์โหลดฟอร์มแล้ว');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function curCell(r,names){ for(const n of names){ if(r[n]!==undefined&&r[n]!==null&&String(r[n]).trim()!=='') return String(r[n]).trim(); } return ''; }
+async function curImportFile(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  if(!xlsxReady()) return;
+  try{ showLoading(true);
+    const wb=XLSX.read(new Uint8Array(await f.arrayBuffer()),{type:'array'});
+    const find=n=>wb.SheetNames.find(x=>x.trim()===n);
+    const n1=find('รายวิชา'), n2=find('ตัวชี้วัด');
+    if(!n1&&!n2) throw new Error('ไม่พบชีต "รายวิชา" หรือ "ตัวชี้วัด" — ใช้ฟอร์มที่ดาวน์โหลดจากปุ่ม ⬇️');
+    const rd=n=>n?XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:false}).map((o,i)=>{ const r={}; Object.keys(o).forEach(k=>r[String(k).trim()]=o[k]); r.__line=i+2; return r; }):[];
+    const subjects=rd(n1).map(r=>({line:r.__line,classLevel:curCell(r,['ชั้น']),code:curCell(r,['รหัสวิชา']),name:curCell(r,['ชื่อวิชา']),type:curCell(r,['ประเภท']),
+      hours:curCell(r,['ชั่วโมง','ชม.']),area:curCell(r,['กลุ่มสาระ']),teacher:curCell(r,['ครูผู้สอน','ครู']),rooms:curCell(r,['ห้อง']),alias:curCell(r,['ชื่อวิชาในตารางสอน'])}));
+    const indicators=rd(n2).map(r=>({line:r.__line,classLevel:curCell(r,['ชั้น']),subjectCode:curCell(r,['รหัสวิชา']),name:curCell(r,['ชื่อวิชา']),code:curCell(r,['รหัสตัวชี้วัด']),text:curCell(r,['ตัวชี้วัด/ผลการเรียนรู้','ตัวชี้วัด','ผลการเรียนรู้'])}));
+    const pv=await GAS.call('getCurriculumPreview',{subjects,indicators});
+    state._curPayload={subjects,indicators}; showCurPreview(pv);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function showCurPreview(pv){
+  const sm=pv.summary, ok=sm.subjects>0;
+  const errs=pv.errors.length?`<div class="mb-3 p-2 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700"><b>แถวที่มีปัญหา ${pv.errors.length} แถว (จะถูกข้าม)</b><ul class="list-disc ml-5 mt-1 max-h-40 overflow-y-auto">${pv.errors.map(e=>`<li>${esc(e.sheet)} แถว ${e.line}: ${esc(e.msg)}</li>`).join('')}</ul></div>`:'';
+  const rowsH=pv.subjects.map(x=>`<tr class="border-b align-top"><td class="py-1 px-1">${esc(x.grade)}</td><td class="px-1">${esc(x.name)}${x.code?' <span class="text-slate-400">'+esc(x.code)+'</span>':''}<br><span class="text-[11px] ${x.isNew?'text-emerald-600':'text-slate-400'}">${x.isNew?'วิชาใหม่':'มีอยู่แล้ว'}</span></td>
+    <td class="px-1 text-xs">${x.assign.length?x.assign.map(a=>esc(a.room.replace('ม.',''))+' → '+esc(a.teacher)+(a.state==='เดิม'?'':' <i class="text-amber-600">('+esc(a.state)+')</i>')).join('<br>'):'<span class="text-slate-300">-</span>'}</td>
+    <td class="px-1 text-xs">${x.indicatorSummary?x.indicatorSummary.total+' ข้อ'+(x.indicatorSummary.added?` (+${x.indicatorSummary.added})`:'')+(x.indicatorSummary.removed?` <i class="text-rose-500">(เอาออก ${x.indicatorSummary.removed})</i>`:''):'-'}</td></tr>`).join('');
+  curModal(`<h3 class="font-bold text-amber-700 mb-2">📋 ตัวอย่างก่อนนำเข้า</h3>
+    <p class="text-sm mb-3">วิชา <b>${sm.subjects}</b> (ใหม่ ${sm.newSubjects}) • กำหนดครูตามห้อง <b>${sm.assignments}</b> วิชา • ตัวชี้วัด <b>${sm.indicators}</b> ข้อ</p>
+    ${errs}
+    <div class="overflow-x-auto max-h-64 overflow-y-auto mb-3"><table class="w-full text-sm"><thead><tr class="text-left text-slate-400 border-b"><th class="px-1">ชั้น</th><th class="px-1">วิชา</th><th class="px-1">ห้อง → ครู</th><th class="px-1">ตัวชี้วัด</th></tr></thead><tbody>${rowsH||'<tr><td colspan="4" class="py-3 text-center text-slate-400">ไม่มีรายการที่นำเข้าได้</td></tr>'}</tbody></table></div>
+    <p class="text-[11px] text-slate-400 mb-3">ไม่มีการลบรายวิชา หน่วย หรือคะแนนใดๆ</p>
+    <div class="flex gap-2 justify-end"><button onclick="closeCurModal()" class="btn bg-slate-100 px-4 py-1.5 text-sm">ยกเลิก</button>
+    <button ${ok?'':'disabled'} onclick="curImportConfirm()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 text-sm disabled:opacity-40">✅ ยืนยันนำเข้า</button></div>`);
+}
+async function curImportConfirm(){
+  const pl=state._curPayload; if(!pl) return;
+  try{ showLoading(true);
+    const r=await GAS.call('importCurriculum',pl);
+    closeCurModal(); state._curPayload=null;
+    await loadSubjects();
+    toast(`นำเข้าแล้ว: วิชาใหม่ ${r.subjectsAdded} • ครูผู้สอน +${r.assignAdded}/แก้ ${r.assignChanged} • ตัวชี้วัด +${r.indicatorsAdded}/แก้ ${r.indicatorsUpdated}/เอาออก ${r.indicatorsRemoved}`);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+
+/* ================= เล่มรายงานครูประจำวิชา (Part 3) ================= */
+const BK_ROWS_L=24, BK_ROWS_P=34;
+function bkChunk(arr,n){ const o=[]; for(let i=0;i<arr.length;i+=n) o.push(arr.slice(i,i+n)); return o.length?o:[[]]; }
+async function openBookModal(){
+  try{ showLoading(true);
+    const list=await GAS.call('getBookList',{});
+    if(!list.length){ toast('ยังไม่มีวิชาที่ได้รับมอบหมาย — แอดมินนำเข้าโครงสร้างหลักสูตรหรือกำหนดครูผู้สอนก่อน','error'); return; }
+    state._bookList=list;
+    const by={}; list.forEach((x,i)=>{ const k=x.subjectID; (by[k]=by[k]||{name:x.name,code:x.code,cl:x.classLevel,items:[]}).items.push([x,i]); });
+    const cur=state.scoreSubject?String(state.scoreSubject.ID):'';
+    curModal(`<h3 class="font-bold text-sky-700 mb-1">🖨️ เล่มรายงานครูประจำวิชา</h3>
+      <p class="text-xs text-slate-500 mb-3">เลือกวิชา/ห้องที่ต้องการ (พิมพ์ต่อกันทีละห้อง) • ภาคเรียนที่ ${esc(state.semester)} • ห้องละ 8 หน้า: ปกสรุป • เช็คชื่อรายคาบ • รายละเอียดคะแนน • สรุปผลการเรียน • คุณลักษณะ • อ่าน/คิด/เขียน • สมรรถนะ 5 ประการ • ผ่านตัวชี้วัด</p>
+      <div class="space-y-2 mb-3 max-h-[50vh] overflow-y-auto">${Object.keys(by).map(k=>{ const g=by[k]; return `<div class="border rounded-lg p-2"><label class="font-semibold text-sm flex gap-2 items-center"><input type="checkbox" onchange="document.querySelectorAll('.bkChk[data-sub=&quot;${esc(k)}&quot;]').forEach(c=>c.checked=this.checked)" ${k===cur?'checked':''}> ${esc(g.name)} <span class="text-xs text-slate-400">${esc(g.code)} ${esc(g.cl)}</span></label>
+        <div class="flex flex-wrap gap-3 mt-1 ml-6">${g.items.map(([x,i])=>`<label class="text-sm flex gap-1 items-center"><input type="checkbox" class="bkChk" data-sub="${esc(k)}" value="${i}" ${k===cur?'checked':''}>${esc(String(x.room).replace('ม.',''))}</label>`).join('')}</div></div>`; }).join('')}</div>
+      <div class="flex gap-2 justify-end"><button onclick="closeCurModal()" class="btn bg-slate-100 px-4 py-1.5 text-sm">ยกเลิก</button>
+      <button onclick="printBookFn()" class="btn bg-sky-600 hover:bg-sky-700 text-white px-4 py-1.5 text-sm">🖨️ สร้างและพิมพ์</button></div>`);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function printBookFn(){
+  const idx=[...document.querySelectorAll('#curModal .bkChk:checked')].map(c=>Number(c.value));
+  if(!idx.length){ toast('เลือกอย่างน้อย 1 ห้อง','error'); return; }
+  if(idx.length>12){ toast('เลือกได้ครั้งละไม่เกิน 12 ห้อง','error'); return; }
+  const items=idx.map(i=>({subjectID:state._bookList[i].subjectID, room:state._bookList[i].room}));
+  try{ showLoading(true);
+    const r=await GAS.call('getSubjectBook',{items, semester:state.semester});
+    closeCurModal();
+    const html=r.books.map(b=>bkBook(b,r.school)).join('');
+    const area=document.getElementById('bookPrintArea'); area.innerHTML=html;
+    document.body.classList.add('printing-book');
+    const after=()=>{ document.body.classList.remove('printing-book'); area.innerHTML=''; window.removeEventListener('afterprint',after); };
+    window.addEventListener('afterprint',after);
+    toast('พร้อมพิมพ์ '+r.books.length+' ห้อง ('+area.querySelectorAll('.bk-page').length+' หน้า) — เลือก "บันทึกเป็น PDF" ได้');
+    setTimeout(()=>window.print(),300);
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+function bkHead(b,sc,title,sub){
+  return `<h1>${esc(title)}</h1><div class="bk-sub">${esc(sc.name)} • ภาคเรียนที่ ${esc(b.semester)} ปีการศึกษา ${esc(sc.academicYear)}<br>วิชา ${esc(b.subject.code)} ${esc(b.subject.name)} • ชั้น ${esc(String(b.room))} • ครูผู้สอน ${esc(b.teacher||'-')}${sub?' • '+esc(sub):''}</div>`;
+}
+const bkFmt=v=>(v===''||v===null||v===undefined)?'-':String(Math.round(Number(v)*100)/100);
+function bkGradeOf(b,st){ const g=b.grades[st.ID]; if(!g) return ''; const v=g.grade51; return (v===''||v==null)?'':String(v); }
+function bkTotals(b,st){
+  const s=b.scores[st.ID]||{}; let sum=0,has=false;
+  b.units.forEach(u=>{ const v=s[u.ID]; if(v!==undefined&&v!==''&&v!==null){ sum+=Number(v); has=true; } });
+  const mid=s.MID, fin=s.FINAL, num=v=>(v===undefined||v===''||v===null)?null:Number(v);
+  const m=num(mid), f=num(fin);
+  const total=(has||m!==null||f!==null)?(sum+(m||0)+(f||0)):null;
+  return {sum:has?sum:null, mid:m, fin:f, total};
+}
+function bkBook(b,sc){
+  return [bkCover(b,sc),bkAttendance(b,sc),bkScores(b,sc),bkSummary(b,sc),bkAbility(b,sc,'characteristic','คุณลักษณะอันพึงประสงค์ 8 ประการ',CHAR_2551,'pass'),
+          bkAbility(b,sc,'readthink','การอ่าน คิดวิเคราะห์ และเขียน',READTHINK,'pass'),bkAbility(b,sc,'competency5','สมรรถนะสำคัญของผู้เรียน 5 ประการ',COMP5,'lv4'),bkIndicators(b,sc)].join('');
+}
+function bkCover(b,sc){
+  const n=b.students.length, at=b.attendance, sm=at.summary||{};
+  const maxUnits=b.units.reduce((a,u)=>a+u.maxScore,0), mm=b.exam.midMax||0, fm=b.exam.finalMax||0;
+  const gr={}; let pass=0,fail=0,ro=0,ms=0,none=0;
+  b.students.forEach(st=>{ const g=bkGradeOf(b,st); if(g==='') none++; else if(g==='ร') ro++; else if(g==='มส') ms++; else if(Number(g)>=1) pass++; else fail++; });
+  const low=(at.students||[]).filter(x=>x.pct!=null&&x.pct<80).length;
+  return `<div class="bk-page">${bkHead(b,sc,'เล่มรายงานผลการจัดการเรียนรู้ประจำรายวิชา','')}
+    <div class="bk-kv"><span>รหัส/ชื่อรายวิชา</span><b>${esc(b.subject.code)} ${esc(b.subject.name)}</b>
+      <span>กลุ่มสาระการเรียนรู้</span><b>${esc(b.subject.area||'-')}</b>
+      <span>ประเภท / เวลาเรียน</span><b>${esc(b.subject.type||'-')} / ${esc(b.subject.hours||'-')} ชั่วโมง</b>
+      <span>ชั้น / ห้อง</span><b>${esc(String(b.room))}</b>
+      <span>ครูผู้สอน</span><b>${esc(b.teacher||'-')}</b>
+      <span>จำนวนนักเรียน</span><b>${n} คน</b></div>
+    <h2>เวลาเรียน</h2>
+    <div class="bk-kv"><span>คาบเรียนตามตารางสอน (ถึงปัจจุบัน)</span><b>${sm.periodsTotal||0} คาบ</b><span>คาบที่เช็คชื่อแล้ว</span><b>${(sm.checked||0)+(sm.flagOnly||0)} คาบ (รายคาบ ${sm.checked||0} / หน้าเสาธง ${sm.flagOnly||0})</b><span>นักเรียนเวลาเรียนต่ำกว่า 80%</span><b>${low} คน</b></div>
+    <h2>คะแนน</h2>
+    <div class="bk-kv"><span>จำนวนหน่วยการเรียนรู้</span><b>${b.units.length} หน่วย (คะแนนเก็บเต็ม ${bkFmt(maxUnits)})</b><span>สอบกลางภาค / ปลายภาค (เต็ม)</span><b>${mm||'-'} / ${fm||'-'}</b><span>รวมคะแนนเต็ม</span><b>${bkFmt(maxUnits+mm+fm)}</b></div>
+    <h2>ผลการเรียน</h2>
+    <div class="bk-kv"><span>ผ่าน (เกรด ≥ 1)</span><b>${pass} คน</b><span>ไม่ผ่าน (เกรด 0)</span><b>${fail} คน</b><span>ร / มส</span><b>${ro} / ${ms} คน</b><span>ยังไม่มีผล</span><b>${none} คน</b></div>
+    <div class="bk-sign"><div>ลงชื่อ ........................................<br>(${esc(b.teacher||'ครูผู้สอน')})<br>ครูผู้สอน</div><div>ลงชื่อ ........................................<br>(.........................................)<br>หัวหน้าวิชาการ/ผู้อำนวยการ</div></div></div>`;
+}
+function bkAttendance(b,sc){
+  const at=b.attendance, dates=at.dates||[];
+  if(!dates.length){
+    return `<div class="bk-page bk-land">${bkHead(b,sc,'บันทึกเวลาเรียนรายคาบ','')}<p style="margin-top:20mm;text-align:center;font-size:13px">${at.needDates?'ยังไม่ได้ตั้งวันเปิด–ปิดภาคเรียน (ตั้งค่า → ปฏิทิน/ภาคเรียน)':'ไม่พบวิชานี้ในตารางสอนของห้อง '+esc(String(b.room))+' (ค้นหาด้วยชื่อ “'+esc(b.schedName)+'”) — ระบุ “ชื่อวิชาในตารางสอน” ในฟอร์มโครงสร้างหลักสูตร'}</p></div>`;
+  }
+  const byId={}; (at.students||[]).forEach(x=>byId[x.studentID]=x);
+  const dcols=bkChunk(dates,26), rchunks=bkChunk(b.students,BK_ROWS_L);
+  let out='';
+  dcols.forEach((dc,ci)=>{ const last=ci===dcols.length-1;
+    rchunks.forEach((rc,ri)=>{
+      out+=`<div class="bk-page bk-land">${bkHead(b,sc,'บันทึกเวลาเรียนรายคาบ','ตอน '+(ci+1)+'/'+dcols.length+(rchunks.length>1?' • หน้า '+(ri+1)+'/'+rchunks.length:''))}
+      <table class="bk-t"><thead><tr><th rowspan="2" style="width:8mm">เลขที่</th><th rowspan="2" style="width:48mm">ชื่อ–สกุล</th>${dc.map(d=>`<th>${esc(d.date.slice(8,10)+'/'+d.date.slice(5,7))}</th>`).join('')}${last?'<th rowspan="2">มา</th><th rowspan="2">ขาด</th><th rowspan="2">ลา</th><th rowspan="2">สาย</th><th rowspan="2">%</th>':''}</tr>
+      <tr>${dc.map(d=>`<th>ค.${esc(d.period)}</th>`).join('')}</tr></thead><tbody>${rc.map(st=>{ const a=byId[st.ID]||{marks:{}}; return `<tr><td class="c">${esc(st.number)}</td><td class="l">${esc(st.fullName)}</td>${dc.map(d=>{ const m=a.marks&&a.marks[d.date+'|'+d.period]; const sh=d.source==='none'?'':(m==='มา'?'/':m==='ขาด'?'ข':m==='ลา'?'ล':m==='สาย'?'ส':''); return `<td class="c">${sh}</td>`; }).join('')}${last?`<td class="c">${a.present==null?'':a.present}</td><td class="c">${a.absent==null?'':a.absent}</td><td class="c">${a.leave==null?'':a.leave}</td><td class="c">${a.late==null?'':a.late}</td><td class="c">${a.pct==null?'-':a.pct}</td>`:''}</tr>`; }).join('')}</tbody></table>
+      <div class="bk-note">/ = มา ข = ขาด ล = ลา ส = สาย • ช่องว่างในคาบที่ยังไม่ได้เช็คชื่อ (นับเป็นมาในผลรวม) • เกณฑ์เวลาเรียนไม่ต่ำกว่า 80%</div></div>`;
+    }); });
+  return out;
+}
+function bkScores(b,sc){
+  const uchunks=bkChunk(b.units,10), rchunks=bkChunk(b.students,BK_ROWS_L); let out='';
+  uchunks.forEach((uc,ci)=>{ const last=ci===uchunks.length-1;
+    rchunks.forEach((rc,ri)=>{
+      out+=`<div class="bk-page bk-land">${bkHead(b,sc,'รายละเอียดคะแนน',(uchunks.length>1?'ตอน '+(ci+1)+'/'+uchunks.length+' ':'')+(rchunks.length>1?'หน้า '+(ri+1)+'/'+rchunks.length:''))}
+      <table class="bk-t"><thead><tr><th style="width:8mm">เลขที่</th><th style="width:48mm">ชื่อ–สกุล</th>${uc.map(u=>`<th class="v">${esc(u.unitName)} (${bkFmt(u.maxScore)})</th>`).join('')}${last?`<th class="v">รวมคะแนนเก็บ</th>${b.exam.midMax>0?`<th class="v">กลางภาค (${b.exam.midMax})</th>`:''}${b.exam.finalMax>0?`<th class="v">ปลายภาค (${b.exam.finalMax})</th>`:''}<th class="v">รวมทั้งหมด</th><th class="v">ร้อยละ</th><th class="v">เกรด</th>`:''}</tr></thead>
+      <tbody>${rc.map(st=>{ const s=b.scores[st.ID]||{}, t=bkTotals(b,st), g=b.grades[st.ID]; return `<tr><td class="c">${esc(st.number)}</td><td class="l">${esc(st.fullName)}</td>${uc.map(u=>`<td class="c">${bkFmt(s[u.ID])}</td>`).join('')}${last?`<td class="c">${bkFmt(t.sum)}</td>${b.exam.midMax>0?`<td class="c">${bkFmt(t.mid)}</td>`:''}${b.exam.finalMax>0?`<td class="c">${bkFmt(t.fin)}</td>`:''}<td class="c"><b>${bkFmt(t.total)}</b></td><td class="c">${g&&g.percent!==''&&g.percent!=null?bkFmt(g.percent):'-'}</td><td class="c"><b>${esc(bkGradeOf(b,st)||'-')}</b></td>`:''}</tr>`; }).join('')}</tbody></table>
+      <div class="bk-note">ตัวเลขในวงเล็บ = คะแนนเต็ม • “-” = ยังไม่มีคะแนน</div></div>`;
+    }); });
+  return out;
+}
+function bkSummary(b,sc){
+  const order=['4','3.5','3','2.5','2','1.5','1','0','ร','มส'], cnt={}; order.forEach(k=>cnt[k]=0); let none=0; const pcts=[];
+  b.students.forEach(st=>{ const g=bkGradeOf(b,st); if(g==='') none++; else if(cnt[g]!==undefined) cnt[g]++; else none++;
+    const pc=b.grades[st.ID]&&b.grades[st.ID].percent; if(pc!==''&&pc!=null&&bkGradeOf(b,st)!=='ร'&&bkGradeOf(b,st)!=='มส') pcts.push(Number(pc)); });
+  const n=b.students.length||1, avg=pcts.length?pcts.reduce((a,x)=>a+x,0)/pcts.length:null;
+  const passN=order.slice(0,7).reduce((a,k)=>a+cnt[k],0);
+  const names=(g)=>b.students.filter(st=>bkGradeOf(b,st)===g).map(st=>st.number+'. '+st.fullName).join(', ')||'-';
+  return `<div class="bk-page">${bkHead(b,sc,'สรุปผลการเรียน','')}
+    <table class="bk-t" style="width:150mm;margin:0 auto 8px"><thead><tr><th>ผลการเรียน</th>${order.map(k=>`<th>${k}</th>`).join('')}<th>ยังไม่มีผล</th><th>รวม</th></tr></thead>
+    <tbody><tr><td class="c">จำนวน (คน)</td>${order.map(k=>`<td class="c">${cnt[k]}</td>`).join('')}<td class="c">${none}</td><td class="c">${b.students.length}</td></tr>
+    <tr><td class="c">ร้อยละ</td>${order.map(k=>`<td class="c">${(cnt[k]/n*100).toFixed(1)}</td>`).join('')}<td class="c">${(none/n*100).toFixed(1)}</td><td class="c">100</td></tr></tbody></table>
+    <div class="bk-kv"><span>ผ่านเกณฑ์ (เกรด ≥ 1)</span><b>${passN} คน (${(passN/n*100).toFixed(1)}%)</b><span>ไม่ผ่าน (เกรด 0)</span><b>${cnt['0']} คน</b><span>ได้ ร (รอผลการเรียน)</span><b>${cnt['ร']} คน</b><span>ได้ มส (ไม่มีสิทธิ์สอบ)</span><b>${cnt['มส']} คน</b>
+      <span>ร้อยละเฉลี่ย (เฉพาะที่มีผล)</span><b>${avg==null?'-':avg.toFixed(2)}</b><span>สูงสุด / ต่ำสุด</span><b>${pcts.length?Math.max(...pcts).toFixed(1)+' / '+Math.min(...pcts).toFixed(1):'-'}</b></div>
+    <h2 style="margin-top:8px">รายชื่อนักเรียนที่ต้องติดตาม</h2>
+    <div class="bk-kv"><span>เกรด 0</span><b style="font-weight:400">${esc(names('0'))}</b><span>ร</span><b style="font-weight:400">${esc(names('ร'))}</b><span>มส</span><b style="font-weight:400">${esc(names('มส'))}</b></div>
+    <div class="bk-sign" style="margin-top:30mm"><div>ลงชื่อ ........................................<br>(${esc(b.teacher||'ครูผู้สอน')})<br>ครูผู้สอน</div><div>ลงชื่อ ........................................<br>(.........................................)<br>ผู้อำนวยการ</div></div></div>`;
+}
+function bkAbility(b,sc,group,title,items,kind){
+  const get=(st,it)=>(b.ability[st.ID]||{})[group+'|'+it];
+  const show=v=>kind==='pass'?(v==='ผ่าน'?'✓':v==='ไม่ผ่าน'?'✗':''):(v||'');
+  const sum=st=>{ const vals=items.map(it=>get(st,it)).filter(v=>v); if(!vals.length) return '-';
+    if(kind==='pass') return vals.includes('ไม่ผ่าน')?'ไม่ผ่าน':'ผ่าน';
+    return vals.reduce((m,v)=>LV4_RANK[v]<LV4_RANK[m]?v:m,vals[0]); };
+  const rchunks=bkChunk(b.students,BK_ROWS_P); let out='';
+  rchunks.forEach((rc,ri)=>{
+    out+=`<div class="bk-page">${bkHead(b,sc,title,rchunks.length>1?'หน้า '+(ri+1)+'/'+rchunks.length:'')}
+    <table class="bk-t"><thead><tr><th style="width:9mm">เลขที่</th><th style="width:50mm">ชื่อ–สกุล</th>${items.map((c,i)=>`<th class="v">${kind==='pass'&&items.length>3?(i+1)+'. ':''}${esc(c.f)}</th>`).join('')}<th class="v">สรุป</th></tr></thead>
+    <tbody>${rc.map(st=>`<tr><td class="c">${esc(st.number)}</td><td class="l">${esc(st.fullName)}</td>${items.map(c=>`<td class="c">${esc(show(get(st,c.f)))}</td>`).join('')}<td class="c"><b>${esc(sum(st))}</b></td></tr>`).join('')}</tbody></table>
+    <div class="bk-note">${kind==='pass'?'✓ = ผ่าน ✗ = ไม่ผ่าน • สรุป: มีข้อใดไม่ผ่าน = ไม่ผ่าน':'ระดับ: ดีเยี่ยม / ดี / ผ่าน / ไม่ผ่าน • สรุปตามระดับต่ำสุด'} • ช่องว่าง = ยังไม่ได้ประเมิน • ผลประเมินเป็นของภาคเรียนนี้ (บันทึกที่เมนู สมรรถนะ/คุณลักษณะ)</div></div>`; });
+  return out;
+}
+function bkIndicators(b,sc){
+  if(!b.indicators.length) return `<div class="bk-page">${bkHead(b,sc,'การผ่านตัวชี้วัด/ผลการเรียนรู้','')}<p style="margin-top:20mm;text-align:center;font-size:13px">ยังไม่ได้นำเข้าตัวชี้วัดของวิชานี้ (แอดมิน: เมนูรายวิชา → นำเข้าโครงสร้างหลักสูตร)</p></div>`;
+  if(!b.indicatorsMapped) return `<div class="bk-page">${bkHead(b,sc,'การผ่านตัวชี้วัด/ผลการเรียนรู้','')}<p style="margin-top:20mm;text-align:center;font-size:13px">ยังไม่ได้กำหนด — ครูต้องติ๊กว่าแต่ละหน่วยการเรียนรู้วัดตัวชี้วัดข้อใด (หน้าบันทึกผลการเรียน → ปุ่ม 🎯 ตัวชี้วัด ในแต่ละหน่วย)</p>
+    <div class="bk-note" style="margin-top:8mm">ตัวชี้วัดของวิชา (${b.indicators.length} ข้อ): ${b.indicators.map(x=>esc(x.code)+' '+esc(x.text)).join(' • ')}</div></div>`;
+  const icols=bkChunk(b.indicators,18), rchunks=bkChunk(b.students,BK_ROWS_L); let out='';
+  icols.forEach((ic,ci)=>{ const last=ci===icols.length-1;
+    rchunks.forEach((rc,ri)=>{
+      out+=`<div class="bk-page bk-land">${bkHead(b,sc,'การผ่านตัวชี้วัด/ผลการเรียนรู้',(icols.length>1?'ตอน '+(ci+1)+'/'+icols.length+' ':'')+(rchunks.length>1?'หน้า '+(ri+1)+'/'+rchunks.length:''))}
+      <table class="bk-t"><thead><tr><th style="width:8mm">เลขที่</th><th style="width:48mm">ชื่อ–สกุล</th>${ic.map(x=>`<th class="v">${esc(x.code)}</th>`).join('')}${last?'<th class="v">ผ่าน/ทั้งหมด</th>':''}</tr></thead>
+      <tbody>${rc.map(st=>{ const pm=b.indicatorPass[st.ID]||{}; let ok=0,tot=0; b.indicators.forEach(x=>{ if(pm[x.ID]==='ผ่าน'){ok++;tot++;} else if(pm[x.ID]==='ไม่ผ่าน'||pm[x.ID]==='-'){tot++;} });
+        return `<tr><td class="c">${esc(st.number)}</td><td class="l">${esc(st.fullName)}</td>${ic.map(x=>{ const v=pm[x.ID]; return `<td class="c">${v==='ผ่าน'?'✓':v==='ไม่ผ่าน'?'✗':v==='-'?'-':''}</td>`; }).join('')}${last?`<td class="c">${ok}/${tot}</td>`:''}</tr>`; }).join('')}</tbody></table>
+      <div class="bk-note">✓ ผ่าน (ได้ ≥ 50% ของคะแนนเต็มทุกหน่วยที่วัดตัวชี้วัดนี้ ไม่นับสอบกลาง/ปลายภาค) ✗ ไม่ผ่าน - ยังไม่มีคะแนนบางหน่วย ช่องว่าง = ไม่มีหน่วยใดวัดตัวชี้วัดนี้ • ${ic.map(x=>esc(x.code)+' '+esc(String(x.text).slice(0,70))).join(' | ')}</div></div>`;
+    }); });
+  return out;
+}
+
+function xlsxReady(){ if(typeof XLSX==='undefined'){ toast('ไลบรารี Excel ยังโหลดไม่เสร็จ — รอสักครู่แล้วลองใหม่ (ต้องต่ออินเทอร์เน็ต)','error'); return false; } return true; }
+function scoreFormCols(sub){
+  const cols=(state.units[sub.ID]||[]).map(u=>({unitID:String(u.ID), label:u.unitName+' (เต็ม '+u.maxScore+')', max:Number(u.maxScore)}));
+  const ex=examCfg();
+  if(ex.midMax>0) cols.push({unitID:'MID', label:'กลางภาค (เต็ม '+ex.midMax+')', max:ex.midMax});
+  if(ex.finalMax>0) cols.push({unitID:'FINAL', label:'ปลายภาค (เต็ม '+ex.finalMax+')', max:ex.finalMax});
+  return cols;
+}
+function downloadScoreForm(){
+  const sub=state.scoreSubject; if(!sub||!state.unitsOk){ toast('เลือกวิชาและรอให้โหลดเสร็จก่อน','error'); return; }
+  if(!xlsxReady()) return;
+  const units=state.units[sub.ID]||[];
+  if(!units.length){ toast('เพิ่มหน่วยและกด “บันทึกหน่วย” ก่อนดาวน์โหลดฟอร์ม','error'); return; }
+  if(units.some(u=>!u.ID)){ toast('กด “บันทึกหน่วย” ก่อนดาวน์โหลดฟอร์ม','error'); return; }
+  const students=scoreStudents(); if(!students.length){ toast('ไม่มีนักเรียนในห้องนี้','error'); return; }
+  const cols=scoreFormCols(sub);
+  const sm={}; state.scores.forEach(r=>{ (sm[r.studentID]=sm[r.studentID]||{})[r.unitID]=r.score; });
+  const spm={}; state.grades.filter(g=>String(g.subjectID)===String(sub.ID)&&(g.mode==='S'||g.mode==='B')&&(g.grade51==='ร'||g.grade51==='มส')).forEach(g=>spm[g.studentID]=g.grade51);
+  const head=['เลขที่','เลขประจำตัว','ชื่อ','นามสกุล'].concat(cols.map(c=>c.label)).concat(['ผลพิเศษ (ร/มส)']);
+  const rows=students.map(st=>[Number(st.number)||st.number, st.studentCode||'', nmFirst(st), nmLast(st)]
+    .concat(cols.map(c=>{ const v=sm[st.ID]&&sm[st.ID][c.unitID]; return (v===undefined||v===null||v==='')?'':Number(v); }))
+    .concat([spm[st.ID]||'']));
+  const ws=XLSX.utils.aoa_to_sheet([head].concat(rows));
+  ws['!cols']=[{wch:7},{wch:13},{wch:16},{wch:18}].concat(cols.map(()=>({wch:16}))).concat([{wch:14}]);
+  const help=XLSX.utils.aoa_to_sheet([
+    ['วิธีกรอกฟอร์มคะแนน'],
+    ['วิชา: '+sub.name+' • ห้อง '+state.scoreRoom+' • ภาคเรียนที่ '+state.semester],
+    ['1) กรอกคะแนนในชีต "คะแนน" เฉพาะช่องคะแนน อย่าแก้ ลบ หรือสลับตำแหน่งคอลัมน์/หัวตาราง'],
+    ['2) คะแนนต้อง ≥ 0, ไม่เกินคะแนนเต็มในวงเล็บ, เป็นจำนวนเต็มหรือลงท้าย .5 เท่านั้น (เช่น 5 หรือ 5.5)'],
+    ['3) ช่องว่าง = ไม่เปลี่ยนค่าเดิมในระบบ • ช่อง "ผลพิเศษ" ใส่ ร หรือ มส เฉพาะคนที่มีปัญหา, ใส่ - เพื่อยกเลิก'],
+    ['4) บันทึกไฟล์แล้วกลับมาที่หน้านี้ → ⬆️ นำเข้าคะแนนจาก Excel → ตรวจในตาราง → 💾 บันทึก'],
+    ['5) ฟอร์มนี้ใช้ได้กับวิชา/ห้อง/ภาคเรียนนี้เท่านั้น ถ้าเพิ่มหรือลบหน่วย ให้ดาวน์โหลดฟอร์มใหม่']
+  ]);
+  help['!cols']=[{wch:100}];
+  const meta=XLSX.utils.aoa_to_sheet([['key','value'],['formType','NSR_SCORE_FORM_v1'],['subjectID',String(sub.ID)],['semester',String(state.semester)],['room',String(state.scoreRoom)],['feVersion',FE_VERSION],['col','label','unitID','max']]
+    .concat(cols.map((c,i)=>[4+i,c.label,c.unitID,c.max])));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'คะแนน'); XLSX.utils.book_append_sheet(wb,help,'วิธีกรอก'); XLSX.utils.book_append_sheet(wb,meta,'_meta');
+  wb.Workbook={Sheets:[{},{},{Hidden:1}]};
+  XLSX.writeFile(wb,'ฟอร์มคะแนน_'+sub.name+'_'+String(state.scoreRoom).replace('/','-')+'_ภาค'+state.semester+'.xlsx');
+  toast('ดาวน์โหลดฟอร์มแล้ว — กรอกเสร็จให้กด ⬆️ นำเข้า','success');
+}
+function normImportNum(v){
+  if(typeof v==='number'){ const r=Math.round(v*100)/100; return Math.abs(v-r)<1e-9?String(r):String(v); }
+  return String(v).trim();
+}
+function importScoreForm(inp){
+  const f=inp.files&&inp.files[0]; inp.value=''; if(!f) return;
+  if(!xlsxReady()) return;
+  const fr=new FileReader();
+  fr.onload=e=>{ try{ applyScoreForm(XLSX.read(new Uint8Array(e.target.result),{type:'array'})); }catch(err){ toast(err.message,'error'); const m=document.getElementById('sc_importMsg'); if(m){ m.classList.add('hidden'); } } };
+  fr.onerror=()=>toast('อ่านไฟล์ไม่สำเร็จ','error');
+  fr.readAsArrayBuffer(f);
+}
+function applyScoreForm(wb){
+  const sub=state.scoreSubject; if(!sub||!state.unitsOk) throw new Error('เลือกวิชาและรอให้โหลดเสร็จก่อนนำเข้า');
+  const wm=wb.Sheets['_meta'];
+  if(!wm) throw new Error('ไม่ใช่ไฟล์ฟอร์มคะแนนของระบบ (ไม่มีชีต _meta) — กด ⬇️ ดาวน์โหลดฟอร์มจากหน้านี้ แล้วกรอกในไฟล์นั้น');
+  const kv={}, colRows=[]; let inCols=false;
+  XLSX.utils.sheet_to_json(wm,{header:1,defval:''}).forEach(r=>{
+    if(r[0]==='col'){ inCols=true; return; }
+    if(inCols){ if(r[2]!=='') colRows.push({col:Number(r[0]), label:String(r[1]), unitID:String(r[2])}); }
+    else if(r[0]!=='') kv[String(r[0])]=String(r[1]);
+  });
+  if(kv.formType!=='NSR_SCORE_FORM_v1') throw new Error('ไฟล์นี้ไม่ใช่ฟอร์มคะแนนของระบบ');
+  if(kv.subjectID!==String(sub.ID)) throw new Error('ฟอร์มนี้เป็นของวิชาอื่น — ไม่ได้นำเข้า (เลือกวิชาให้ตรงกับไฟล์ หรือดาวน์โหลดฟอร์มใหม่)');
+  if(kv.semester!==String(state.semester)) throw new Error('ฟอร์มนี้เป็นของภาคเรียนที่ '+kv.semester+' แต่หน้าจอเป็นภาคเรียนที่ '+state.semester+' — ไม่ได้นำเข้า');
+  if(kv.room!==String(state.scoreRoom)) throw new Error('ฟอร์มนี้เป็นของห้อง '+kv.room+' แต่หน้าจอเป็นห้อง '+state.scoreRoom+' — ไม่ได้นำเข้า');
+  const ws=wb.Sheets['คะแนน']||wb.Sheets[wb.SheetNames[0]];
+  const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+  if(!aoa.length) throw new Error('ชีต "คะแนน" ว่างเปล่า');
+  const head=aoa[0].map(x=>String(x).trim());
+  const valid=new Set((state.units[sub.ID]||[]).map(u=>String(u.ID))); const ex=examCfg();
+  if(ex.midMax>0) valid.add('MID'); if(ex.finalMax>0) valid.add('FINAL');
+  const colMap=[], warn=[];
+  colRows.forEach(c=>{
+    let idx=(head[c.col]===c.label)?c.col:-1;
+    if(idx<0){ const hits=head.map((h,i)=>h===c.label?i:-1).filter(i=>i>=0); if(hits.length===1) idx=hits[0]; }
+    if(idx<0){ warn.push('ไม่พบคอลัมน์ "'+c.label+'" (ถูกแก้/ลบหรือไม่)'); return; }
+    if(!valid.has(c.unitID)){ warn.push('คอลัมน์ "'+c.label+'" ไม่ตรงกับหน่วยปัจจุบัน — ข้าม (ดาวน์โหลดฟอร์มใหม่)'); return; }
+    colMap.push({idx, unitID:c.unitID});
+  });
+  if(!colMap.length) throw new Error('ไม่พบคอลัมน์คะแนนที่ตรงกับหน่วยปัจจุบัน — ดาวน์โหลดฟอร์มใหม่แล้วกรอก');
+  const spIdx=head.findIndex(h=>/^ผลพิเศษ/.test(h)), codeIdx=head.indexOf('เลขประจำตัว'), numIdx=head.indexOf('เลขที่');
+  const stu=scoreStudents(), byCode={}, byNum={};
+  stu.forEach(st=>{ if(st.studentCode) byCode[String(st.studentCode).trim()]=st; byNum[String(Number(st.number))]=st; });
+  let nCells=0, nRows=0; const missing=[];
+  for(let r=1;r<aoa.length;r++){
+    const row=aoa[r]; if(!row||row.every(v=>v===''||v==null)) continue;
+    const code=codeIdx>=0?String(row[codeIdx]==null?'':row[codeIdx]).trim():'';
+    const num=numIdx>=0?String(Number(row[numIdx])):'';
+    const st=(code&&byCode[code])||byNum[num];
+    if(!st){ missing.push('แถว '+(r+1)+' ('+(code||num||'?')+')'); continue; }
+    const tr=document.querySelector('#scoreBody tr[data-sid="'+st.ID+'"]'); if(!tr) continue;
+    nRows++;
+    colMap.forEach(c=>{
+      const raw=row[c.idx]; if(raw===''||raw==null) return;
+      const el=tr.querySelector('input.scoreCell[data-unit="'+c.unitID+'"]'); if(!el) return;
+      el.value=normImportNum(raw); nCells++;
+    });
+    if(spIdx>=0){
+      const v=String(row[spIdx]==null?'':row[spIdx]).trim(); const sel=tr.querySelector('select.spCell');
+      if(sel&&v!==''){ if(v==='ร'||v==='มส') sel.value=v; else if(v==='-'||v==='—') sel.value=''; else warn.push('แถว '+(r+1)+': ผลพิเศษ "'+v+'" ใช้ได้เฉพาะ ร / มส / -'); }
+    }
+    calcRowTr(tr);
+  }
+  const nBad=validateScoreTable();
+  const msg=document.getElementById('sc_importMsg');
+  const lines=['📥 นำเข้าแล้ว '+nCells+' ช่อง จากนักเรียน '+nRows+' คน — <b>ยังไม่ได้บันทึก</b> ตรวจในตารางแล้วกด 💾 บันทึกคะแนน'];
+  if(nBad) lines.push('<span class="text-rose-700">⚠️ มี '+nBad+' ช่องที่ไม่ถูกต้อง (สีแดง) แก้ในตารางก่อนบันทึก</span>');
+  if(missing.length) lines.push('ไม่พบนักเรียนในห้องนี้ '+missing.length+' แถว (ข้าม): '+esc(missing.slice(0,5).join(', '))+(missing.length>5?' …':''));
+  warn.slice(0,6).forEach(w=>lines.push('• '+esc(w)));
+  if(msg){ msg.innerHTML=lines.join('<br>'); msg.classList.remove('hidden'); }
+  toast('นำเข้า '+nCells+' ช่อง'+(nBad?' • พบช่องผิด '+nBad:' — ตรวจแล้วกดบันทึก'), nBad?'error':'success');
 }
 
 /* ---- Mode A: score table ---- */
@@ -3086,7 +3598,6 @@ async function loadMyTodo(){
     if(t.uncheckedPeriods) items.push({icon:'📋', text:`คาบสอนที่ยังไม่เช็คชื่อ <b>${t.uncheckedPeriods}</b> คาบ (ภาคเรียนนี้)`, cls:'bg-amber-50 text-amber-800 border-amber-200', go:()=>{switchTab('attendance');setTimeout(()=>{switchAtt('period');setPdMode('subject');},50);}});
     if(t.uncheckedFlagDays) items.push({icon:'🚩', text:`วันที่ยังไม่เช็คชื่อหน้าเสาธง <b>${t.uncheckedFlagDays}</b> วัน`, cls:'bg-rose-50 text-rose-800 border-rose-200', go:()=>{switchTab('attendance');setTimeout(()=>switchAtt('flag'),50);}});
     if(t.ungradedSubjects&&t.ungradedSubjects.length) items.push({icon:'📝', text:`วิชาที่ยังไม่ตัดเกรด <b>${t.ungradedSubjects.length}</b> วิชา: `+t.ungradedSubjects.slice(0,4).map(x=>esc(x.name)+(x.room?' ('+esc(x.room)+')':'')).join(', ')+(t.ungradedSubjects.length>4?' …':''), cls:'bg-sky-50 text-sky-800 border-sky-200', go:()=>switchTab('scores')});
-    if(t.docsMissing) items.push({icon:'📤', text:`เอกสารการสอนค้างส่ง <b>${t.docsMissing}</b> รายการ (จาก ${t.docsTotal})`, cls:'bg-violet-50 text-violet-800 border-violet-200', go:()=>switchTab('teaching')});
     if(!items.length){
       el.classList.remove('hidden');
       el.innerHTML='<div class="card p-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200">✅ ไม่มีงานค้างในภาคเรียนนี้ — เยี่ยมมาก!</div>';
@@ -3295,8 +3806,8 @@ async function submitChangePw(){
 // สิทธิ์การเข้าถึงเมนูตามบทบาท ('*' = ทุกเมนู)
 const TAB_ACCESS = {
   admin: '*',
-  teacher: ['home','manual','schedule','scores','ability','teaching','remed','approve','supervise','docs','profile','exams','care','report','summary68','attendance','calendar','risk'],
-  director:['home','manual','schedule','overview','teaching','remed','approve','supervise','docs','profile','exams','care','sar','report','summary68','stats','risk','calendar']
+  teacher: ['home','manual','schedule','scores','ability','remed','approve','report','summary68','attendance','calendar','risk'],
+  director:['home','manual','schedule','overview','remed','approve','report','summary68','stats','risk','calendar']
 };
 function roleLabel(role){ return role==='admin'?'แอดมิน':role==='director'?'ผู้บริหาร':'ครู'; }
 function applyRole(){
@@ -3316,6 +3827,7 @@ function applyRole(){
   document.getElementById('userChip').textContent='👤 '+(u.name||'')+' • '+roleLabel(role);
   document.getElementById('userBar').classList.remove('hidden');
   navRefresh();
+  if(isAdmin) checkIntegrity();
 }
 
 /* ---------- นำเข้ารายชื่อ (A-F) ---------- */
@@ -7137,6 +7649,27 @@ function showMaint(msg){
   const b=document.getElementById('svcBanner'); if(!b) return;
   b.textContent='🔧 '+(msg||'ระบบปิดปรับปรุงชั่วคราว'); b.classList.remove('hidden');
 }
+/* ---------- แจ้งเตือนแอดมิน: ข้อมูลลดลงหลังอัปเดต / คะแนนที่ไม่แสดง ---------- */
+async function checkIntegrity(){
+  const b=document.getElementById('intBanner'); if(!b || state._intBusy) return;
+  state._intBusy=true;
+  try{
+    const r=await GAS.call('getIntegrity',{});
+    const msgs=[];
+    if(r.alert) msgs.push('📉 ข้อมูลลดลงหลังอัปเดตระบบ ('+esc(r.alert.from)+' → '+esc(r.alert.to)+'): '+r.alert.drops.map(d=>esc(d.sheet)+' '+d.before+'→'+d.now).join(', '));
+    if(r.orphan) msgs.push('🧩 มีคะแนน '+r.orphan+' แถวที่ไม่แสดงในหน้าเว็บ (หน่วย/วิชาหาย)');
+    if(!msgs.length){ b.classList.add('hidden'); b.innerHTML=''; return; }
+    b.innerHTML='⚠️ '+msgs.join(' • ')+' <button onclick="goIntegrityFix()" class="underline font-semibold ml-1">ดู/กู้</button>'+(r.alert?' <button onclick="ackIntegrityFn()" class="underline ml-1">รับทราบ</button>':'');
+    b.classList.remove('hidden');
+  }catch(e){} finally{ state._intBusy=false; }
+}
+function goIntegrityFix(){
+  switchTab('admin'); setTimeout(()=>{ try{ switchAsub('backup'); }catch(e){} setTimeout(()=>{ orphanScan(); const bx=document.getElementById('ou_box'); if(bx) bx.scrollIntoView({behavior:'smooth',block:'center'}); },200); },50);
+}
+async function ackIntegrityFn(){
+  try{ await GAS.call('ackIntegrity',{}); }catch(e){ toast(e.message,'error'); return; }
+  checkIntegrity();
+}
 function showVerBanner(){
   const b=document.getElementById('verBanner'); if(!b) return;
   if(!GAS.verBad){ b.classList.add('hidden'); return; }
@@ -7215,7 +7748,7 @@ async function loadHealth(){
     if(hs) hs.innerHTML='📄 ชีตที่เชื่อมอยู่: '+(h.sheet&&h.sheet.url?`<a class="underline text-teal-700" target="_blank" rel="noopener" href="${esc(h.sheet.url)}">${esc(h.sheet.name||'เปิดชีต')}</a>`:esc((h.sheet&&h.sheet.name)||'-'))+' • Code.gs <b>'+esc(h.appVersion||'-')+'</b> • หน้าเว็บ <b>'+esc(FE_VERSION)+'</b>'+((h.appVersion&&h.appVersion!==FE_VERSION)?' <span class="text-rose-600 font-semibold">⚠️ ไม่ตรงกัน</span>':' ✅ ตรงกัน');
     const T={green:'ปกติ',yellow:'ควรดู',red:'ผิดปกติ'};
     lv.innerHTML=`<span class="hl-pill hl-${h.level}">● ${T[h.level]}</span>`;
-    box.innerHTML=h.checks.map(c=>`<div class="flex items-start gap-2 py-1 border-b last:border-0"><span class="hl-pill hl-${c.level} shrink-0">${T[c.level]}</span><div class="flex-1"><b>${esc(c.name)}</b> <span class="text-slate-500">${esc(c.msg)}</span>${c.fix==='repairGradesLayout'?' <button onclick="runRepairGrades()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 text-xs ml-1">🔧 ซ่อมโครงชีตเกรด</button>':''}</div></div>`).join('');
+    box.innerHTML=h.checks.map(c=>`<div class="flex items-start gap-2 py-1 border-b last:border-0"><span class="hl-pill hl-${c.level} shrink-0">${T[c.level]}</span><div class="flex-1"><b>${esc(c.name)}</b> <span class="text-slate-500">${esc(c.msg)}</span>${c.fix==='orphanUnits'?' <button onclick="orphanScan();const b=document.getElementById(\'ou_box\');if(b)b.scrollIntoView({behavior:\'smooth\',block:\'center\'})" class="btn bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 text-xs ml-1">🧩 ตรวจ/กู้หน่วย</button>':''}${c.fix==='repairGradesLayout'?' <button onclick="runRepairGrades()" class="btn bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 text-xs ml-1">🔧 ซ่อมโครงชีตเกรด</button>':''}</div></div>`).join('');
   }catch(e){ box.innerHTML='<span class="text-rose-600">'+esc(e.message)+'</span>'; }
 }
 
@@ -7409,5 +7942,6 @@ async function recoverApply(){
 }
 initApp();
 </script>
+<div id="bookPrintArea"></div>
 </body>
 </html>
