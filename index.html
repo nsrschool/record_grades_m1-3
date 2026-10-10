@@ -14,7 +14,7 @@
      ตัวอย่าง: 'https://script.google.com/macros/s/AKfycb..../exec'
      ============================================================ -->
 <script>
-  window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby2iQpK1cmxzn_YOqFCkEapAOhq4_oO8pv2QYslQeqyj1rnW-3Fkhw38XQfjuJ_v0eVhQ/exec';
+  window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_bZ3uWDMeW9Nv96yhjYMYzxyP2VxZterIy5nH2Y0uf-_DljrHuuebSqe0Wikr5FdjpQ/exec';
 </script>
 
 <!-- Tailwind CSS -->
@@ -296,7 +296,6 @@
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="admin" data-label="⚙️ ผู้ดูแลระบบ">
       <button data-tab="subjects" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🏫 จัดการรายวิชา</button>
-      <button data-tab="assign" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">👩‍🏫 จัดครูผู้สอน</button>
       <button data-tab="admin" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🛠️ แอดมิน</button>
       <button data-tab="settings" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">⚙️ ตั้งค่าระบบ</button>
     </div>
@@ -463,21 +462,7 @@
   </section>
 
   <!-- ---------- TAB: ASSIGN (จัดครูผู้สอน) ---------- -->
-  <section id="tab-assign" class="tabpane hidden">
-    <div class="card p-4 mb-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <h3 class="font-bold text-teal-700">👩‍🏫 จัดครูผู้สอน (รายวิชา × ห้อง)</h3>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="syncAssign()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 text-xs">🔄 ดึงจากตารางสอน</button>
-          <button onclick="healthCheck()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-1.5 text-xs">🩺 ตรวจสุขภาพรายวิชา</button>
-          <button onclick="saveAssignAll()" class="btn bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 text-xs">💾 บันทึกทั้งหมด</button>
-        </div>
-      </div>
-      <p class="text-[11px] text-slate-400 mt-2">กำหนดว่าวิชาไหน ห้องไหน ครูคนใดสอน — มีผลต่อสิทธิ์กรอกคะแนน/เช็คชื่อรายคาบของครู • ค่าเริ่มต้นดึงจากตารางสอนอัตโนมัติ • ปุ่ม "ทั้งชั้น" = ใช้ครูคนเดียวกันทุกห้องของวิชานั้น</p>
-      <div id="asgHealth" class="hidden mt-3 text-xs"></div>
-    </div>
-    <div id="asgArea" class="card p-4 text-sm text-slate-400">กำลังโหลด…</div>
-  </section>
+
   <!-- ---------- TAB: PROFILE (ประวัตินักเรียน) ---------- -->
   <section id="tab-profile" class="tabpane hidden">
     <div class="card p-4 mb-4">
@@ -708,6 +693,8 @@
     <div class="card p-4">
       <div class="flex items-center justify-between mb-3 gap-2">
         <h2 class="font-bold text-teal-700">📚 รายวิชาทั้งหมด</h2>
+        <label class="text-xs text-slate-500 flex items-center gap-1 ml-auto"><input type="checkbox" id="su_noTeacher" onchange="renderSubjects()"> เฉพาะวิชาที่ยังไม่มีครู</label>
+        <button onclick="cleanupSubjects()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-2 py-1 text-xs whitespace-nowrap">🧹 ล้างวิชาซ้ำ</button>
         <select id="su_filter" class="inp w-auto text-sm" onchange="renderSubjects()">
           <option value="">ทุกชั้น</option>
           <option>ม.1</option><option>ม.2</option><option>ม.3</option>
@@ -716,7 +703,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead><tr class="text-left text-slate-400 border-b">
-            <th class="py-2 px-2">รหัส</th><th class="px-2">ชื่อวิชา</th><th class="px-2">กลุ่มสาระ</th>
+            <th class="py-2 px-2">รหัส</th><th class="px-2">ชื่อวิชา</th><th class="px-2">ครูผู้สอน (ห้อง)</th><th class="px-2">กลุ่มสาระ</th>
             <th class="px-2">ชั้น</th><th class="px-2">ชม.</th><th class="px-2">ประเภท</th><th class="px-2"></th>
           </tr></thead>
           <tbody id="subjectsBody"></tbody>
@@ -1219,7 +1206,6 @@
   <section id="tab-admin" class="tabpane hidden">
     <div class="flex gap-2 mb-4 overflow-x-auto nav-scroll pb-1">
       <button data-asub="roster"   class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🧑‍🎓 จัดการนักเรียน</button>
-      <button data-asub="schedule" class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">📅 นำเข้าตารางสอน</button>
       <button data-asub="teachers" class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">👤 จัดการครู / PIN</button>
       <button data-asub="docs"     class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">📄 คำอธิบายรายวิชา</button>
       <button data-asub="backup"   class="asubbtn btn px-3 py-1.5 text-sm bg-white border border-slate-200 whitespace-nowrap">🚀 เผยแพร่/สำรอง</button>
@@ -1238,7 +1224,6 @@
           <input type="file" id="rosterFile" accept=".xlsx,.xls,.csv" class="hidden" onchange="importRoster(event)">
         </div>
       </div>
-    </div>
 
       <div class="card p-4 mb-4">
         <h2 class="font-bold text-teal-700 mb-3">นำเข้า / เพิ่มรายชื่อนักเรียน</h2>
@@ -1296,27 +1281,6 @@
         </table></div>
       </div>
 
-
-    <!-- asub: schedule -->
-    <div id="asub-schedule" class="asubpane hidden">
-      <div class="card p-4 mb-4">
-        <h3 class="font-bold text-teal-700 mb-1">นำเข้าตารางสอน</h3>
-        <p class="text-xs text-slate-400 mb-3">ใช้ไฟล์ตารางสอนที่มีแท็บ <b>"ตารางสอนรายวัน"</b> — ระบบจะอ่าน วัน×คาบ×ชั้น→วิชา+ครู (เฉพาะ ม.1-3) และสร้างบัญชีครูอัตโนมัติ (PIN เริ่มต้น 1234)</p>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="document.getElementById('scheduleFile').click()" class="btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 text-xs">📤 เลือกไฟล์ตารางสอน</button>
-          <button onclick="syncSubjects()" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs">🔄 สร้างรายวิชาจากตารางสอน</button>
-          <button onclick="cleanupSubjects()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-3 py-2 text-xs">🧹 ล้างวิชาซ้ำ</button>
-          <input type="file" id="scheduleFile" accept=".xlsx,.xls" class="hidden" onchange="importScheduleFile(event)">
-        </div>
-        <div id="scheduleSummary" class="text-xs text-slate-500 mt-3"></div>
-      </div>
-      <div class="card p-4">
-        <h3 class="font-bold text-teal-700 mb-2">ตารางสอนในระบบ <span id="schCount" class="text-xs font-normal text-slate-400"></span></h3>
-        <div class="overflow-x-auto"><table class="w-full text-sm">
-          <thead><tr class="text-left text-slate-400 border-b"><th class="py-2 px-2">วัน</th><th class="px-2">คาบ</th><th class="px-2">ชั้น</th><th class="px-2">วิชา</th><th class="px-2">ครู</th></tr></thead>
-          <tbody id="scheduleBody"></tbody>
-        </table></div>
-      </div>
     </div>
 
     <!-- asub: teachers -->
@@ -1630,6 +1594,22 @@
   </div>
 </div>
 
+<!-- assign teachers to a subject -->
+<div id="assignSubModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
+  <div class="card p-5 w-full max-w-md fade-in max-h-[90vh] overflow-y-auto">
+    <h3 class="font-bold text-teal-700 mb-1">👤 มอบหมายครูผู้สอน</h3>
+    <div class="font-semibold text-sm mb-3"><span id="asgm_name"></span> <span id="asgm_grade" class="badge bg-teal-100 text-teal-700"></span></div>
+    <input type="hidden" id="asgm_id">
+    <label class="flex items-center gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2 mb-3"><input type="checkbox" id="asgm_same" onchange="asgmSameToggle()"> ใช้ครูคนเดียวกันทุกห้อง</label>
+    <div id="asgm_rooms" class="space-y-2"></div>
+    <p class="text-[11px] text-slate-400 mt-3">เลือกครูแยกรายห้องได้ (เช่น ครูคนละคนสอนในชั้นเดียวกัน) • ครูที่เลือกจะบันทึกคะแนนและพิมพ์เล่มรายงานของห้องนั้นได้ • เว้นว่างไว้ = ยังไม่กำหนดครู</p>
+    <div class="flex justify-end gap-2 mt-4">
+      <button onclick="closeModal('assignSubModal')" class="btn bg-slate-100 px-4 py-2 text-sm">ยกเลิก</button>
+      <button onclick="saveAssignSub()" class="btn bg-teal-600 text-white px-4 py-2 text-sm">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- edit subject -->
 <div id="editSubModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
   <div class="card p-5 w-full max-w-sm fade-in">
@@ -1684,7 +1664,7 @@
 /* ============================================================
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
-const FE_VERSION = '2026-10-08d';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = '2026-10-10a';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -1858,7 +1838,6 @@ function switchTab(name){
   if(name==='overview') ovSwitch(state.ovSub||'class');
   if(name==='remed') initRemed();
   if(name==='approve') initApprove();
-  if(name==='assign') loadAssign();
   if(name==='summary68') initSummary68();
   if(name==='manual') window.scrollTo(0,0);
 }
@@ -1913,7 +1892,6 @@ function switchAsub(name){
   document.querySelectorAll('.asubpane').forEach(p=>p.classList.add('hidden'));
   document.getElementById('asub-'+name).classList.remove('hidden');
   document.querySelectorAll('.asubbtn').forEach(b=>b.classList.toggle('tab-active', b.dataset.asub===name));
-  if(name==='schedule') loadSchedule();
   if(name==='teachers') renderTeachers();
   if(name==='docs') initDocsAdmin();
   if(name==='backup'){ initBackup(); loadHealth(); }
@@ -2231,24 +2209,81 @@ function importStudents(ev){
    ============================================================ */
 async function loadSubjects(pre){ state.subjects=pre||await GAS.call('getSubjects'); renderSubjects(); }
 
+function asgRoomsOf(s){ const g=String(s.classLevel||''); return allClasses().filter(c=>String(c).split('/')[0]===g); }
+function asgOfSubject(sid){ return (state.asg||[]).filter(a=>String(a.subjectID)===String(sid)&&String(a.teacher||'').trim()); }
 function renderSubjects(){
+  if(!state.asg && !state._asgLoading){
+    state._asgLoading=true;
+    GAS.call('getAssignList').then(r=>{ state.asg=r.assign||[]; state._asgLoading=false; renderSubjects(); }).catch(()=>{ state._asgLoading=false; state.asg=[]; renderSubjects(); });
+  }
   const f=document.getElementById('su_filter').value;
+  const noT=document.getElementById('su_noTeacher')&&document.getElementById('su_noTeacher').checked;
   const list=state.subjects
     .filter(s=> !f || s.classLevel===f)
+    .filter(s=> !noT || !asgOfSubject(s.ID).length)
     .sort((a,b)=> String(a.classLevel).localeCompare(String(b.classLevel)) || String(a.code).localeCompare(String(b.code)));
-  document.getElementById('subjectsBody').innerHTML = list.length ? list.map(s=>`
-    <tr class="border-b hover:bg-teal-50/40">
+  document.getElementById('subjectsBody').innerHTML = list.length ? list.map(s=>{
+    const as=asgOfSubject(s.ID), by={};
+    as.forEach(a=>{ (by[a.teacher]=by[a.teacher]||[]).push(String(a.room)); });
+    const rooms=asgRoomsOf(s), have=new Set(as.map(a=>String(a.room)));
+    const miss=rooms.filter(r=>!have.has(r));
+    const tHtml=Object.keys(by).length
+      ? Object.keys(by).map(t=>`<div><b class="text-slate-600">${esc(t)}</b> <span class="text-slate-400">${by[t].sort().map(esc).join(', ')}</span></div>`).join('')+(miss.length?`<div class="text-amber-600">ยังไม่มีครู: ${miss.map(esc).join(', ')}</div>`:'')
+      : '<span class="text-rose-400">ยังไม่มีครู</span>';
+    return `
+    <tr class="border-b hover:bg-teal-50/40 align-top">
       <td class="py-2 px-2 font-mono text-xs">${esc(s.code)}</td>
       <td class="px-2 font-medium">${esc(s.name)}</td>
+      <td class="px-2 text-xs">${state.asg?tHtml:'<span class="text-slate-300">…</span>'}</td>
       <td class="px-2 text-xs text-slate-500">${esc(s.learningArea)}</td>
       <td class="px-2"><span class="badge bg-teal-100 text-teal-700">${esc(s.classLevel)}</span></td>
       <td class="px-2">${esc(s.hours)}</td>
       <td class="px-2"><span class="badge ${s.type==='เพิ่มเติม'?'bg-amber-100 text-amber-700':'bg-blue-100 text-blue-700'}">${esc(s.type)}</span></td>
       <td class="px-2 text-right whitespace-nowrap">
+        <button onclick="openAssignSub('${esc(s.ID)}')" class="px-1" title="มอบหมายครูผู้สอน">👤</button>
         <button onclick='openEditSubject(${JSON.stringify(s)})' class="text-blue-500 px-1">✏️</button>
         <button onclick="delSubject('${s.ID}')" class="text-rose-500 px-1">🗑️</button>
       </td>
-    </tr>`).join('') : `<tr><td colspan="7" class="text-center text-slate-400 py-6">ยังไม่มีรายวิชา</td></tr>`;
+    </tr>`;}).join('') : `<tr><td colspan="8" class="text-center text-slate-400 py-6">${noT?'ทุกวิชามีครูแล้ว':'ยังไม่มีรายวิชา'}</td></tr>`;
+}
+// ---- มอบหมายครูผู้สอนรายวิชา (แยกรายห้องได้) ----
+function asgTeacherNames(extra){
+  const names=(state.teachers||[]).filter(t=>t.role!=='admin'&&t.name).map(t=>t.name);
+  (extra||[]).forEach(n=>{ if(n&&!names.includes(n)) names.push(n); });
+  return names;
+}
+function openAssignSub(id){
+  const s=(state.subjects||[]).find(x=>String(x.ID)===String(id)); if(!s) return;
+  if(!state.asg){ toast('กำลังโหลดข้อมูลครูผู้สอน — ลองอีกครั้งในสักครู่','error'); return; }
+  const rooms=asgRoomsOf(s);
+  if(!rooms.length){ toast('ยังไม่มีห้องของชั้น '+s.classLevel+' ในระบบ (นำเข้ารายชื่อนักเรียนก่อน)','error'); return; }
+  const cur={}; asgOfSubject(s.ID).forEach(a=>cur[String(a.room)]=a.teacher);
+  const names=asgTeacherNames(Object.values(cur));
+  document.getElementById('asgm_id').value=s.ID;
+  document.getElementById('asgm_name').textContent=s.name;
+  document.getElementById('asgm_grade').textContent=s.classLevel;
+  document.getElementById('asgm_rooms').innerHTML=rooms.map(r=>`<div class="flex items-center gap-3"><span class="font-semibold text-teal-700 w-16">${esc(r)}</span>
+    <select class="inp flex-1 asgm-cell" data-room="${esc(r)}" onchange="asgmCellChanged(this)"><option value="">— ยังไม่กำหนด —</option>${names.map(n=>`<option value="${esc(n)}" ${cur[r]===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`).join('');
+  const vals=rooms.map(r=>cur[r]||''); document.getElementById('asgm_same').checked=rooms.length>1&&vals[0]!==''&&vals.every(v=>v===vals[0]);
+  openModal('assignSubModal');
+}
+function asgmSameToggle(){
+  if(!document.getElementById('asgm_same').checked) return;
+  const cells=[...document.querySelectorAll('#asgm_rooms .asgm-cell')]; const v=(cells.find(c=>c.value)||cells[0]).value;
+  cells.forEach(c=>c.value=v);
+}
+function asgmCellChanged(el){
+  if(document.getElementById('asgm_same').checked) document.querySelectorAll('#asgm_rooms .asgm-cell').forEach(c=>c.value=el.value);
+}
+async function saveAssignSub(){
+  const sid=document.getElementById('asgm_id').value;
+  const items=[...document.querySelectorAll('#asgm_rooms .asgm-cell')].map(c=>({subjectID:sid, room:c.dataset.room, teacher:c.value}));
+  try{ showLoading(true);
+    await GAS.call('saveTeacherAssign',{items});
+    const keep=(state.asg||[]).filter(a=>!(String(a.subjectID)===String(sid)&&items.some(i=>i.room===String(a.room))));
+    items.forEach(i=>{ if(i.teacher) keep.push({subjectID:sid, room:i.room, teacher:i.teacher}); });
+    state.asg=keep; closeModal('assignSubModal'); renderSubjects(); toast('บันทึกครูผู้สอนแล้ว');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 
 async function addSubject(){
@@ -2843,7 +2878,7 @@ async function curImportConfirm(){
   const pl=state._curPayload; if(!pl) return;
   try{ showLoading(true);
     const r=await GAS.call('importCurriculum',pl);
-    closeCurModal(); state._curPayload=null;
+    closeCurModal(); state._curPayload=null; state.asg=null;
     await loadSubjects();
     toast(`นำเข้าแล้ว: วิชาใหม่ ${r.subjectsAdded} • ครูผู้สอน +${r.assignAdded}/แก้ ${r.assignChanged} • ตัวชี้วัด +${r.indicatorsAdded}/แก้ ${r.indicatorsUpdated}/เอาออก ${r.indicatorsRemoved}`);
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
