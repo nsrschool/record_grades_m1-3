@@ -695,6 +695,7 @@
         <h2 class="font-bold text-teal-700">📚 รายวิชาทั้งหมด</h2>
         <label class="text-xs text-slate-500 flex items-center gap-1 ml-auto"><input type="checkbox" id="su_noTeacher" onchange="renderSubjects()"> เฉพาะวิชาที่ยังไม่มีครู</label>
         <button onclick="cleanupSubjects()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-700 px-2 py-1 text-xs whitespace-nowrap">🧹 ล้างวิชาซ้ำ</button>
+        <button onclick="normTeacherNames()" class="btn bg-violet-100 hover:bg-violet-200 text-violet-700 px-2 py-1 text-xs whitespace-nowrap">👤 ปรับชื่อครูให้ตรงบัญชี</button>
         <select id="su_filter" class="inp w-auto text-sm" onchange="renderSubjects()">
           <option value="">ทุกชั้น</option>
           <option>ม.1</option><option>ม.2</option><option>ม.3</option>
@@ -1664,7 +1665,7 @@
 /* ============================================================
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
-const FE_VERSION = '2026-10-10a';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = '2026-10-10b';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -2214,7 +2215,7 @@ function asgOfSubject(sid){ return (state.asg||[]).filter(a=>String(a.subjectID)
 function renderSubjects(){
   if(!state.asg && !state._asgLoading){
     state._asgLoading=true;
-    GAS.call('getAssignList').then(r=>{ state.asg=r.assign||[]; state._asgLoading=false; renderSubjects(); }).catch(()=>{ state._asgLoading=false; state.asg=[]; renderSubjects(); });
+    GAS.call('getAssignList').then(r=>{ state.asg=r.assign||[]; state._asgLoading=false; renderSubjects(); }).catch(e=>{ state._asgLoading=false; state.asg=[]; toast('โหลดรายชื่อครูผู้สอนไม่สำเร็จ: '+((e&&e.message)||e)+' (ตรวจว่า Deploy Code.gs เวอร์ชันใหม่แล้ว)','error'); renderSubjects(); });
   }
   const f=document.getElementById('su_filter').value;
   const noT=document.getElementById('su_noTeacher')&&document.getElementById('su_noTeacher').checked;
@@ -3953,6 +3954,22 @@ async function cleanupSubjects(){
     const res=await GAS.call('dedupeSubjects');
     await loadSubjects();
     toast(res.removed?('ล้างวิชาซ้ำแล้ว '+res.removed+' รายการ'):'ไม่พบวิชาซ้ำ','success');
+  }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
+}
+async function normTeacherNames(){
+  try{ showLoading(true);
+    const pv=await GAS.call('normalizeTeacherNames',{apply:false});
+    showLoading(false);
+    if(!pv.scheduleRows && !pv.assignRows){
+      toast(pv.unmatched.length?('ชื่อตรงบัญชีหมดแล้ว (ยกเว้นที่ไม่พบในบัญชีครู: '+pv.unmatched.join(', ')+')'):'ชื่อครูตรงกับบัญชีครูทั้งหมดแล้ว','success'); return;
+    }
+    const lines=pv.changes.slice(0,15).map(c=>'• '+c.text+' ('+c.count+')').join('\n');
+    const um=pv.unmatched.length?('\n\nไม่พบในบัญชีครู (ไม่แก้): '+pv.unmatched.join(', ')):'';
+    if(!confirm('จะปรับชื่อครูเป็นชื่อเต็มตามบัญชี\nตารางสอน '+pv.scheduleRows+' แถว • จัดครูผู้สอน '+pv.assignRows+' แถว\n\n'+lines+um+'\n\nยืนยัน?')) return;
+    showLoading(true);
+    const r=await GAS.call('normalizeTeacherNames',{apply:true});
+    state.asg=null; try{ await loadSubjects(); }catch(e){}
+    toast('ปรับชื่อครูแล้ว: ตารางสอน '+r.scheduleRows+' • จัดครู '+r.assignRows,'success');
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
 async function cleanupStudents(){
