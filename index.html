@@ -1651,10 +1651,10 @@
 </div>
 
 <!-- ====================== TOAST + LOADING ====================== -->
-<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] hidden">
+<div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[120] hidden">
   <div id="toastBox" class="px-4 py-2.5 rounded-xl shadow-lg text-sm text-white font-medium"></div>
 </div>
-<div id="loading" class="fixed inset-0 bg-white/60 backdrop-blur-sm hidden items-center justify-center z-[70]">
+<div id="loading" class="fixed inset-0 bg-white/60 backdrop-blur-sm hidden items-center justify-center z-[110]">
   <div class="flex flex-col items-center gap-3">
     <div class="w-10 h-10 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin"></div>
     <p class="text-sm text-teal-700 font-medium">กำลังทำงาน…</p>
@@ -1665,7 +1665,7 @@
 /* ============================================================
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
-const FE_VERSION = '2026-10-10b';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = '2026-10-13a';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
