@@ -329,8 +329,6 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
       <button data-tab="approve" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🔏 ส่ง/อนุมัติผล</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="schedule" data-label="📅 ตาราง/ปฏิทิน">
-      <button data-tab="schedule" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🗓️ ตารางสอน</button>
-      <button data-tab="classtt" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🏫 ตารางเรียนรายห้อง</button>
       <button data-tab="calendar" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📅 ปฏิทินวิชาการ</button>
     </div>
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="student" data-label="🧑‍🎓 นักเรียน">
@@ -350,6 +348,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="track" data-label="📊 ติดตาม &amp; อนุมัติผล">
       <button data-tab="overview" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📈 ติดตาม &amp; อนุมัติ</button>
       <button data-tab="principal" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🏫 อนุมัติผลรายห้อง (ผอ.)</button>
+      <button data-tab="pending" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🚧 ค้างอนุมัติ (รวมทุกวิชา)</button>
       <button data-tab="adm_locks" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🔒 ล็อกบังคับ/ปลดล็อก</button>
       <button data-tab="set_lookup" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">👪 ตรวจผลออนไลน์<span id="issBadge" class="hidden ml-1 bg-rose-500 text-white rounded-full text-[10px] px-1.5 py-0.5 align-middle">0</span></button>
     </div>
@@ -449,6 +448,42 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
   </section>
 
   <!-- ---------- TAB: OVERVIEW (แดชบอร์ดผู้บริหาร) ---------- -->
+  <!-- ---------- TAB: PENDING (วิชาที่ยังอนุมัติไม่ได้ — แอดมิน) ---------- -->
+  <section id="tab-pending" class="tabpane hidden">
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h3 class="font-bold text-sky-700">🚧 วิชาที่ยังอนุมัติไม่ได้ <span class="text-xs font-normal text-slate-400">(รวมทุกวิชา × ห้อง)</span></h3>
+        <button onclick="pendReload()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">🔄 โหลดใหม่</button>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mt-3 text-sm">
+        <select id="pd_level" class="inp" onchange="pendFilterChanged('level')"></select>
+        <select id="pd_room" class="inp" onchange="pendFilterChanged('room')"></select>
+        <select id="pd_subj" class="inp col-span-2 md:col-span-1" onchange="pendFilterChanged('subj')"></select>
+        <select id="pd_teacher" class="inp col-span-2 md:col-span-1" onchange="pendFilterChanged('teacher')"></select>
+        <select id="pd_reason" class="inp" onchange="pendFilterChanged('reason')">
+          <option value="">ทุกเหตุผล</option><option value="blank">มีช่องคะแนนว่าง</option><option value="nounits">ยังไม่ตั้งหน่วย</option><option value="ungraded">คะแนนครบ ยังไม่ตัดเกรด</option>
+        </select>
+        <input id="pd_q" class="inp" placeholder="ค้นหาวิชา/ครู" oninput="pendFilterChanged('q')">
+      </div>
+      <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500">
+        <label class="flex items-center gap-1"><input type="checkbox" id="pd_lock" onchange="pendFilterChanged('lock')"> รวมที่ล็อก/อนุมัติแล้ว</label>
+        <button onclick="pendReset()" class="underline text-sky-700">ล้างตัวกรอง</button>
+      </div>
+    </div>
+    <div id="pd_totals" class="flex flex-wrap gap-2 mb-4"></div>
+    <div class="card p-4 mb-4">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span class="text-xs text-slate-500">เลือกแล้ว <b id="pd_selN">0</b> รายการ</span>
+        <button onclick="pendSelAll()" class="btn bg-sky-50 text-sky-700 px-3 py-1.5 text-xs">☑ เลือกทั้งหมดที่กรอง</button>
+        <button onclick="pendSelClear()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">ไม่เลือก</button>
+        <button onclick="pendZeroPreview()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 text-xs">🧯 เติม 0 ที่เลือก (ดูตัวอย่างก่อน)</button>
+        <button onclick="pendBatches()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">↩️ รอบที่เติมไว้ / ย้อนกลับ</button>
+      </div>
+      <div id="pd_batches" class="hidden mb-3"></div>
+      <div class="overflow-x-auto"><div id="pd_area"></div></div>
+    </div>
+  </section>
+
   <section id="tab-overview" class="tabpane hidden">
     <div class="card p-4 mb-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1957,7 +1992,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-15j';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-15l';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -1971,15 +2006,28 @@ const GAS = {
     if (!isRead && GAS.verBad) { await GAS.recheck(); if (GAS.verBad) throw GAS.verError(); }
     // DIRTY: หลังบันทึกข้อมูล ภายใน 90 วินาทีทุกการอ่านแนบ noCache ทะลุแคชทุกชั้น (Worker/CacheService)
     if (/^(get|export)/.test(action) && GAS.dirty() && payload.noCache === undefined) payload = Object.assign({}, payload, { noCache: true });
-    let res;
-    try {
-      res = await fetch(GAS.URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain เลี่ยง CORS preflight
-        body: JSON.stringify({ action, payload, token: (state.currentUser||{}).token || '', fv: FE_VERSION })
-      });
-    } finally { if (!isRead) GAS.markDirty(); }
-    const json = await res.json();
+    const reqBody = JSON.stringify({ action, payload, token: (state.currentUser||{}).token || '', fv: FE_VERSION });
+    let json = null, lastErr = null;
+    const tries = isRead ? 3 : 1;   // อ่าน: ลองใหม่ได้ / เขียน: ยิงครั้งเดียว (กันบันทึกซ้ำ)
+    for (let t = 0; t < tries; t++) {
+      if (t > 0) await new Promise(r => setTimeout(r, 900 * t));
+      let txt;
+      try {
+        const res = await fetch(GAS.URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain เลี่ยง CORS preflight
+          body: reqBody
+        });
+        txt = (typeof res.text === 'function') ? await res.text() : JSON.stringify(await res.json());
+      } catch (e) {
+        if (!isRead) { GAS.markDirty(); throw e; }
+        lastErr = e; continue;
+      }
+      if (!isRead) GAS.markDirty();
+      try { json = JSON.parse(txt); break; }
+      catch (e) { lastErr = GAS.badResp(txt, isRead); if (!isRead) throw lastErr; }
+    }
+    if (!json) throw lastErr || new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ');
     GAS.noteVersion(json.v, json.sys);
     if (!json.ok) {
       const err = new Error(json.error || 'เกิดข้อผิดพลาด');
@@ -1992,6 +2040,14 @@ const GAS = {
     }
     hideMaint();
     return json.data;
+  },
+  // เซิร์ฟเวอร์ตอบเป็น HTML (เช่น Service Unavailable / หน้าล็อกอิน Google) แทน JSON
+  badResp(txt, isRead){
+    const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(String(txt||'')); const ttl = m ? m[1].replace(/\s+/g,' ').trim().slice(0,60) : '';
+    const e = new Error(isRead
+      ? 'เซิร์ฟเวอร์ตอบกลับผิดปกติ'+(ttl?' ('+ttl+')':'')+' — ลองใหม่แล้วยังไม่สำเร็จ กรุณารอสักครู่แล้วลองอีกครั้ง'
+      : 'ไม่แน่ใจว่าบันทึกสำเร็จหรือไม่ (เซิร์ฟเวอร์ตอบกลับผิดปกติ'+(ttl?': '+ttl:'')+') — ตรวจข้อมูลก่อนกดบันทึกซ้ำ');
+    e.code = 'BADRESP'; return e;
   },
   beVersion: null, verBad: false,
   noteVersion(v, sys){
@@ -2148,6 +2204,7 @@ function switchTabBase(name){
   if(name==='former') loadMoved();
   if(name==='mis') initMIS();
   if(name==='overview') ovSwitch(state.ovSub||'scores');
+  if(name==='pending') initPending();
   if(name==='principal') loadPrincipalPage();
   if(name==='remed') initRemed();
   if(name==='approve') initApprove();
@@ -2255,7 +2312,7 @@ async function applyBootstrap(data){
   if(data.students) await loadStudents(data.students);     // ก้อนไฟล์นิ่งไม่มีนักเรียน → ข้าม รอของจริงจาก GAS
   if(data.subjects) await loadSubjects(data.subjects);
   if(data.schedule) state.mySchedule=data.schedule;
-  if(data.myTeach)  state.myTeach=data.myTeach;
+  if(data.myTeach!==undefined) state.myTeach=data.myTeach||[];
   if(data.teachers&&data.teachers.length) state.teachers=data.teachers;
   const gsel=document.getElementById('globalSem'); if(gsel) gsel.value=state.semester;
   applySettingsToUI();
@@ -2735,8 +2792,8 @@ function scoreStudents(){
 function gradeRoomsFor(sub){
   const d=classDigit(sub.classLevel);
   const u=state.currentUser; let rooms;
-  if(u && u.role!=='admin' && state.mySchedule && state.mySchedule.length){
-    rooms=state.mySchedule.filter(s=>s.subject===sub.name && classDigit(s.classLevel)===d).map(s=>s.classLevel);
+  if(u && u.role!=='admin'){
+    rooms=(state.myTeach||[]).filter(t=>String(t.subjectID)===String(sub.ID)).map(t=>t.room);
   }else{
     rooms=state.students.filter(s=>classDigit(s.classLevel)===d).map(s=>s.classLevel);
   }
@@ -2746,8 +2803,12 @@ function gradeRoomsFor(sub){
 function fillScoreSubjects(){
   const sel=document.getElementById('sc_subject'); const cur=sel.value;
   const u=state.currentUser;
-  // ครู: จำกัดรายวิชา×ห้อง ตามที่ได้รับมอบ (เมนูจัดครูผู้สอน ∪ ตารางสอน)
-  if(u && u.role!=='admin' && state.myTeach && state.myTeach.length){
+  // ครู: เฉพาะรายวิชา×ห้องที่ได้รับมอบหมายในเมนูจัดครูผู้สอน (ไม่มี = ว่าง ไม่แสดงทุกวิชา)
+  if(u && u.role!=='admin'){
+    if(!(state.myTeach||[]).length){
+      sel.innerHTML='<option value="">— ยังไม่ได้รับมอบหมายรายวิชา (แจ้งแอดมินจัดครูผู้สอน) —</option>';
+      return;
+    }
     const opts=[]; const seenOpt=new Set();
     state.myTeach.forEach(t=>{
       const key=t.name+'|'+t.room;
@@ -2759,10 +2820,6 @@ function fillScoreSubjects(){
     return;
   }
   let subs=state.subjects.slice();
-  if(u && u.role!=='admin' && state.mySchedule && state.mySchedule.length){
-    const taught=new Set(state.mySchedule.map(s=>s.subject+'|'+classDigit(s.classLevel)));
-    subs=subs.filter(s=>taught.has(s.name+'|'+classDigit(s.classLevel)));
-  }
   subs.sort((a,b)=>String(a.classLevel).localeCompare(String(b.classLevel))||String(a.code).localeCompare(String(b.code)));
   // แยกเป็นรายห้อง (เช่น คณิตศาสตร์ ม.1/1, ม.1/2) + กันรายการซ้ำ
   const opts=[]; const seenOpt=new Set();
@@ -4160,7 +4217,7 @@ function logout(){
   if(DEMO.on){ DEMO.stop(); return; }   // โหมดทดลองใช้: ออกจากโหมด (ล้างข้อมูลตัวอย่าง)
   try{ GAS.call('logout').catch(()=>{}); }catch(e){}   // ยกเลิก token ฝั่งเซิร์ฟเวอร์ (ไม่รอผล)
   try{ localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
-  state.currentUser=null; state.mySchedule=[]; state.pr=null;
+  state.currentUser=null; state.mySchedule=[]; state.myTeach=[]; state.pr=null;
   try{ localStorage.removeItem('kps_session_m13'); }catch(e){}
   showLoginScreen();
 }
@@ -4211,9 +4268,9 @@ async function submitChangePw(){
 // สิทธิ์การเข้าถึงเมนูตามบทบาท ('*' = ทุกเมนู)
 const TAB_ACCESS = {
   admin: '*',
-  teacher: ['home','manual','developer','actsum','promo','schedule','classtt','adm_docs','profile','scores','ability','remed','approve','report','summary68','attendance','calendar','risk'],
-  director:['home','manual','developer','actsum','promo','schedule','classtt','profile','overview','remed','approve','report','summary68','stats','risk','calendar'],
-  principal:['home','manual','developer','principal','actsum','promo','schedule','classtt','profile','overview','report','summary68','stats','risk','calendar']
+  teacher: ['home','manual','developer','actsum','promo','adm_docs','profile','scores','ability','remed','approve','report','summary68','attendance','calendar','risk'],
+  director:['home','manual','developer','actsum','promo','profile','overview','remed','approve','report','summary68','stats','risk','calendar'],
+  principal:['home','manual','developer','principal','actsum','promo','profile','overview','report','summary68','stats','risk','calendar']
 };
 function roleLabel(role){ return role==='admin'?'แอดมิน':role==='director'?'รองผอ./หัวหน้าวิชาการ':role==='principal'?'ผู้อำนวยการ':'ครู'; }
 function applyRole(){
@@ -5185,9 +5242,9 @@ function onPP5Mode(){
     const cls=document.getElementById('pp5_class').value;
     const u=state.currentUser;
     let subs=state.subjects.filter(s=>!s.classLevel || classDigit(s.classLevel)===classDigit(cls));
-    if(u && u.role!=='admin' && state.mySchedule && state.mySchedule.length){
-      const taught=new Set(state.mySchedule.map(s=>s.subject+'|'+classDigit(s.classLevel)));
-      subs=subs.filter(s=>taught.has(s.name+'|'+classDigit(s.classLevel)));
+    if(u && u.role!=='admin'){
+      const mine=new Set((state.myTeach||[]).map(t=>String(t.subjectID)));
+      subs=subs.filter(s=>mine.has(String(s.ID)));
     }
     const sel=document.getElementById('pp5_subject'); const cur=sel.value;
     sel.innerHTML=subs.map(s=>`<option value="${s.ID}">[${esc(s.classLevel)}] ${esc(s.code||'')} ${esc(s.name)}</option>`).join('');
@@ -6661,6 +6718,152 @@ function trkRowStatus(r){   // สถานะแสดงผลของแถ�
   if(r.ready) return 'ready';
   return r.status;
 }
+
+/* ============================================================
+   🚧 ค้างอนุมัติ (รวมทุกวิชา × ห้อง) — แอดมิน
+   ============================================================ */
+state.pend={level:'',room:'',subj:'',teacher:'',reason:'',q:'',lock:false};
+state.pendSel=new Set();
+function pendReason(r){ return !r.units?'nounits':(r.blankCells>0?'blank':'ungraded'); }
+function pendBase(){   // วิชา×ห้องที่ยังไม่พร้อมอนุมัติ (ก่อนใช้ตัวกรอง)
+  const rows=((state.trk||{}).rows||[]);
+  return rows.filter(r=>!r.ready && (state.pend.lock||!r.lock));
+}
+function pendRows(){
+  const f=state.pend, q=f.q.trim().toLowerCase();
+  return pendBase().filter(r=>{
+    if(f.level && String(r.room).split('/')[0]!==f.level) return false;
+    if(f.room && r.room!==f.room) return false;
+    if(f.subj && r.name!==f.subj) return false;
+    if(f.teacher && (r.teacher||TRK_NOTEACHER)!==f.teacher) return false;
+    if(f.reason && pendReason(r)!==f.reason) return false;
+    if(q && !((r.name||'')+' '+(r.code||'')+' '+(r.teacher||'')).toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>(b.blankCells-a.blankCells)||String(a.room).localeCompare(String(b.room),'th',{numeric:true})||String(a.name).localeCompare(String(b.name),'th'));
+}
+async function initPending(){
+  showLoading(true);
+  try{ await loadTracker(); }catch(e){ toast(e.message,'error'); }
+  showLoading(false);
+  pendFillFilters(); pendRender();
+}
+function pendReload(){ initPending(); }
+function pendFillFilters(){
+  const base=pendBase(), f=state.pend;
+  const uniq=(arr)=>[...new Set(arr.filter(Boolean))];
+  const nat=(a,b)=>String(a).localeCompare(String(b),'th',{numeric:true});
+  const set=(id,first,vals,cur)=>{ const el=document.getElementById(id); el.innerHTML='<option value="">'+first+'</option>'+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''); el.value=vals.includes(cur)?cur:''; return el.value; };
+  const lv=uniq(base.map(r=>String(r.room).split('/')[0])).sort(nat);
+  f.level=set('pd_level','ทุกชั้น',lv,f.level);
+  const rm=uniq(base.filter(r=>!f.level||String(r.room).split('/')[0]===f.level).map(r=>r.room)).sort(nat);
+  f.room=set('pd_room','ทุกห้อง',rm,f.room);
+  f.subj=set('pd_subj','ทุกวิชา',uniq(base.filter(r=>(!f.level||String(r.room).split('/')[0]===f.level)).map(r=>r.name)).sort(nat),f.subj);
+  f.teacher=set('pd_teacher','ทุกครู',uniq(base.map(r=>r.teacher||TRK_NOTEACHER)).sort(nat),f.teacher);
+  document.getElementById('pd_reason').value=f.reason;
+  document.getElementById('pd_lock').checked=!!f.lock;
+}
+function pendFilterChanged(k){
+  const f=state.pend;
+  if(k==='level') f.level=document.getElementById('pd_level').value, f.room='';
+  if(k==='room') f.room=document.getElementById('pd_room').value;
+  if(k==='subj') f.subj=document.getElementById('pd_subj').value;
+  if(k==='teacher') f.teacher=document.getElementById('pd_teacher').value;
+  if(k==='reason') f.reason=document.getElementById('pd_reason').value;
+  if(k==='q') f.q=document.getElementById('pd_q').value;
+  if(k==='lock') f.lock=document.getElementById('pd_lock').checked;
+  if(k!=='q') pendFillFilters();
+  pendRender();
+}
+function pendReset(){ state.pend={level:'',room:'',subj:'',teacher:'',reason:'',q:'',lock:false}; document.getElementById('pd_q').value=''; pendFillFilters(); pendRender(); }
+function pendSelUpdate(){ const n=document.getElementById('pd_selN'); if(n) n.textContent=state.pendSel.size; }
+function pendToggle(el){ const k=el.dataset.k; if(el.checked) state.pendSel.add(k); else state.pendSel.delete(k); pendSelUpdate(); }
+function pendSelAll(){ pendRows().forEach(r=>state.pendSel.add(trkKey(r))); pendRender(); }
+function pendSelClear(){ state.pendSel.clear(); pendRender(); }
+function pendBadge(r){
+  if(r.lock) return '<span class="badge bg-emerald-600 text-white">🔒 ล็อกแล้ว</span>';
+  const x=pendReason(r);
+  if(x==='nounits') return '<span class="badge bg-rose-50 text-rose-500">ยังไม่ตั้งหน่วย</span>';
+  if(x==='blank') return '<span class="badge bg-amber-100 text-amber-700">ว่าง '+r.blankCells+' ช่อง</span>';
+  return '<span class="badge bg-sky-100 text-sky-700">ยังไม่ตัดเกรด '+r.ungraded+' คน</span>';
+}
+function pendRender(){
+  const rows=pendRows(), all=pendBase();
+  const cnt={blank:0,nounits:0,ungraded:0}; all.forEach(r=>cnt[pendReason(r)]++);
+  const blankTotal=rows.reduce((a,r)=>a+(r.blankCells||0),0);
+  const card=(n,l,cls)=>`<div class="rounded-2xl px-4 py-3 ${cls} min-w-[7rem] grow"><div class="text-2xl font-bold">${n}</div><div class="text-xs">${l}</div></div>`;
+  document.getElementById('pd_totals').innerHTML=
+    card(rows.length+'<span class="text-sm font-normal text-slate-400"> / '+all.length+'</span>','ที่แสดง / ค้างทั้งหมด','bg-slate-50 text-slate-700')+
+    card(blankTotal,'ช่องคะแนนว่างรวม (ที่แสดง)','bg-amber-50 text-amber-700')+
+    card(cnt.blank,'มีช่องว่าง (วิชา×ห้อง)','bg-rose-50 text-rose-600')+
+    card(cnt.nounits,'ยังไม่ตั้งหน่วย','bg-slate-100 text-slate-600')+
+    card(cnt.ungraded,'ยังไม่ตัดเกรด','bg-sky-50 text-sky-700');
+  const col=p=>p>=90?'bg-emerald-500':p>=60?'bg-amber-400':'bg-rose-400';
+  document.getElementById('pd_area').innerHTML=
+   '<table class="w-full text-sm" style="min-width:720px"><thead><tr class="text-left text-slate-400 border-b"><th class="py-1 px-2 w-6"></th><th class="px-2">ห้อง</th><th class="px-2">รายวิชา</th><th class="px-2">ครูผู้สอน</th><th class="px-2">ความคืบหน้า</th><th class="px-2">สถานะ</th><th class="px-2"></th></tr></thead><tbody>'+
+   (rows.length?rows.map((r,i)=>{
+     const k=trkKey(r);
+     const miss=(r.missingUnits||[]).map(u=>`<span class="badge bg-rose-50 text-rose-600">${esc(u.name)} • ขาด ${u.missing} คน</span>`).join(' ');
+     const det=(miss||r.ungraded)?`<tr id="pdD${i}" class="hidden bg-slate-50/70"><td colspan="7" class="px-4 py-2 text-xs"><div class="flex flex-wrap gap-1.5">${miss||'<span class="text-sky-700">คะแนนครบทุกหน่วย — เหลือตัดเกรด '+r.ungraded+' คน</span>'}${r.exempt?` <span class="badge bg-amber-50 text-amber-700">ยกเว้น ${r.exempt} คน (ร/มส/มผ)</span>`:''}</div></td></tr>`:'';
+     return `<tr class="border-b ${(miss||r.ungraded)?'cursor-pointer hover:bg-sky-50/40':''}" ${(miss||r.ungraded)?`onclick="document.getElementById('pdD${i}').classList.toggle('hidden')"`:''}>
+       <td class="px-2" onclick="event.stopPropagation()"><input type="checkbox" data-k="${esc(k)}" ${state.pendSel.has(k)?'checked':''} onchange="pendToggle(this)"></td>
+       <td class="py-1.5 px-2"><span class="badge bg-sky-50 text-sky-700">${esc(r.room)}</span></td>
+       <td class="px-2 font-medium text-slate-700">${esc(r.code)} ${esc(r.name)}</td>
+       <td class="px-2 text-xs ${r.teacher?'':'text-rose-500'}">${esc(r.teacher||TRK_NOTEACHER)}</td>
+       <td class="px-2"><div class="flex items-center gap-2"><div class="grow h-2 bg-slate-100 rounded-full overflow-hidden" style="min-width:60px"><div class="${col(r.percent)} h-full" style="width:${r.percent}%"></div></div><span class="text-xs text-slate-500 w-9 text-right">${r.percent}%</span></div></td>
+       <td class="px-2">${pendBadge(r)}</td>
+       <td class="px-2" onclick="event.stopPropagation()"><button class="btn bg-sky-50 text-sky-700 px-2 py-1 text-xs" onclick="pendGo('${esc(r.subjectID)}','${esc(r.room)}')">ไปบันทึก</button></td></tr>${det}`;
+   }).join(''):'<tr><td colspan="7" class="py-6 text-center text-slate-400">ไม่พบรายการ 🎉</td></tr>')+'</tbody></table>';
+  pendSelUpdate();
+}
+function pendGo(sid,room){   // ไปหน้าบันทึกคะแนนของวิชา×ห้องนี้
+  switchTab('scores');
+  const sel=document.getElementById('sc_subject'); if(!sel) return;
+  sel.value=sid+'|'+room;
+  if(sel.value===sid+'|'+room) onSelectScoreSubject();
+}
+async function pendZeroPreview(){
+  const targets=[...state.pendSel];
+  if(!targets.length){ toast('ยังไม่ได้เลือกรายการ','error'); return; }
+  showLoading(true);
+  let pv;
+  try{ pv=await GAS.call('getZeroFillPreview',{semester:state.semester,targets}); }catch(e){ showLoading(false); toast(e.message,'error'); return; }
+  showLoading(false);
+  if(!pv.totalCells){ toast('ไม่มีช่องว่างให้เติม'+(pv.skippedLocked?' (ข้ามวิชาที่ล็อก '+pv.skippedLocked+' รายการ)':''),'error'); return; }
+  const msg='เติม 0 ในช่องว่าง '+pv.totalCells+' ช่อง\nนักเรียน '+pv.totalStudents+' คน • '+pv.rows.length+' วิชา×ห้อง'+
+    (pv.skippedLocked?'\n(ข้ามวิชาที่ล็อก '+pv.skippedLocked+' รายการ)':'')+
+    '\n\n• ไม่ทับคะแนนเดิม • ข้ามนักเรียนที่มี ร/มส/มผ\n• ย้อนกลับได้จากปุ่ม “รอบที่เติมไว้”\n\nยืนยันเติม 0 ?';
+  if(!confirm(msg)) return;
+  showLoading(true);
+  try{
+    const r=await GAS.call('applyZeroFill',{semester:state.semester,targets});
+    showLoading(false);
+    toast('เติม 0 แล้ว '+r.filled+' ช่อง • '+r.subjects+' วิชา'+(r.errors&&r.errors.length?' (คำนวณเกรดไม่ครบ '+r.errors.length+' วิชา)':''));
+    state.pendSel.clear(); await initPending();
+  }catch(e){ showLoading(false); toast(e.message,'error'); }
+}
+async function pendBatches(){
+  const box=document.getElementById('pd_batches');
+  if(!box.classList.contains('hidden')){ box.classList.add('hidden'); return; }
+  showLoading(true);
+  let list=[];
+  try{ list=await GAS.call('getZeroFillBatches',{}); }catch(e){ showLoading(false); toast(e.message,'error'); return; }
+  showLoading(false);
+  box.classList.remove('hidden');
+  box.innerHTML='<div class="rounded-xl border border-slate-200 p-3 text-xs">'+
+    (list.length?list.map(b=>`<div class="flex flex-wrap items-center justify-between gap-2 py-1 border-b last:border-0"><span>${esc(String(b.at).slice(0,16))} • ${esc(b.by||'')} • ${b.cells} ช่อง • ${b.subjects} วิชา (ภาค ${esc(b.semester)})</span><button class="btn bg-rose-50 text-rose-600 px-2 py-1" onclick="pendUndo('${esc(b.batchId)}')">↩️ ย้อนรอบนี้</button></div>`).join(''):'<span class="text-slate-400">ยังไม่มีรอบที่เติมไว้</span>')+'</div>';
+}
+async function pendUndo(id){
+  if(!confirm('ย้อนรอบนี้? จะลบเฉพาะช่องที่ระบบเติม 0 และยังเป็น 0 อยู่ (ช่องที่ครูแก้แล้วไม่ถูกแตะ)')) return;
+  showLoading(true);
+  try{
+    const r=await GAS.call('undoZeroFill',{batchId:id});
+    showLoading(false);
+    toast('ย้อนแล้ว '+r.undone+' ช่อง'+(r.changed?' • ข้ามที่ครูแก้แล้ว '+r.changed:'')+(r.locked?' • ข้ามที่ล็อก '+r.locked:''));
+    document.getElementById('pd_batches').classList.add('hidden');
+    await initPending();
+  }catch(e){ showLoading(false); toast(e.message,'error'); }
+}
+
 async function loadTracker(){ const r=await GAS.call('getExecTracker',{semester:state.semester}); state.trk=(r&&Array.isArray(r.rows))?r:{semester:state.semester,rows:[]}; trkBadgeUpdate(); return state.trk; }
 function trkReadyCount(){ return ((state.trk||{}).rows||[]).filter(r=>r.ready&&!r.lock).length; }
 function trkBadgeUpdate(){   // ป้ายแดง: จำนวนวิชา×ห้อง ที่พร้อมอนุมัติ (เฉพาะแอดมิน/ผู้บริหาร)
@@ -8546,7 +8749,7 @@ async function loadGradeCharts(){
    ============================================================ */
 function handleSessionExpired(msg){
   try{ localStorage.removeItem('kps_session_m13'); localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
-  state.currentUser=null; state.mySchedule=[];
+  state.currentUser=null; state.mySchedule=[]; state.myTeach=[];
   if(window._sessExpShown) return;
   window._sessExpShown=true; setTimeout(()=>{ window._sessExpShown=false; },3000);
   showLoginScreen();
@@ -8910,7 +9113,7 @@ function renderLookupPage(){
   loadIssues();
 }
 function renderAccess(){
-  const skip=['home','manual','developer','principal','actsum','promo','editlog','health','admin','settings','subjects','assign','adm_roster','adm_teachers','adm_docs','adm_locks','adm_year','adm_backup','set_access','set_lookup','set_mapping','classtt','profile','former','mis'];
+  const skip=['home','manual','developer','principal','actsum','promo','editlog','health','admin','settings','subjects','assign','adm_roster','adm_teachers','adm_docs','adm_locks','adm_year','adm_backup','set_access','set_lookup','set_mapping','classtt','pending','profile','former','mis'];
   const btns=[...document.querySelectorAll('.navbtn')].filter(b=>skip.indexOf(b.dataset.tab)<0);
   let lastCat='';
   document.getElementById('acc_body').innerHTML=btns.map(b=>{
@@ -9019,7 +9222,7 @@ function applyTabAccessFromSettings(){
     const t=JSON.parse((state.settings&&state.settings.tabAccess)||'null'); if(!t) return;
     ['teacher','director','principal'].forEach(r=>{
       if(!Array.isArray(t[r])) return;
-      const a=t[r].slice(); ['home','manual','developer','actsum','promo','classtt','profile'].concat(r==='teacher'?['adm_docs']:[]).concat(r==='principal'?['principal']:[]).forEach(k=>{ if(a.indexOf(k)<0) a.push(k); });   // เมนูที่เปิดให้เสมอ (ไม่อยู่ในตารางสิทธิ์)
+      const a=t[r].slice(); ['home','manual','developer','actsum','promo','profile'].concat(r==='teacher'?['adm_docs']:[]).concat(r==='principal'?['principal']:[]).forEach(k=>{ if(a.indexOf(k)<0) a.push(k); });   // เมนูที่เปิดให้เสมอ (ไม่อยู่ในตารางสิทธิ์)
       TAB_ACCESS[r]=a;
     });
   }catch(e){}
