@@ -348,7 +348,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
     <div class="subnav hidden gap-2 overflow-x-auto nav-scroll pb-0.5" data-cat="track" data-label="📊 ติดตาม &amp; อนุมัติผล">
       <button data-tab="overview" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">📈 ติดตาม &amp; อนุมัติ</button>
       <button data-tab="principal" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🏫 อนุมัติผลรายห้อง (ผอ.)</button>
-      <button data-tab="pending" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🚧 ค้างอนุมัติ (รวมทุกวิชา)</button>
+      <button data-tab="pending" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🚧 ค้างอนุมัติ</button>
       <button data-tab="adm_locks" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">🔒 ล็อกบังคับ/ปลดล็อก</button>
       <button data-tab="set_lookup" class="navbtn btn whitespace-nowrap px-3 py-1.5 text-sm bg-white border border-slate-200">👪 ตรวจผลออนไลน์<span id="issBadge" class="hidden ml-1 bg-rose-500 text-white rounded-full text-[10px] px-1.5 py-0.5 align-middle">0</span></button>
     </div>
@@ -448,39 +448,41 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
   </section>
 
   <!-- ---------- TAB: OVERVIEW (แดชบอร์ดผู้บริหาร) ---------- -->
-  <!-- ---------- TAB: PENDING (วิชาที่ยังอนุมัติไม่ได้ — แอดมิน) ---------- -->
+  <!-- ---------- TAB: PENDING (นักเรียนที่ทำให้วิชาอนุมัติไม่ได้ — แอดมิน แก้ทีเดียว บันทึกทีเดียว) ---------- -->
   <section id="tab-pending" class="tabpane hidden">
     <div class="card p-4 mb-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h3 class="font-bold text-sky-700">🚧 วิชาที่ยังอนุมัติไม่ได้ <span class="text-xs font-normal text-slate-400">(รวมทุกวิชา × ห้อง)</span></h3>
-        <button onclick="pendReload()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">🔄 โหลดใหม่</button>
+        <h3 class="font-bold text-sky-700">🚧 ค้างอนุมัติ <span class="text-xs font-normal text-slate-400">นักเรียนที่ทำให้วิชาอนุมัติไม่ได้ • แก้ทีเดียว กดบันทึกทีเดียว</span></h3>
+        <div class="flex gap-2">
+          <button onclick="pendBatches()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">↩️ รอบที่เติม 0 ไว้</button>
+          <button onclick="pendReload()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">🔄 โหลดใหม่</button>
+        </div>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mt-3 text-sm">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-sm">
         <select id="pd_level" class="inp" onchange="pendFilterChanged('level')"></select>
         <select id="pd_room" class="inp" onchange="pendFilterChanged('room')"></select>
         <select id="pd_subj" class="inp col-span-2 md:col-span-1" onchange="pendFilterChanged('subj')"></select>
         <select id="pd_teacher" class="inp col-span-2 md:col-span-1" onchange="pendFilterChanged('teacher')"></select>
-        <select id="pd_reason" class="inp" onchange="pendFilterChanged('reason')">
-          <option value="">ทุกเหตุผล</option><option value="blank">มีช่องคะแนนว่าง</option><option value="nounits">ยังไม่ตั้งหน่วย</option><option value="ungraded">คะแนนครบ ยังไม่ตัดเกรด</option>
-        </select>
-        <input id="pd_q" class="inp" placeholder="ค้นหาวิชา/ครู" oninput="pendFilterChanged('q')">
+        <input id="pd_q" class="inp col-span-2 md:col-span-1" placeholder="ค้นหาชื่อ/เลขที่" oninput="pendFilterChanged('q')">
       </div>
       <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500">
-        <label class="flex items-center gap-1"><input type="checkbox" id="pd_lock" onchange="pendFilterChanged('lock')"> รวมที่ล็อก/อนุมัติแล้ว</label>
+        <label class="flex items-center gap-1"><input type="checkbox" id="pd_lock" onchange="pendFilterChanged('lock')"> แสดงวิชาที่ล็อกแล้ว (แก้ไม่ได้)</label>
         <button onclick="pendReset()" class="underline text-sky-700">ล้างตัวกรอง</button>
       </div>
+      <div id="pd_batches" class="hidden mt-3"></div>
     </div>
-    <div id="pd_totals" class="flex flex-wrap gap-2 mb-4"></div>
-    <div class="card p-4 mb-4">
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span class="text-xs text-slate-500">เลือกแล้ว <b id="pd_selN">0</b> รายการ</span>
-        <button onclick="pendSelAll()" class="btn bg-sky-50 text-sky-700 px-3 py-1.5 text-xs">☑ เลือกทั้งหมดที่กรอง</button>
-        <button onclick="pendSelClear()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">ไม่เลือก</button>
-        <button onclick="pendZeroPreview()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 text-xs">🧯 เติม 0 ที่เลือก (ดูตัวอย่างก่อน)</button>
-        <button onclick="pendBatches()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">↩️ รอบที่เติมไว้ / ย้อนกลับ</button>
-      </div>
-      <div id="pd_batches" class="hidden mb-3"></div>
-      <div class="overflow-x-auto"><div id="pd_area"></div></div>
+    <div id="pd_totals" class="flex flex-wrap gap-2 mb-3"></div>
+    <div id="pd_ungraded" class="hidden card p-3 mb-3 text-xs"></div>
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <button onclick="pendZeroShown()" class="btn bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 text-xs">🧯 เติม 0 ช่องว่างทั้งหมดที่กรอง (ยังไม่บันทึก)</button>
+      <button onclick="pendClearEdits()" class="btn bg-slate-100 text-slate-600 px-3 py-1.5 text-xs">ล้างที่แก้ค้างไว้</button>
+    </div>
+    <div id="pd_area" class="space-y-3"></div>
+    <div id="pd_pager" class="flex items-center justify-center gap-3 my-4 text-sm"></div>
+    <div class="h-20"></div>
+    <div id="pd_savebar" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 border-t border-slate-200 px-4 py-2 flex items-center justify-between gap-3 hidden">
+      <span class="text-sm text-slate-600">แก้ไว้ <b id="pd_editN">0</b> รายการ (ยังไม่บันทึก)</span>
+      <button onclick="pendSave()" class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 text-sm font-semibold">💾 บันทึกทั้งหมด</button>
     </div>
   </section>
 
@@ -1992,7 +1994,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-15l';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-16a';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -6720,125 +6722,192 @@ function trkRowStatus(r){   // สถานะแสดงผลของแถ�
 }
 
 /* ============================================================
-   🚧 ค้างอนุมัติ (รวมทุกวิชา × ห้อง) — แอดมิน
+   🚧 ค้างอนุมัติ — นักเรียนที่ทำให้วิชาอนุมัติไม่ได้ (แอดมิน • แก้ทีเดียว บันทึกทีเดียว)
    ============================================================ */
-state.pend={level:'',room:'',subj:'',teacher:'',reason:'',q:'',lock:false};
-state.pendSel=new Set();
-function pendReason(r){ return !r.units?'nounits':(r.blankCells>0?'blank':'ungraded'); }
-function pendBase(){   // วิชา×ห้องที่ยังไม่พร้อมอนุมัติ (ก่อนใช้ตัวกรอง)
-  const rows=((state.trk||{}).rows||[]);
-  return rows.filter(r=>!r.ready && (state.pend.lock||!r.lock));
+state.pend={level:'',room:'',subj:'',teacher:'',q:'',lock:false};
+state.pd={data:null,edits:{},marks:{},page:0};
+const PD_PAGE=12;
+function pdLevel(room){ return String(room).split('/')[0]; }
+function pdVisibleItems(o){   // วิชาของนักเรียนคนนี้ที่ผ่านตัวกรองวิชา/ครู/ล็อก
+  const f=state.pend;
+  return o.items.filter(it=>(f.lock||!it.locked) && (!f.subj||it.name===f.subj) && (!f.teacher||(it.teacher||TRK_NOTEACHER)===f.teacher));
 }
-function pendRows(){
+function pdStudents(){
+  const d=state.pd.data; if(!d) return [];
   const f=state.pend, q=f.q.trim().toLowerCase();
-  return pendBase().filter(r=>{
-    if(f.level && String(r.room).split('/')[0]!==f.level) return false;
-    if(f.room && r.room!==f.room) return false;
-    if(f.subj && r.name!==f.subj) return false;
-    if(f.teacher && (r.teacher||TRK_NOTEACHER)!==f.teacher) return false;
-    if(f.reason && pendReason(r)!==f.reason) return false;
-    if(q && !((r.name||'')+' '+(r.code||'')+' '+(r.teacher||'')).toLowerCase().includes(q)) return false;
-    return true;
-  }).sort((a,b)=>(b.blankCells-a.blankCells)||String(a.room).localeCompare(String(b.room),'th',{numeric:true})||String(a.name).localeCompare(String(b.name),'th'));
+  return d.students.filter(o=>{
+    if(f.level && pdLevel(o.room)!==f.level) return false;
+    if(f.room && o.room!==f.room) return false;
+    if(q && !((o.name||'')+' '+o.number+' '+o.room).toLowerCase().includes(q)) return false;
+    return pdVisibleItems(o).length>0;
+  });
 }
 async function initPending(){
   showLoading(true);
-  try{ await loadTracker(); }catch(e){ toast(e.message,'error'); }
+  try{ state.pd.data=await GAS.call('getPendingStudents',{semester:state.semester}); }
+  catch(e){ toast(e.message,'error'); state.pd.data={students:[],units:{},ungraded:[],totalCells:0}; }
   showLoading(false);
-  pendFillFilters(); pendRender();
+  state.pd.page=0; pendFillFilters(); pendRender();
 }
-function pendReload(){ initPending(); }
+function pendReload(){
+  if(pendEditCount() && !confirm('มีรายการที่แก้ไว้แต่ยังไม่บันทึก — โหลดใหม่จะล้างทั้งหมด ต้องการต่อไหม?')) return;
+  state.pd.edits={}; state.pd.marks={}; initPending();
+}
 function pendFillFilters(){
-  const base=pendBase(), f=state.pend;
-  const uniq=(arr)=>[...new Set(arr.filter(Boolean))];
+  const d=state.pd.data, f=state.pend;
   const nat=(a,b)=>String(a).localeCompare(String(b),'th',{numeric:true});
+  const uniq=a=>[...new Set(a.filter(Boolean))];
   const set=(id,first,vals,cur)=>{ const el=document.getElementById(id); el.innerHTML='<option value="">'+first+'</option>'+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''); el.value=vals.includes(cur)?cur:''; return el.value; };
-  const lv=uniq(base.map(r=>String(r.room).split('/')[0])).sort(nat);
-  f.level=set('pd_level','ทุกชั้น',lv,f.level);
-  const rm=uniq(base.filter(r=>!f.level||String(r.room).split('/')[0]===f.level).map(r=>r.room)).sort(nat);
-  f.room=set('pd_room','ทุกห้อง',rm,f.room);
-  f.subj=set('pd_subj','ทุกวิชา',uniq(base.filter(r=>(!f.level||String(r.room).split('/')[0]===f.level)).map(r=>r.name)).sort(nat),f.subj);
-  f.teacher=set('pd_teacher','ทุกครู',uniq(base.map(r=>r.teacher||TRK_NOTEACHER)).sort(nat),f.teacher);
-  document.getElementById('pd_reason').value=f.reason;
+  const sts=d.students;
+  f.level=set('pd_level','ทุกชั้น',uniq(sts.map(o=>pdLevel(o.room))).sort(nat),f.level);
+  f.room=set('pd_room','ทุกห้อง',uniq(sts.filter(o=>!f.level||pdLevel(o.room)===f.level).map(o=>o.room)).sort(nat),f.room);
+  const its=[]; sts.forEach(o=>o.items.forEach(it=>its.push(it)));
+  f.subj=set('pd_subj','ทุกวิชา',uniq(its.map(it=>it.name)).sort(nat),f.subj);
+  f.teacher=set('pd_teacher','ทุกครู',uniq(its.map(it=>it.teacher||TRK_NOTEACHER)).sort(nat),f.teacher);
   document.getElementById('pd_lock').checked=!!f.lock;
 }
 function pendFilterChanged(k){
   const f=state.pend;
-  if(k==='level') f.level=document.getElementById('pd_level').value, f.room='';
+  if(k==='level'){ f.level=document.getElementById('pd_level').value; f.room=''; }
   if(k==='room') f.room=document.getElementById('pd_room').value;
   if(k==='subj') f.subj=document.getElementById('pd_subj').value;
   if(k==='teacher') f.teacher=document.getElementById('pd_teacher').value;
-  if(k==='reason') f.reason=document.getElementById('pd_reason').value;
   if(k==='q') f.q=document.getElementById('pd_q').value;
   if(k==='lock') f.lock=document.getElementById('pd_lock').checked;
+  state.pd.page=0;
   if(k!=='q') pendFillFilters();
   pendRender();
 }
-function pendReset(){ state.pend={level:'',room:'',subj:'',teacher:'',reason:'',q:'',lock:false}; document.getElementById('pd_q').value=''; pendFillFilters(); pendRender(); }
-function pendSelUpdate(){ const n=document.getElementById('pd_selN'); if(n) n.textContent=state.pendSel.size; }
-function pendToggle(el){ const k=el.dataset.k; if(el.checked) state.pendSel.add(k); else state.pendSel.delete(k); pendSelUpdate(); }
-function pendSelAll(){ pendRows().forEach(r=>state.pendSel.add(trkKey(r))); pendRender(); }
-function pendSelClear(){ state.pendSel.clear(); pendRender(); }
-function pendBadge(r){
-  if(r.lock) return '<span class="badge bg-emerald-600 text-white">🔒 ล็อกแล้ว</span>';
-  const x=pendReason(r);
-  if(x==='nounits') return '<span class="badge bg-rose-50 text-rose-500">ยังไม่ตั้งหน่วย</span>';
-  if(x==='blank') return '<span class="badge bg-amber-100 text-amber-700">ว่าง '+r.blankCells+' ช่อง</span>';
-  return '<span class="badge bg-sky-100 text-sky-700">ยังไม่ตัดเกรด '+r.ungraded+' คน</span>';
+function pendReset(){ state.pend={level:'',room:'',subj:'',teacher:'',q:'',lock:false}; document.getElementById('pd_q').value=''; state.pd.page=0; pendFillFilters(); pendRender(); }
+/* ---- แก้ไขค้างไว้ (ยังไม่บันทึก) ---- */
+function pdEK(sid,stid,uid){ return sid+'|'+stid+'|'+uid; }
+function pdMK(sid,stid){ return sid+'|'+stid; }
+function pdUnit(uid){ return (state.pd.data.units||{})[uid]||{name:'',max:0}; }
+function pdScoreErr(v,max){   // คืนข้อความผิดพลาด หรือ '' ถ้าใช้ได้
+  if(v==='') return '';
+  if(!/^\d+(\.\d{1,2})?$/.test(v)) return 'ต้องเป็นตัวเลข';
+  const n=Number(v); if(max&&n>max+1e-9) return 'เกินคะแนนเต็ม '+max;
+  if(Math.abs(n*2-Math.round(n*2))>1e-9) return 'ทศนิยมต้องเป็น .5';
+  return '';
 }
-function pendRender(){
-  const rows=pendRows(), all=pendBase();
-  const cnt={blank:0,nounits:0,ungraded:0}; all.forEach(r=>cnt[pendReason(r)]++);
-  const blankTotal=rows.reduce((a,r)=>a+(r.blankCells||0),0);
+function pendEditCount(){
+  const E=state.pd.edits, M=state.pd.marks; let n=0;
+  Object.keys(E).forEach(k=>{ const [sid,stid]=k.split('|'); if(!M[pdMK(sid,stid)]) n++; });
+  Object.keys(M).forEach(k=>{ if(M[k]) n++; });
+  return n;
+}
+function pendBar(){
+  const n=pendEditCount();
+  document.getElementById('pd_editN').textContent=n;
+  document.getElementById('pd_savebar').classList.toggle('hidden',!n);
+  window.onbeforeunload=n?(e=>{e.preventDefault();e.returnValue='';}):null;
+}
+function pendInput(el){
+  const [sid,stid,uid]=el.dataset.k.split('|'); const v=el.value.trim();
+  const err=pdScoreErr(v,pdUnit(uid).max);
+  el.classList.toggle('blankwarn',!!err); el.title=err;
+  if(v==='') delete state.pd.edits[el.dataset.k]; else state.pd.edits[el.dataset.k]=v;
+  pendBar();
+}
+function pendMark(sel){
+  const k=sel.dataset.k; const [sid,stid]=k.split('|'); const v=sel.value;
+  if(v==='zero'){   // เติม 0 ทั้งวิชา (เฉพาะช่องที่ว่าง)
+    delete state.pd.marks[k];
+    pendItemCells(sid,stid).forEach(uid=>{ state.pd.edits[pdEK(sid,stid,uid)]='0'; });
+  }else if(v===''){ delete state.pd.marks[k]; }
+  else state.pd.marks[k]=v;
+  pendRender(true);
+}
+function pendItemCells(sid,stid){
+  const o=state.pd.data.students.find(x=>x.studentID===stid); if(!o) return [];
+  const it=o.items.find(x=>x.subjectID===sid); return it&&!it.locked?it.cells:[];
+}
+function pendZeroStudent(stid){
+  const o=state.pd.data.students.find(x=>x.studentID===stid); if(!o) return;
+  pdVisibleItems(o).forEach(it=>{ if(it.locked||state.pd.marks[pdMK(it.subjectID,stid)]) return;
+    it.cells.forEach(uid=>{ if(!state.pd.edits[pdEK(it.subjectID,stid,uid)]) state.pd.edits[pdEK(it.subjectID,stid,uid)]='0'; }); });
+  pendRender(true);
+}
+function pendZeroShown(){
+  const list=pdStudents(); let n=0;
+  list.forEach(o=>pdVisibleItems(o).forEach(it=>{ if(it.locked||state.pd.marks[pdMK(it.subjectID,o.studentID)]) return;
+    it.cells.forEach(uid=>{ const k=pdEK(it.subjectID,o.studentID,uid); if(!state.pd.edits[k]){ state.pd.edits[k]='0'; n++; } }); }));
+  toast('ใส่ 0 ในช่องว่างที่กรอง '+n+' ช่อง — ตรวจแล้วกด “บันทึกทั้งหมด”');
+  pendRender(true);
+}
+function pendClearEdits(){
+  if(pendEditCount() && !confirm('ล้างรายการที่แก้ไว้ทั้งหมด?')) return;
+  state.pd.edits={}; state.pd.marks={}; pendRender(true);
+}
+function pendPage(d){ state.pd.page=Math.max(0,state.pd.page+d); pendRender(true); window.scrollTo(0,0); }
+function pendRender(keepScroll){
+  const d=state.pd.data; if(!d) return;
+  const list=pdStudents(), P=state.pd;
+  const maxPage=Math.max(0,Math.ceil(list.length/PD_PAGE)-1); if(P.page>maxPage) P.page=maxPage;
+  let cells=0; list.forEach(o=>pdVisibleItems(o).forEach(it=>{ if(!it.locked) cells+=it.cells.length; }));
   const card=(n,l,cls)=>`<div class="rounded-2xl px-4 py-3 ${cls} min-w-[7rem] grow"><div class="text-2xl font-bold">${n}</div><div class="text-xs">${l}</div></div>`;
   document.getElementById('pd_totals').innerHTML=
-    card(rows.length+'<span class="text-sm font-normal text-slate-400"> / '+all.length+'</span>','ที่แสดง / ค้างทั้งหมด','bg-slate-50 text-slate-700')+
-    card(blankTotal,'ช่องคะแนนว่างรวม (ที่แสดง)','bg-amber-50 text-amber-700')+
-    card(cnt.blank,'มีช่องว่าง (วิชา×ห้อง)','bg-rose-50 text-rose-600')+
-    card(cnt.nounits,'ยังไม่ตั้งหน่วย','bg-slate-100 text-slate-600')+
-    card(cnt.ungraded,'ยังไม่ตัดเกรด','bg-sky-50 text-sky-700');
-  const col=p=>p>=90?'bg-emerald-500':p>=60?'bg-amber-400':'bg-rose-400';
-  document.getElementById('pd_area').innerHTML=
-   '<table class="w-full text-sm" style="min-width:720px"><thead><tr class="text-left text-slate-400 border-b"><th class="py-1 px-2 w-6"></th><th class="px-2">ห้อง</th><th class="px-2">รายวิชา</th><th class="px-2">ครูผู้สอน</th><th class="px-2">ความคืบหน้า</th><th class="px-2">สถานะ</th><th class="px-2"></th></tr></thead><tbody>'+
-   (rows.length?rows.map((r,i)=>{
-     const k=trkKey(r);
-     const miss=(r.missingUnits||[]).map(u=>`<span class="badge bg-rose-50 text-rose-600">${esc(u.name)} • ขาด ${u.missing} คน</span>`).join(' ');
-     const det=(miss||r.ungraded)?`<tr id="pdD${i}" class="hidden bg-slate-50/70"><td colspan="7" class="px-4 py-2 text-xs"><div class="flex flex-wrap gap-1.5">${miss||'<span class="text-sky-700">คะแนนครบทุกหน่วย — เหลือตัดเกรด '+r.ungraded+' คน</span>'}${r.exempt?` <span class="badge bg-amber-50 text-amber-700">ยกเว้น ${r.exempt} คน (ร/มส/มผ)</span>`:''}</div></td></tr>`:'';
-     return `<tr class="border-b ${(miss||r.ungraded)?'cursor-pointer hover:bg-sky-50/40':''}" ${(miss||r.ungraded)?`onclick="document.getElementById('pdD${i}').classList.toggle('hidden')"`:''}>
-       <td class="px-2" onclick="event.stopPropagation()"><input type="checkbox" data-k="${esc(k)}" ${state.pendSel.has(k)?'checked':''} onchange="pendToggle(this)"></td>
-       <td class="py-1.5 px-2"><span class="badge bg-sky-50 text-sky-700">${esc(r.room)}</span></td>
-       <td class="px-2 font-medium text-slate-700">${esc(r.code)} ${esc(r.name)}</td>
-       <td class="px-2 text-xs ${r.teacher?'':'text-rose-500'}">${esc(r.teacher||TRK_NOTEACHER)}</td>
-       <td class="px-2"><div class="flex items-center gap-2"><div class="grow h-2 bg-slate-100 rounded-full overflow-hidden" style="min-width:60px"><div class="${col(r.percent)} h-full" style="width:${r.percent}%"></div></div><span class="text-xs text-slate-500 w-9 text-right">${r.percent}%</span></div></td>
-       <td class="px-2">${pendBadge(r)}</td>
-       <td class="px-2" onclick="event.stopPropagation()"><button class="btn bg-sky-50 text-sky-700 px-2 py-1 text-xs" onclick="pendGo('${esc(r.subjectID)}','${esc(r.room)}')">ไปบันทึก</button></td></tr>${det}`;
-   }).join(''):'<tr><td colspan="7" class="py-6 text-center text-slate-400">ไม่พบรายการ 🎉</td></tr>')+'</tbody></table>';
-  pendSelUpdate();
+    card(list.length+'<span class="text-sm font-normal text-slate-400"> / '+d.students.length+'</span>','นักเรียนที่แสดง / ทั้งหมด','bg-slate-50 text-slate-700')+
+    card(cells,'ช่องคะแนนว่าง (ที่แสดง)','bg-amber-50 text-amber-700')+
+    card(d.totalCells,'ช่องว่างทั้งหมดในระบบ','bg-rose-50 text-rose-600');
+  const ug=document.getElementById('pd_ungraded');
+  if((d.ungraded||[]).length){
+    ug.classList.remove('hidden');
+    ug.innerHTML=`<label class="flex items-start gap-2"><input type="checkbox" id="pd_recalc" checked class="mt-0.5"><span>คะแนนครบแล้วแต่ยังไม่ตัดเกรด <b>${d.ungraded.length}</b> วิชา×ห้อง — คำนวณเกรดให้ด้วยตอนกดบันทึก<br><span class="text-slate-400">${esc(d.ungraded.slice(0,6).map(r=>(r.code||r.name)+' '+r.room).join(', '))}${d.ungraded.length>6?' …':''}</span></span></label>`;
+  }else ug.classList.add('hidden');
+  const slice=list.slice(P.page*PD_PAGE,(P.page+1)*PD_PAGE);
+  document.getElementById('pd_area').innerHTML=slice.length?slice.map(o=>{
+    const its=pdVisibleItems(o);
+    const nBlank=its.reduce((a,it)=>a+(it.locked?0:it.cells.length),0);
+    return `<div class="card p-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="font-semibold text-slate-700"><span class="badge bg-sky-50 text-sky-700">${esc(o.room)}</span> เลขที่ ${esc(o.number)} ${esc(o.name)}
+          <span class="text-xs font-normal text-slate-400">ติด ${its.length} วิชา • ว่าง ${nBlank} ช่อง</span></div>
+        <button class="btn bg-amber-50 text-amber-700 px-2 py-1 text-xs" onclick="pendZeroStudent('${esc(o.studentID)}')">เติม 0 ทั้งคน</button>
+      </div>
+      <div class="space-y-2">${its.map(it=>{
+        const mk=pdMK(it.subjectID,o.studentID), mv=state.pd.marks[mk]||'';
+        const dis=it.locked||mv;
+        return `<div class="rounded-xl border ${it.locked?'border-slate-200 bg-slate-50 opacity-70':'border-slate-100'} p-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="text-sm"><b>${esc(it.code)} ${esc(it.name)}</b> <span class="text-xs text-slate-400">${esc(it.teacher||TRK_NOTEACHER)}</span>${it.locked?' <span class="badge bg-emerald-600 text-white">🔒 ล็อกแล้ว</span>':''}</div>
+            ${it.locked?'':`<select class="inp text-xs py-1" data-k="${esc(mk)}" onchange="pendMark(this)">
+              <option value="" ${mv===''?'selected':''}>กรอกคะแนน</option><option value="zero">เติม 0 ทั้งวิชา</option>
+              <option value="ร" ${mv==='ร'?'selected':''}>ร (ยกเว้น)</option><option value="มส" ${mv==='มส'?'selected':''}>มส (ยกเว้น)</option></select>`}
+          </div>
+          <div class="flex flex-wrap gap-2 mt-1.5">${it.cells.map(uid=>{
+            const u=pdUnit(uid), k=pdEK(it.subjectID,o.studentID,uid), v=P.edits[k]||'';
+            const err=pdScoreErr(v,u.max);
+            return `<label class="text-[11px] text-slate-500 flex flex-col"><span class="truncate max-w-[9rem]" title="${esc(u.name)}">${esc(u.name||'หน่วย')} <span class="text-slate-400">/${u.max}</span></span>
+              <input type="text" inputmode="decimal" class="inp w-20 py-1 text-sm ${err?'blankwarn':''}" data-k="${esc(k)}" value="${esc(v)}" ${dis?'disabled':''} placeholder="${mv?mv:'ว่าง'}" oninput="pendInput(this)"></label>`;
+          }).join('')}</div></div>`;
+      }).join('')}</div></div>`;
+  }).join(''):'<div class="card p-8 text-center text-slate-400">ไม่พบนักเรียนที่มีปัญหา 🎉</div>';
+  document.getElementById('pd_pager').innerHTML=list.length>PD_PAGE?
+    `<button class="btn bg-slate-100 px-3 py-1.5" onclick="pendPage(-1)" ${P.page<=0?'disabled':''}>← ก่อนหน้า</button><span class="text-slate-500">หน้า ${P.page+1} / ${maxPage+1}</span><button class="btn bg-slate-100 px-3 py-1.5" onclick="pendPage(1)" ${P.page>=maxPage?'disabled':''}>ถัดไป →</button>`:'';
+  pendBar();
 }
-function pendGo(sid,room){   // ไปหน้าบันทึกคะแนนของวิชา×ห้องนี้
-  switchTab('scores');
-  const sel=document.getElementById('sc_subject'); if(!sel) return;
-  sel.value=sid+'|'+room;
-  if(sel.value===sid+'|'+room) onSelectScoreSubject();
-}
-async function pendZeroPreview(){
-  const targets=[...state.pendSel];
-  if(!targets.length){ toast('ยังไม่ได้เลือกรายการ','error'); return; }
-  showLoading(true);
-  let pv;
-  try{ pv=await GAS.call('getZeroFillPreview',{semester:state.semester,targets}); }catch(e){ showLoading(false); toast(e.message,'error'); return; }
-  showLoading(false);
-  if(!pv.totalCells){ toast('ไม่มีช่องว่างให้เติม'+(pv.skippedLocked?' (ข้ามวิชาที่ล็อก '+pv.skippedLocked+' รายการ)':''),'error'); return; }
-  const msg='เติม 0 ในช่องว่าง '+pv.totalCells+' ช่อง\nนักเรียน '+pv.totalStudents+' คน • '+pv.rows.length+' วิชา×ห้อง'+
-    (pv.skippedLocked?'\n(ข้ามวิชาที่ล็อก '+pv.skippedLocked+' รายการ)':'')+
-    '\n\n• ไม่ทับคะแนนเดิม • ข้ามนักเรียนที่มี ร/มส/มผ\n• ย้อนกลับได้จากปุ่ม “รอบที่เติมไว้”\n\nยืนยันเติม 0 ?';
-  if(!confirm(msg)) return;
+async function pendSave(){
+  const E=state.pd.edits, M=state.pd.marks, scores=[], marks=[]; let bad=0, zeros=0;
+  Object.keys(E).forEach(k=>{
+    const [sid,stid,uid]=k.split('|'); if(M[pdMK(sid,stid)]) return;
+    const err=pdScoreErr(E[k],pdUnit(uid).max); if(err||E[k]===''){ bad++; return; }
+    if(Number(E[k])===0) zeros++;
+    scores.push({subjectID:sid,studentID:stid,unitID:uid,score:Number(E[k])});
+  });
+  Object.keys(M).forEach(k=>{ if(!M[k]) return; const [sid,stid]=k.split('|'); marks.push({subjectID:sid,studentID:stid,mark:M[k]}); });
+  if(bad){ toast('มี '+bad+' ช่องที่คะแนนไม่ถูกต้อง (กรอบแดง) — แก้ก่อนบันทึก','error'); return; }
+  if(!scores.length&&!marks.length){ toast('ยังไม่มีรายการที่แก้','error'); return; }
+  const recalc=document.getElementById('pd_recalc');
+  const recompute=(recalc&&recalc.checked)?[...new Set((state.pd.data.ungraded||[]).map(r=>r.subjectID))]:[];
+  if(!confirm('บันทึกทั้งหมด?\n• คะแนน '+scores.length+' ช่อง (เป็น 0: '+zeros+')\n• ผลพิเศษ ร/มส '+marks.length+' รายการ'+(recompute.length?'\n• คำนวณเกรดวิชาที่คะแนนครบ '+recompute.length+' วิชา':'')+'\n\nไม่ทับคะแนนเดิม • ข้ามวิชาที่ล็อก • เฉพาะ 0 ย้อนกลับได้')) return;
   showLoading(true);
   try{
-    const r=await GAS.call('applyZeroFill',{semester:state.semester,targets});
+    const r=await GAS.call('savePendingFixes',{semester:state.semester,scores,marks,recompute});
     showLoading(false);
-    toast('เติม 0 แล้ว '+r.filled+' ช่อง • '+r.subjects+' วิชา'+(r.errors&&r.errors.length?' (คำนวณเกรดไม่ครบ '+r.errors.length+' วิชา)':''));
-    state.pendSel.clear(); await initPending();
+    toast('บันทึกแล้ว: คะแนน '+r.filled+' ช่อง • ผลพิเศษ '+r.marks+(r.conflicts?' • ข้ามที่มีคะแนนแล้ว '+r.conflicts:'')+(r.skippedLocked?' • ข้ามที่ล็อก '+r.skippedLocked:'')+(r.errors&&r.errors.length?' • คำนวณเกรดไม่ครบ '+r.errors.length+' วิชา':''));
+    state.pd.edits={}; state.pd.marks={};
+    await initPending();
   }catch(e){ showLoading(false); toast(e.message,'error'); }
 }
 async function pendBatches(){
@@ -6850,7 +6919,7 @@ async function pendBatches(){
   showLoading(false);
   box.classList.remove('hidden');
   box.innerHTML='<div class="rounded-xl border border-slate-200 p-3 text-xs">'+
-    (list.length?list.map(b=>`<div class="flex flex-wrap items-center justify-between gap-2 py-1 border-b last:border-0"><span>${esc(String(b.at).slice(0,16))} • ${esc(b.by||'')} • ${b.cells} ช่อง • ${b.subjects} วิชา (ภาค ${esc(b.semester)})</span><button class="btn bg-rose-50 text-rose-600 px-2 py-1" onclick="pendUndo('${esc(b.batchId)}')">↩️ ย้อนรอบนี้</button></div>`).join(''):'<span class="text-slate-400">ยังไม่มีรอบที่เติมไว้</span>')+'</div>';
+    (list.length?list.map(b=>`<div class="flex flex-wrap items-center justify-between gap-2 py-1 border-b last:border-0"><span>${esc(String(b.at).slice(0,16))} • ${esc(b.by||'')} • ${b.cells} ช่อง • ${b.subjects} วิชา (ภาค ${esc(b.semester)})</span><button class="btn bg-rose-50 text-rose-600 px-2 py-1" onclick="pendUndo('${esc(b.batchId)}')">↩️ ย้อนรอบนี้</button></div>`).join(''):'<span class="text-slate-400">ยังไม่มีรอบที่เติม 0 ไว้</span>')+'</div>';
 }
 async function pendUndo(id){
   if(!confirm('ย้อนรอบนี้? จะลบเฉพาะช่องที่ระบบเติม 0 และยังเป็น 0 อยู่ (ช่องที่ครูแก้แล้วไม่ถูกแตะ)')) return;
@@ -6860,7 +6929,7 @@ async function pendUndo(id){
     showLoading(false);
     toast('ย้อนแล้ว '+r.undone+' ช่อง'+(r.changed?' • ข้ามที่ครูแก้แล้ว '+r.changed:'')+(r.locked?' • ข้ามที่ล็อก '+r.locked:''));
     document.getElementById('pd_batches').classList.add('hidden');
-    await initPending();
+    state.pd.edits={}; state.pd.marks={}; await initPending();
   }catch(e){ showLoading(false); toast(e.message,'error'); }
 }
 
