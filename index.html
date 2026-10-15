@@ -16,7 +16,7 @@
      ============================================================ -->
 <script>
   // ข้อมูลผู้พัฒนา (หน้า 👨‍💻 ผู้พัฒนา) — ช่องที่เว้นว่าง '' จะถูกซ่อนอัตโนมัติ
-  window.DEV_INFO = { name:'ครูรุ่งนิรันดร์™', facebook:'', line:'', website:'/' };
+  window.DEV_INFO = { name:'ครูรุ่งนิรันดร์™', facebook:'', line:'', website:'' };
   window.WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby2iQpK1cmxzn_YOqFCkEapAOhq4_oO8pv2QYslQeqyj1rnW-3Fkhw38XQfjuJ_v0eVhQ/exec';
 </script>
 
@@ -126,6 +126,7 @@
   /* ---- ช่องกรอกคะแนน: พิมพ์ตัวเลขเอง (ไม่มีปุ่มเพิ่ม/ลด) ช่องที่ค่าไม่ถูกต้องเป็นสีแดง ---- */
   input.numcell{-moz-appearance:textfield;appearance:textfield;}
   input.numcell::-webkit-outer-spin-button,input.numcell::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .inp.blankwarn{border-color:#fda4af;background:#fff1f2;}
   .inp.bad{border-color:#e11d48 !important;background:#fff1f2 !important;color:#be123c;}
   /* ---- พาร์ท 3: หน้าตรวจผลผู้ปกครอง / แถบสถานะ ---- */
   .hl-pill{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:600;}
@@ -165,7 +166,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
 <div id="lookupScreen" class="fixed inset-0 z-[82] bg-gradient-to-br from-sky-50 via-white to-amber-50 hidden overflow-y-auto">
   <div class="max-w-3xl mx-auto p-4">
     <div class="noprint flex items-center justify-between mb-3">
-      <button onclick="closeLookup()" class="btn bg-white border border-slate-200 px-3 py-1.5 text-sm">← กลับ</button>
+      <button id="lk_backBtn" onclick="closeLookup()" class="btn bg-white border border-slate-200 px-3 py-1.5 text-sm hidden">← กลับ</button><span id="lk_backSp"></span>
       <span id="lk_school" class="text-xs text-slate-400 text-right"></span>
     </div>
     <div id="lk_formCard" class="card p-5 max-w-sm mx-auto">
@@ -984,13 +985,13 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
   <section id="tab-scores" class="tabpane hidden">
     <div class="card p-4 mb-4">
       <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
-        <div class="flex-1">
+        <div class="flex-1 min-w-0 sm:min-w-[260px]">
           <label class="text-xs text-slate-500">เลือกรายวิชา</label>
-          <select id="sc_subject" class="inp mt-1" onchange="onSelectScoreSubject()">
+          <select id="sc_subject" class="inp mt-1 w-full" onchange="onSelectScoreSubject()">
             <option value="">— เลือกรายวิชา —</option>
           </select>
         </div>
-        <div id="sc_timeCheck" class="hidden mb-2"></div>
+        <div id="sc_timeCheck" class="hidden mb-2 min-w-0 sm:flex-[2] break-words"></div>
         <button onclick="openBookModal()" class="btn bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 text-sm whitespace-nowrap">🖨️ เล่มรายงานครูประจำวิชา</button>
       </div>
       <div id="sc_docs" class="mt-3"></div>
@@ -1030,6 +1031,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
         </div>
         <div id="sc_importMsg" class="hidden mb-3 p-3 rounded-lg bg-sky-50 border border-sky-200 text-sky-800 text-xs"></div>
         <div id="scoreErrBox" class="hidden mb-3 p-3 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 text-xs"></div>
+        <div id="sc_blankBar" class="hidden mb-3 p-3 rounded-lg text-xs"></div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead id="scoreHead"></thead>
@@ -1324,7 +1326,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
       <div class="mt-4"><h4 class="text-sm font-semibold text-slate-600 mb-2 text-center">เปรียบเทียบเกรดเฉลี่ยรายห้อง</h4><div style="height:280px"><canvas id="gcRoom"></canvas></div></div>
       <p id="gc_empty" class="text-xs text-slate-400 text-center mt-2 hidden">ยังไม่มีข้อมูลเกรดในขอบเขตนี้</p>
     </div>
-    <div class="card p-4">
+    <div id="misLegacyCard" class="card p-4">
       <h3 class="font-bold text-sky-700 mb-1">📤 ส่งออกเกรดเข้า School MIS (แบบเดิม — แนะนำใช้เมนู 🧾 ส่งออก SchoolMIS ในหมวดรายงาน)</h3>
       <p class="text-xs text-slate-400 mb-3">ส่งออกเกรด (หลักสูตร 2551) เพื่อนำไปกรอกในระบบ School MIS สำหรับจัดทำเอกสารหลักฐานการศึกษา</p>
       <div class="flex flex-wrap gap-2 items-end">
@@ -1955,7 +1957,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-15i';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-15j';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -2924,7 +2926,23 @@ function validateScoreTable(){
   return errs.length;
 }
 function focusScoreErr(i){ const e=(window._scoreErrs||[])[i]; if(e&&e.el){ e.el.focus(); try{ e.el.scrollIntoView({block:'center'}); }catch(x){} } }
-function onScoreInput(el){ normNum(el); validateScoreTable(); calcRow(el); }
+// ช่องคะแนนว่างของนักเรียนที่ไม่มีผลพิเศษ ร/มส → แถบแดงเตือน (บันทึกได้เสมอ แต่สถานะวิชายังเป็น "ยังไม่ครบ")
+function updateBlankBar(){
+  const bar=document.getElementById('sc_blankBar'); if(!bar) return;
+  const trs=[...document.querySelectorAll('#scoreBody tr[data-sid]')];
+  if(!trs.length||!state.scoreSubject){ bar.classList.add('hidden'); return; }
+  let cells=0, people=0;
+  trs.forEach(tr=>{
+    const sp=tr.querySelector('select.spCell'); const exempt=!!(sp&&sp.value);
+    let n=0; tr.querySelectorAll('.scoreCell').forEach(c=>{ const blank=(c.value===''&&!exempt); c.classList.toggle('blankwarn',blank); if(blank) n++; });
+    cells+=n; if(n) people++;
+  });
+  bar.classList.remove('hidden','bg-rose-50','border','border-rose-300','text-rose-700','bg-emerald-50','border-emerald-300','text-emerald-700');
+  if(cells){ bar.classList.add('bg-rose-50','border','border-rose-300','text-rose-700');
+    bar.innerHTML='⚠️ <b>ยังไม่ครบ — ช่องคะแนนว่าง '+cells+' ช่อง ('+people+' คน)</b> กรอกคะแนนให้ครบ หรือเลือกผลพิเศษ <b>ร / มส</b> ให้นักเรียนที่ขาดเรียนนาน (กดบันทึกได้ แต่สถานะวิชานี้จะยังเป็น "ยังไม่ครบ")'; }
+  else { bar.classList.add('bg-emerald-50','border','border-emerald-300','text-emerald-700'); bar.innerHTML='✅ กรอกคะแนนครบทุกช่องแล้ว'; }
+}
+function onScoreInput(el){ normNum(el); validateScoreTable(); calcRow(el); updateBlankBar(); }
 function unitMaxErr(v){ if(v==='') return 'กรอกคะแนนเต็มของหน่วย'; const e=numErr(v,999); if(e) return e; return Number(v)<=0?'ต้องมากกว่า 0':''; }
 function onUnitMaxInput(el,id,i){
   const v=normNum(el); const e=unitMaxErr(v);
@@ -3507,6 +3525,7 @@ function renderScoreTable(){
       </select></td>
     </tr>`).join('') : `<tr><td colspan="${units.length+exCols.length+7}" class="text-center text-slate-400 py-6">${units.length?'ไม่มีนักเรียนในชั้นนี้':'กรุณาเพิ่มและบันทึกหน่วยก่อน'}</td></tr>`;
   document.querySelectorAll('#scoreBody tr[data-sid]').forEach(tr=>calcRowTr(tr));
+  updateBlankBar();
   const nBad=validateScoreTable();
   if(nBad) toast('พบคะแนนที่ไม่ถูกต้อง '+nBad+' จุด (สีแดง) — กรุณาแก้ก่อนบันทึก','error');
 }
@@ -3532,7 +3551,7 @@ function applySpecialView(tr){
   if(sp.value) gc.textContent=sp.value;
   sp.classList.toggle('bg-amber-100',!!sp.value);
 }
-function onSpecialChange(sel){ const tr=sel.closest('tr'); calcRowTr(tr); }
+function onSpecialChange(sel){ const tr=sel.closest('tr'); calcRowTr(tr); updateBlankBar(); }
 async function saveScoresFn(){
   if(blockedByLock(state.scoreRoom)) return;
   const sub=state.scoreSubject;
@@ -3558,6 +3577,7 @@ async function saveScoresFn(){
     state.scores=await GAS.call('getScores',{subjectID:sub.ID, semester:state.semester});
     state.grades=await GAS.call('getGrades',{semester:state.semester});
     document.querySelectorAll('#scoreBody select.spCell').forEach(sel=>{ sel.dataset.orig=sel.value; });
+    updateBlankBar(); state.trk=null; state.homeTodoAt=0;
     toast('บันทึกคะแนนและคำนวณเกรดแล้ว'+(marks.length?' (ผลพิเศษ '+marks.length+' คน)':''));
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
@@ -3961,6 +3981,7 @@ async function loadMyTodo(){
     if(t.uncheckedPeriods) items.push({icon:'📋', text:`คาบสอนที่ยังไม่เช็คชื่อ <b>${t.uncheckedPeriods}</b> คาบ (ภาคเรียนนี้)`, cls:'bg-amber-50 text-amber-800 border-amber-200', go:()=>{switchTab('attendance');setTimeout(()=>{switchAtt('period');setPdMode('subject');},50);}});
     if(t.uncheckedFlagDays) items.push({icon:'🚩', text:`วันที่ยังไม่เช็คชื่อหน้าเสาธง <b>${t.uncheckedFlagDays}</b> วัน`, cls:'bg-rose-50 text-rose-800 border-rose-200', go:()=>{switchTab('attendance');setTimeout(()=>switchAtt('flag'),50);}});
     if(t.ungradedSubjects&&t.ungradedSubjects.length) items.push({icon:'📝', text:`วิชาที่ยังไม่ตัดเกรด <b>${t.ungradedSubjects.length}</b> วิชา: `+t.ungradedSubjects.slice(0,4).map(x=>esc(x.name)+(x.room?' ('+esc(x.room)+')':'')).join(', ')+(t.ungradedSubjects.length>4?' …':''), cls:'bg-sky-50 text-sky-800 border-sky-200', go:()=>switchTab('scores')});
+    if(t.blankSubjects&&t.blankSubjects.length) items.push({icon:'🔴', text:`วิชาที่คะแนนยังไม่ครบ <b>${t.blankSubjects.length}</b> วิชา×ห้อง: `+t.blankSubjects.slice(0,4).map(x=>esc(x.name)+' '+esc(x.room)+' ('+x.blank+' ช่อง)').join(', ')+(t.blankSubjects.length>4?' …':''), cls:'bg-rose-50 text-rose-800 border-rose-200', go:()=>switchTab('scores')});
     if(!items.length){
       el.classList.remove('hidden');
       el.innerHTML='<div class="card p-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200">✅ ไม่มีงานค้างในภาคเรียนนี้ — เยี่ยมมาก!</div>';
@@ -4210,6 +4231,7 @@ function applyRole(){
     el.style.display = isAdmin ? '' : 'none';
   });
   document.getElementById('userChip').textContent='👤 '+(u.name||'')+' • '+roleLabel(role);
+  { const mc=document.getElementById('misLegacyCard'); if(mc) mc.style.display=(role==='principal')?'none':''; }   // ผอ. ไม่ต้องเห็นส่งออกเกรดเข้า School MIS
   document.getElementById('userBar').classList.remove('hidden');
   { const lb=isAdmin?'⚙️ ตั้งค่าระบบ':'ℹ️ ช่วยเหลือ';
     const cb=document.querySelector('.catbtn[data-cat="setup"]'); if(cb) cb.textContent=lb;
@@ -6703,10 +6725,10 @@ function trkFiltered(){
 }
 function trkBadge(r){
   if(r.lock) return `<span class="badge bg-emerald-600 text-white">🔒 ${r.lock==='room'?'ล็อกทั้งห้อง':'อนุมัติแล้ว'}</span>`;
-  if(r.ready) return '<span class="badge bg-emerald-100 text-emerald-700">✅ พร้อมอนุมัติ</span>';
+  if(r.ready) return '<span class="badge bg-emerald-100 text-emerald-700">✅ พร้อมอนุมัติ</span>'+(r.exempt?` <span class="badge bg-amber-50 text-amber-700" title="นักเรียนที่ตั้งผลพิเศษ ร/มส/มผ ไม่ต้องมีคะแนนครบ">ยกเว้น ${r.exempt} คน (ร/มส)</span>`:'');
   if(!r.units) return '<span class="badge bg-rose-50 text-rose-500">ยังไม่ตั้งหน่วย</span>';
   if(r.status==='complete') return '<span class="badge bg-sky-100 text-sky-700">คะแนนครบ • ยังไม่ตัดเกรดครบ</span>';
-  if(r.status==='partial') return '<span class="badge bg-amber-100 text-amber-700">บันทึกบางส่วน</span>';
+  if(r.status==='partial') return '<span class="badge bg-amber-100 text-amber-700">ยังไม่ครบ'+(r.blankCells?' '+r.blankCells+' ช่อง':'')+'</span>'+(r.exempt?` <span class="badge bg-amber-50 text-amber-700">ยกเว้น ${r.exempt} คน</span>`:'');
   return '<span class="badge bg-rose-50 text-rose-500">ยังไม่บันทึก</span>';
 }
 function renderOvScores(){
@@ -8595,6 +8617,9 @@ function fillLookupDateSelects(){
 }
 async function openLookup(){
   fillLookupDateSelects();
+  // ปุ่ม "กลับ" แสดงเฉพาะโหมดทดลอง/ผู้ใช้ที่ล็อกอินอยู่ — นักเรียนที่เข้าหน้าตรวจผลจะไม่มีทางกลับไปหน้าล็อกอินครู (กันสุ่มเดา PIN)
+  const canBack=!!(DEMO.on||state.currentUser); const bb=document.getElementById('lk_backBtn'); if(bb) bb.classList.toggle('hidden',!canBack);
+  if(!canBack){ try{ if(history.replaceState && !/[?&]check\b/.test(location.search)) history.replaceState(null,'',location.pathname+'?check'); }catch(e){} }   // รีเฟรชแล้วยังอยู่หน้าตรวจผล
   const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
   document.getElementById('lookupScreen').classList.remove('hidden');
   resetLookup();
@@ -8607,6 +8632,7 @@ async function openLookup(){
   }catch(e){ if(e.code!=='EXPIRED') toast(e.message,'error'); }
 }
 function closeLookup(){
+  if(!(DEMO.on||state.currentUser)) return;   // นักเรียน/ผู้ปกครอง: ไม่มีทางออกไปหน้าล็อกอินครู
   document.getElementById('lookupScreen').classList.add('hidden');
   if(history.replaceState && /[?&]check\b/.test(location.search)) history.replaceState(null,'',location.pathname);
   if(state.currentUser) return;
@@ -9252,13 +9278,13 @@ const DEMO = {
       T().Grades=T().Grades.filter(g=>!(g.studentID===st.ID&&g.subjectID===subID&&g.mode==='A')); if(pc==null) return; T().Grades=T().Grades.filter(g=>!(g.studentID===st.ID&&g.subjectID===subID));
       const m=gradeOf(pc); T().Grades.push({ID:gid('GR'),studentID:st.ID,subjectID:subID,mode:'A',percent:pc,level68:'',grade51:m.grade51,letter51:m.letter51,note:'',semester:sem||'1'}); }); }
   function tracker(){ const rows=[]; const rooms=DEMO.ROOMS;
-    T().Subjects.slice().sort((a,b)=>a.classLevel.localeCompare(b.classLevel)||a.name.localeCompare(b.name)).forEach(su=>{ const rm=roomOfSub(su), ids=stuInRoom(rm).map(s=>s.ID), exp=ids.length;
+    T().Subjects.slice().sort((a,b)=>a.classLevel.localeCompare(b.classLevel)||a.name.localeCompare(b.name)).forEach(su=>{ const rm=roomOfSub(su), all=stuInRoom(rm).map(s=>s.ID), exm=T().Grades.filter(g=>g.subjectID===su.ID&&['ร','มส','มผ'].indexOf(String(g.grade51))>=0).map(g=>g.studentID), ids=all.filter(id=>exm.indexOf(id)<0), exp=ids.length, exN=all.length-exp;
       const us=T().LearningUnits.filter(u=>u.subjectID===su.ID); let cells=0, miss=[];
       us.forEach(u=>{ const have=ids.filter(id=>T().Scores.some(x=>x.studentID===id&&x.unitID===u.ID&&x.score!==''&&x.score!=null)).length; cells+=have; if(have<exp) miss.push({name:u.unitName,missing:exp-have}); });
-      const g=ids.filter(id=>T().Grades.some(x=>x.studentID===id&&x.subjectID===su.ID)).length, total=us.length*exp, complete=us.length>0&&exp>0&&!miss.length;
+      const g=ids.filter(id=>T().Grades.some(x=>x.studentID===id&&x.subjectID===su.ID)).length, total=us.length*exp, complete=us.length>0&&(exp>0||exN>0)&&!miss.length;
       const ta=T().TeacherAssign.find(a=>a.subjectID===su.ID&&a.room===rm);
       rows.push({subjectID:su.ID,classLevel:su.classLevel,room:rm,code:su.code,name:su.name,teacher:ta?ta.teacher:'',expected:exp,units:us.length,cells:cells,total:total,percent:total?Math.round(cells/total*100):0,
-        graded:g,status:complete?'complete':(cells>0?'partial':'none'),missingUnits:miss,ungraded:Math.max(0,exp-g),ready:complete&&g>=exp,lock:roomLocked(rm)?'room':(lockedSub(su.ID,rm)?'subject':'')}); });
+        graded:g,exempt:exN,blankCells:Math.max(0,total-cells),status:complete?'complete':(cells>0?'partial':'none'),missingUnits:miss,ungraded:Math.max(0,exp-g),ready:complete&&g>=exp,lock:roomLocked(rm)?'room':(lockedSub(su.ID,rm)?'subject':'')}); });
     return {semester:'1',rows:rows}; }
   function roomsView(){ const tr=tracker().rows; return DEMO.ROOMS.map(rm=>{ const rs=tr.filter(r=>r.room===rm), total=rs.length, done=rs.filter(r=>r.lock).length, ready=total>0&&done===total;
       const ap=T().RoomApprovals.find(a=>a.room===rm&&a.status==='approved');
