@@ -170,7 +170,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
       <span id="lk_school" class="text-xs text-slate-400 text-right"></span>
     </div>
     <div id="lk_formCard" class="card p-5 max-w-sm mx-auto">
-      <div class="text-center"><div id="lk_logo" class="flex justify-center mb-1"><span class="text-4xl">👨‍👩‍👧</span></div>
+      <div class="text-center"><div id="lk_logo" class="flex justify-center mb-1 min-h-[4rem]"></div>
         <h2 class="text-lg font-bold text-sky-700">ตรวจผลการเรียนสำหรับผู้ปกครอง</h2>
         <p class="text-xs text-slate-400 mb-3">ระดับมัธยมศึกษาตอนต้น • หลักสูตรแกนกลางฯ 2551</p></div>
       <div class="space-y-2 text-left">
@@ -8615,6 +8615,12 @@ function fillLookupDateSelects(){
   const be=new Date().getFullYear()+543;
   y.innerHTML='<option value="">ปี พ.ศ.</option>'+Array.from({length:18},(_,i)=>`<option>${be-8-i}</option>`).join('');
 }
+function lkShowSchool(info){
+  info=info||{};
+  document.getElementById('lk_school').textContent=[info.schoolName, info.academicYear?'ปีการศึกษา '+info.academicYear:''].filter(Boolean).join(' • ');
+  const box=document.getElementById('lk_logo'); if(!box) return;
+  if(info.logoURL){ box.innerHTML=''; const im=document.createElement('img'); im.alt='ตราโรงเรียน'; im.className='w-16 h-16 object-contain'; im.onerror=()=>{ im.remove(); }; im.src=info.logoURL; box.appendChild(im); }
+}
 async function openLookup(){
   fillLookupDateSelects();
   // ปุ่ม "กลับ" แสดงเฉพาะโหมดทดลอง/ผู้ใช้ที่ล็อกอินอยู่ — นักเรียนที่เข้าหน้าตรวจผลจะไม่มีทางกลับไปหน้าล็อกอินครู (กันสุ่มเดา PIN)
@@ -8623,10 +8629,12 @@ async function openLookup(){
   const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
   document.getElementById('lookupScreen').classList.remove('hidden');
   resetLookup();
+  // ตราโรงเรียน: แสดงทันทีจากข้อมูลที่เคยโหลดไว้ (ไม่ต้องรอเซิร์ฟเวอร์) แล้วค่อยอัปเดตเมื่อโหลดสำเร็จ
+  if(!DEMO.on){ try{ const c=JSON.parse(localStorage.getItem('nsr_m13_pub')||'null'); if(c) lkShowSchool(c); }catch(e){} }
   try{
     const info=state.publicInfo||await GAS.call('getPublicInfo'); state.publicInfo=info;
-    document.getElementById('lk_school').textContent=[info.schoolName, info.academicYear?'ปีการศึกษา '+info.academicYear:''].filter(Boolean).join(' • ');
-    if(info.logoURL) document.getElementById('lk_logo').innerHTML=`<img src="${esc(info.logoURL)}" alt="" class="w-16 h-16 object-contain">`;
+    lkShowSchool(info);
+    if(!DEMO.on){ try{ localStorage.setItem('nsr_m13_pub',JSON.stringify({schoolName:info.schoolName||'',academicYear:info.academicYear||'',logoURL:info.logoURL||''})); }catch(e){} }
     const il=document.getElementById('lk_issueLink'); if(il) il.classList.toggle('hidden', info.issueEnabled===false);
     if(!info.lookupEnabled) toast('ระบบตรวจผลการเรียนยังไม่เปิดให้บริการ','error');
   }catch(e){ if(e.code!=='EXPIRED') toast(e.message,'error'); }
@@ -9197,6 +9205,8 @@ const DEMO = {
   const GIRLS=['สดใส','นภา','ชลธิชา','พิมพ์ใจ','อารีย์','ศิริ','รักเรียน','มินตรา','วิมลรัตน์','ใสสะอาด'];
   const SUR=['สมมติ','ตัวอย่าง','ทดลอง','จำลอง','เรียนดี'];
   DEMO.MAPPING=MAPPING; DEMO.ROOMS=ROOMS;
+  // ตราสมมติของโรงเรียนตัวอย่าง (ออกแบบขึ้นเอง ไม่ใช่ตราโรงเรียนจริง)
+  DEMO.EMBLEM='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 4 L90 18 V50 C90 74 72 90 50 97 C28 90 10 74 10 50 V18 Z" fill="#1c3d5a"/><path d="M50 12 L82 23 V50 C82 69 67 82 50 88 C33 82 18 69 18 50 V23 Z" fill="none" stroke="#b08d3e" stroke-width="3"/><path d="M28 44 Q39 38 50 44 Q61 38 72 44 V66 Q61 60 50 66 Q39 60 28 66 Z" fill="#f7f6f2"/><path d="M50 44 V66" stroke="#1c3d5a" stroke-width="2"/><path d="M50 22 l4 9 9.5 1-7 6.5 2 9.5-8.5-5-8.5 5 2-9.5-7-6.5 9.5-1z" fill="#b08d3e"/></svg>');
 
   DEMO.build=function(){
     const R=rng(20261015), today=new Date(), todayISO=isoOf(today);
@@ -9204,7 +9214,7 @@ const DEMO = {
     T.Settings={ schoolName:'โรงเรียนตัวอย่างวิทยา (ข้อมูลสมมติ)', slogan:'ระบบรายงานผลการเรียน หลักสูตรแกนกลางฯ พุทธศักราช 2551', academicYear:'2569', area:'สำนักงานเขตพื้นที่ตัวอย่าง',
       directorName:'นายใจดี ผู้อำนวยการสมมติ', deputyName:'นายวิชัย วิชาการสมมติ', academicHead:'นายวิชัย วิชาการสมมติ', address:'', remark:'', hoursPerYear:'1200', currentSemester:'1',
       sem1Start:isoOf(new Date(today.getTime()-120*864e5)), sem1End:isoOf(new Date(today.getTime()+30*864e5)), sem2Start:'', sem2End:'',
-      lookupEnabled:'1', issueEnabled:'0', issueEmail:'', principalApproval:'1', demoEnabled:'1', logoURL:'', directorSignURL:'', deputySignURL:'', reportDate:'' };
+      lookupEnabled:'1', issueEnabled:'0', issueEmail:'', principalApproval:'1', demoEnabled:'1', logoURL:DEMO.EMBLEM, directorSignURL:'', deputySignURL:'', reportDate:'' };
     T.GradeMapping=clone(MAPPING);
     // ครู
     T.Teachers=TEACHERS.map((n,i)=>({ID:'DT'+(i+10),name:n,role:'teacher',homeroomClass:i<3?ROOMS[i]:''}));
@@ -9300,7 +9310,7 @@ const DEMO = {
 
   const R={
     ping:()=>({pong:true,demo:true}),
-    getPublicInfo:()=>({schoolName:T().Settings.schoolName,area:T().Settings.area,academicYear:T().Settings.academicYear,logoURL:'',slogan:T().Settings.slogan,currentSemester:'1',lookupEnabled:true,issueEnabled:false,principalApproval:true,demoEnabled:true}),
+    getPublicInfo:()=>({schoolName:T().Settings.schoolName,area:T().Settings.area,academicYear:T().Settings.academicYear,logoURL:DEMO.EMBLEM,slogan:T().Settings.slogan,currentSemester:'1',lookupEnabled:true,issueEnabled:false,principalApproval:true,demoEnabled:true}),
     getLoginNames:()=>Object.keys(DEMO.PERSONAS).map(k=>DEMO.PERSONAS[k].name),
     getBootstrap:()=>({settings:clone(T().Settings),mapping:clone(MAPPING),students:clone(T().Students.filter(s=>s.status!=='moved')),subjects:clone(T().Subjects),calendar:clone(T().Calendar),
       locks:clone(T().Locks),subjectLocks:clone(T().SubjectLocks),roomApprovals:T().RoomApprovals.filter(a=>a.status==='approved').map(a=>a.room),
