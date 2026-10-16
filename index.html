@@ -182,7 +182,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
           </div></div>
       </div>
       <button onclick="doLookup()" class="btn bg-sky-500 hover:bg-sky-600 text-white w-full py-2.5 mt-4 text-sm">🔍 ตรวจผลการเรียน</button>
-      <p class="text-[11px] text-slate-400 mt-3 text-center">แสดงเฉพาะผลที่โรงเรียนอนุมัติแล้ว • หากกรอกผิดหลายครั้งระบบจะล็อกชั่วคราว</p>
+      <p class="text-[11px] text-slate-400 mt-3 text-center">แสดงเฉพาะผลที่โรงเรียนอนุมัติแล้ว</p>
       <div class="text-center mt-2"><button id="lk_issueLink" onclick="openIssue()" class="text-xs text-sky-700 underline">เข้าไม่ได้? แจ้งปัญหาข้อมูลนักเรียน</button></div>
     </div>
     <div id="lk_resultWrap" class="hidden">
@@ -902,7 +902,8 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
         <div><label class="text-xs text-slate-500">ชื่อเล่น</label><input id="prf_nickname" class="inp mt-1"></div>
         <div><label class="text-xs text-slate-500">เลขบัตรประชาชน</label><input id="prf_citizenId" class="inp mt-1" maxlength="17"></div>
-        <div><label class="text-xs text-slate-500">วันเกิด</label><input type="date" id="prf_birthDate" class="inp mt-1"></div>
+        <div><label class="text-xs text-slate-500">วันเกิด (พ.ศ.)</label><input type="hidden" id="prf_birthDate">
+          <div class="grid grid-cols-3 gap-1 mt-1"><select id="prf_bd_d" class="inp" onchange="pfBirthSync()"></select><select id="prf_bd_m" class="inp" onchange="pfBirthSync()"></select><select id="prf_bd_y" class="inp" onchange="pfBirthSync()"></select></div></div>
         <div><label class="text-xs text-slate-500">ศาสนา</label><input id="prf_religion" class="inp mt-1"></div>
         <div><label class="text-xs text-slate-500">สัญชาติ</label><input id="prf_nationality" class="inp mt-1"></div>
         <div><label class="text-xs text-slate-500">เชื้อชาติ</label><input id="prf_ethnicity" class="inp mt-1"></div>
@@ -1994,7 +1995,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-16c';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-16e';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -7312,15 +7313,53 @@ function openProfile(i){
     el.value=r[k]||'';
     el.disabled=!canEdit;
   });
+  pfBirthFill(r.birthDate||'', canEdit);
   document.getElementById('prf_saveBtn').classList.toggle('hidden', !canEdit);
   document.getElementById('prf_photoFile').value='';
   { const h=document.getElementById('prf_hist'); h.classList.add('hidden'); h.innerHTML=''; }
   document.querySelector('#prfModal button[title="เปลี่ยนรูป"]').classList.toggle('hidden', !canEdit);
   document.getElementById('prfModal').classList.remove('hidden');
 }
+// วันเกิดในหน้าประวัตินักเรียน: เลือก วัน/เดือน/ปี พ.ศ. → เก็บในชีตเป็น ค.ศ. yyyy-mm-dd (รูปแบบเดิม ใช้จับคู่ตรวจผล/DMC/พิมพ์เอกสารต่อได้)
+function pfBirthInit(){
+  const d=document.getElementById('prf_bd_d'), m=document.getElementById('prf_bd_m'), y=document.getElementById('prf_bd_y');
+  if(!d||d.options.length) return;
+  d.innerHTML='<option value="">วัน</option>'+Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+  m.innerHTML='<option value="">เดือน</option>'+THAI_MONTHS.slice(1).map((n,i)=>`<option value="${i+1}">${n}</option>`).join('');
+  const be=new Date().getFullYear()+543;
+  y.innerHTML='<option value="">ปี พ.ศ.</option>'+Array.from({length:22},(_,i)=>`<option value="${be-8-i}">${be-8-i}</option>`).join('');
+}
+function pfBirthParse(v){   // รับ yyyy-mm-dd (ค.ศ.) / dd/mm/yyyy (พ.ศ. หรือ ค.ศ.) → {d,m,beY} หรือ null
+  const t=String(v||'').trim(); let m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/), d,mo,y;
+  if(m){ y=+m[1]; mo=+m[2]; d=+m[3]; }
+  else{ m=t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/); if(!m) return null; d=+m[1]; mo=+m[2]; y=+m[3]; }
+  if(!(d>=1&&d<=31&&mo>=1&&mo<=12&&y>1800)) return null;
+  return {d,m:mo,y:(y>2400?y:y+543)};
+}
+function pfBirthFill(v, canEdit){
+  pfBirthInit();
+  const d=document.getElementById('prf_bd_d'), m=document.getElementById('prf_bd_m'), y=document.getElementById('prf_bd_y');
+  const b=pfBirthParse(v);
+  if(b){
+    if(![].some.call(y.options,o=>o.value===String(b.y))){ const o=document.createElement('option'); o.value=String(b.y); o.text=String(b.y); y.add(o); }
+    d.value=String(b.d); m.value=String(b.m); y.value=String(b.y);
+  }else{ d.value=''; m.value=''; y.value=''; }
+  [d,m,y].forEach(el=>{ el.disabled=!canEdit; });
+  document.getElementById('prf_birthDate').value = b ? (b.y-543)+'-'+String(b.m).padStart(2,'0')+'-'+String(b.d).padStart(2,'0') : String(v||'').trim();
+}
+function pfBirthSync(){   // คืนข้อความผิดพลาด หรือ '' ถ้าใช้ได้ (และเขียนค่า ค.ศ. ลง hidden)
+  const d=document.getElementById('prf_bd_d').value, m=document.getElementById('prf_bd_m').value, y=document.getElementById('prf_bd_y').value;
+  const h=document.getElementById('prf_birthDate');
+  if(!d&&!m&&!y){ h.value=''; return ''; }
+  if(!d||!m||!y) return 'วันเกิด: เลือก วัน เดือน ปี พ.ศ. ให้ครบ (หรือปล่อยว่างทั้งหมด)';
+  const yc=Number(y)-543, dt=new Date(Date.UTC(yc,Number(m)-1,Number(d)));
+  if(dt.getUTCFullYear()!==yc||dt.getUTCMonth()!==Number(m)-1||dt.getUTCDate()!==Number(d)) return 'วันเกิด: ไม่มีวันที่ '+d+' '+THAI_MONTHS[Number(m)]+' '+y;
+  h.value=yc+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'); return '';
+}
 async function saveProfile(){
   if(!state._prfSid) return;
   const p={studentID:state._prfSid};
+  const berr=pfBirthSync(); if(berr){ toast(berr,'error'); return; }
   PROFILE_FIELDS_FE.forEach(k=>{ const el=document.getElementById('prf_'+k); if(el) p[k]=el.value.trim(); });
   try{ showLoading(true);
     await GAS.call('saveStudentProfile',p);
