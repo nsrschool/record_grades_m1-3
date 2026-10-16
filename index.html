@@ -138,7 +138,6 @@
     body.printing-lookup #lookupScreen .noprint{display:none !important;}
     body.printing-lookup #lk_result{zoom:1 !important;}
   }
-body.demo-on [onclick="openChangePw()"]{display:none!important}
 </style>
 </head>
 
@@ -247,7 +246,6 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
     </div>
     <button onclick="doLogin()" class="btn bg-sky-500 hover:bg-sky-600 text-white w-full py-2.5 mt-4 text-sm">เข้าสู่ระบบ</button>
     <button onclick="openLookup()" class="btn bg-white border border-sky-300 text-sky-700 hover:bg-sky-50 w-full py-2.5 mt-2 text-sm">👨‍👩‍👧 ผู้ปกครอง: ตรวจผลการเรียนของนักเรียน</button>
-    <button id="demoLoginBtn" onclick="DEMO.start('teacher')" class="btn bg-amber-50 border border-amber-400 text-amber-800 hover:bg-amber-100 w-full py-2.5 mt-2 text-sm">👀 ทดลองใช้ระบบ (ไม่ต้องล็อกอิน)</button>
     <p class="text-[11px] text-slate-400 mt-3">แอดมินเริ่มต้น: ชื่อ <b>แอดมิน</b> • PIN <b>1234</b> (เปลี่ยนได้ในเมนูจัดการครู)</p>
   </div>
 </div>
@@ -1468,10 +1466,10 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
         </div>
       </div>
       <div class="card p-4 mt-4">
-        <h2 class="font-bold text-sky-700 mb-1">🔐 การอนุมัติ & โหมดทดลอง</h2>
+        <h2 class="font-bold text-sky-700 mb-1">🔐 การอนุมัติ & เวลาเรียน</h2>
         <p class="text-[11px] text-slate-400 mb-3">ตัวเลือกด้านล่างบันทึกทันทีเมื่อกดติ๊ก</p>
         <label class="flex items-start gap-2 text-sm"><input type="checkbox" id="set_principalApproval" class="mt-1" onchange="toggleSetting('principalApproval',this.checked)"> <span>ต้องให้ ผอ. อนุมัติก่อนผู้ปกครองเห็นผล <span class="block text-[11px] text-slate-400">เปิด = ผู้ปกครองเห็นผลเฉพาะห้องที่ ผอ. อนุมัติรายห้องแล้ว • ปิดสำหรับโรงเรียนที่ไม่ใช้บทบาทผู้อำนวยการ (ใช้การล็อกของรองผอ./วิชาการตามเดิม)</span></span></label>
-        <label class="flex items-start gap-2 text-sm mt-3"><input type="checkbox" id="set_demoEnabled" class="mt-1" onchange="toggleSetting('demoEnabled',this.checked)"> <span>แสดงปุ่ม “👀 ทดลองใช้ระบบ” ที่หน้าล็อกอิน <span class="block text-[11px] text-slate-400">โหมดทดลองใช้ข้อมูลสมมติที่สร้างในหน้าจอเท่านั้น ไม่แตะข้อมูลโรงเรียนจริง</span></span></label>
+        <label class="flex items-start gap-2 text-sm mt-3"><input type="checkbox" id="set_attAssumePresent" class="mt-1" onchange="toggleSetting('attAssumePresent',this.checked)"> <span>นับวันที่ครูไม่ได้เช็กชื่อเป็น “มาเรียน”<br><span class="text-[11px] text-slate-400">เปิด = วันเปิดเรียนเท่ากันทุกห้อง (ตามปฏิทินวิชาการ) และห้องที่ไม่ได้เช็กวันนั้นนับว่ามาทั้งหมด (ใช้พิมพ์สมุดพก/ตรวจผล) • ปิด = นับตามบันทึกจริง — ก่อนพิมพ์ปลายเทอมให้ปิดแล้วตรวจว่าครูเช็กครบ</span></span></label>
       </div>
     </div>
 
@@ -1995,11 +1993,10 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-16e';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-16f';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
-    if (DEMO.on) return DEMO.call(action, payload);   // โหมดทดลองใช้: ข้อมูลสมมติในหน้าเว็บ ไม่ส่งคำขอใดไปเซิร์ฟเวอร์
     if (GAS.URL.indexOf('http') !== 0) {
       throw new Error('ยังไม่ได้ตั้งค่า Web App URL ในไฟล์ index.html (ตัวแปร WEB_APP_URL)');
     }
@@ -2330,7 +2327,6 @@ async function bootstrap(){
     sel.innerHTML='<option value="">— กลุ่มสาระ —</option>'+LEARNING_AREAS.map(a=>`<option>${a}</option>`).join('');
   });
   const u=state.currentUser||{};
-  if(DEMO.on){ await applyBootstrap(await DEMO.call('getBootstrap',{})); setStatus(true); return; }   // โหมดทดลอง: ไม่อ่าน/เขียนแคชในเครื่อง
   const fetchFresh=async ()=>{
     const data=await GAS.call('getBootstrap',{teacher:u.name||'', role:u.role||'', noCache:true});   // ซิงก์เบื้องหลังทะลุแคชเสมอ
     await applyBootstrap(data);
@@ -2397,7 +2393,7 @@ function applySettingsToUI(){
   document.getElementById('set_reportDate').value=formatReportDate(s.reportDate);
   document.getElementById('set_remark').value=normalizeRemark(s.remark);
   const pa=document.getElementById('set_principalApproval'); if(pa) pa.checked=String(s.principalApproval)==='1';
-  const dm=document.getElementById('set_demoEnabled'); if(dm) dm.checked=String(s.demoEnabled)!=='0';
+  const aa=document.getElementById('set_attAssumePresent'); if(aa) aa.checked=String(s.attAssumePresent)!=='0';
 }
 async function toggleSetting(key,on){
   try{ showLoading(true); const o={}; o[key]=on?'1':'0'; state.settings=await GAS.call('saveSettings',o); toast('บันทึกแล้ว','success'); }
@@ -4197,7 +4193,7 @@ async function showLoginScreen(){
     const sel=document.getElementById('loginName');
     sel.innerHTML='<option value="">— เลือกชื่อ —</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
   }catch(e){ setStatus(false); toast(e.message,'error'); }
-  try{ const info=await GAS.call('getPublicInfo'); state.publicInfo=info; const db=document.getElementById('demoLoginBtn'); if(db) db.classList.toggle('hidden', info.demoEnabled===false); }catch(e){}   // แอดมินปิดปุ่มทดลองได้ในตั้งค่าระบบ
+  try{ const info=await GAS.call('getPublicInfo'); state.publicInfo=info; }catch(e){}
 }
 
 async function doLogin(){
@@ -4217,7 +4213,6 @@ async function doLogin(){
 }
 
 function logout(){
-  if(DEMO.on){ DEMO.stop(); return; }   // โหมดทดลองใช้: ออกจากโหมด (ล้างข้อมูลตัวอย่าง)
   try{ GAS.call('logout').catch(()=>{}); }catch(e){}   // ยกเลิก token ฝั่งเซิร์ฟเวอร์ (ไม่รอผล)
   try{ localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
   state.currentUser=null; state.mySchedule=[]; state.myTeach=[]; state.pr=null;
@@ -8938,23 +8933,23 @@ function lkShowSchool(info){
 async function openLookup(){
   fillLookupDateSelects();
   // ปุ่ม "กลับ" แสดงเฉพาะโหมดทดลอง/ผู้ใช้ที่ล็อกอินอยู่ — นักเรียนที่เข้าหน้าตรวจผลจะไม่มีทางกลับไปหน้าล็อกอินครู (กันสุ่มเดา PIN)
-  const canBack=!!(DEMO.on||state.currentUser); const bb=document.getElementById('lk_backBtn'); if(bb) bb.classList.toggle('hidden',!canBack);
+  const canBack=!!state.currentUser; const bb=document.getElementById('lk_backBtn'); if(bb) bb.classList.toggle('hidden',!canBack);
   if(!canBack){ try{ if(history.replaceState && !/[?&]check\b/.test(location.search)) history.replaceState(null,'',location.pathname+'?check'); }catch(e){} }   // รีเฟรชแล้วยังอยู่หน้าตรวจผล
   const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
   document.getElementById('lookupScreen').classList.remove('hidden');
   resetLookup();
   // ตราโรงเรียน: แสดงทันทีจากข้อมูลที่เคยโหลดไว้ (ไม่ต้องรอเซิร์ฟเวอร์) แล้วค่อยอัปเดตเมื่อโหลดสำเร็จ
-  if(!DEMO.on){ try{ const c=JSON.parse(localStorage.getItem('nsr_m13_pub')||'null'); if(c) lkShowSchool(c); }catch(e){} }
+  try{ const c=JSON.parse(localStorage.getItem('nsr_m13_pub')||'null'); if(c) lkShowSchool(c); }catch(e){}
   try{
     const info=state.publicInfo||await GAS.call('getPublicInfo'); state.publicInfo=info;
     lkShowSchool(info);
-    if(!DEMO.on){ try{ localStorage.setItem('nsr_m13_pub',JSON.stringify({schoolName:info.schoolName||'',academicYear:info.academicYear||'',logoURL:info.logoURL||''})); }catch(e){} }
+    try{ localStorage.setItem('nsr_m13_pub',JSON.stringify({schoolName:info.schoolName||'',academicYear:info.academicYear||'',logoURL:info.logoURL||''})); }catch(e){}
     const il=document.getElementById('lk_issueLink'); if(il) il.classList.toggle('hidden', info.issueEnabled===false);
     if(!info.lookupEnabled) toast('ระบบตรวจผลการเรียนยังไม่เปิดให้บริการ','error');
   }catch(e){ if(e.code!=='EXPIRED') toast(e.message,'error'); }
 }
 function closeLookup(){
-  if(!(DEMO.on||state.currentUser)) return;   // นักเรียน/ผู้ปกครอง: ไม่มีทางออกไปหน้าล็อกอินครู
+  if(!state.currentUser) return;   // นักเรียน/ผู้ปกครอง: ไม่มีทางออกไปหน้าล็อกอินครู
   document.getElementById('lookupScreen').classList.add('hidden');
   if(history.replaceState && /[?&]check\b/.test(location.search)) history.replaceState(null,'',location.pathname);
   if(state.currentUser) return;
@@ -9481,342 +9476,7 @@ async function recoverApply(){
     try{ localStorage.removeItem(BOOT_CACHE_KEY); }catch(e){}
   }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
 }
-/*DEMO_BEGIN*/
-/* ====================== โหมดทดลองใช้ (DEMO) ======================
- * ข้อมูลสมมติสร้างในหน้าเว็บนี้เท่านั้น — ไม่เรียก GAS (แม้แต่ ping), ไม่เขียน localStorage, ปิดหน้า/กดออกแล้วหายหมด
- * DEMO.call(action,payload) เลียนพฤติกรรม Code.gs เท่าที่จำเป็นต่อการดูหน้าจอ (รวมสิทธิ์อนุมัติ 2 ขั้น) */
-const DEMO = {
-  on:false, db:null, persona:'teacher', blockedStorage:0, calls:[],
-  PERSONAS:{
-    teacher:  { id:'DT1', name:'นางสมศรี ใจสมมติ', role:'teacher',   homeroomClass:'ม.1/1', token:'demo' },
-    director: { id:'DT2', name:'นายวิชัย วิชาการสมมติ', role:'director',  homeroomClass:'', token:'demo' },
-    principal:{ id:'DT3', name:'นายใจดี ผู้อำนวยการสมมติ', role:'principal', homeroomClass:'', token:'demo' }
-  },
-  BLOCK_TABS:['adm_backup','adm_roster','adm_teachers','adm_year','adm_locks','subjects','editlog','health','settings','set_mapping','set_access','set_lookup','mis','admin','adm_docs'],
-  _origSet:null, _origRem:null
-};
-(function(){
-  const clone=o=>JSON.parse(JSON.stringify(o));
-  function rng(seed){ let s=seed>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
-  const pad=n=>String(n).padStart(2,'0');
-  const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-  const nowStr=()=>{ const d=new Date(); return isoOf(d)+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds()); };
-  let idc=0; const gid=p=>p+(++idc).toString(36)+Math.floor(Math.random()*1e4).toString(36);
-  const TH_DAYS=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
-  const MAPPING=[{minPercent:80,maxPercent:100,grade51:4,letter51:'ดีเยี่ยม'},{minPercent:75,maxPercent:79,grade51:3.5,letter51:'ดีมาก'},{minPercent:70,maxPercent:74,grade51:3,letter51:'ดี'},
-    {minPercent:65,maxPercent:69,grade51:2.5,letter51:'ค่อนข้างดี'},{minPercent:60,maxPercent:64,grade51:2,letter51:'ปานกลาง'},{minPercent:55,maxPercent:59,grade51:1.5,letter51:'พอใช้'},
-    {minPercent:50,maxPercent:54,grade51:1,letter51:'ผ่านเกณฑ์ขั้นต่ำ'},{minPercent:0,maxPercent:49,grade51:0,letter51:'ต่ำกว่าเกณฑ์'}];
-  const ROOMS=['ม.1/1','ม.2/1','ม.3/1'];
-  const SUBJ=[ // [รหัสกลาง, ชื่อ, กลุ่มสาระ, ชม./ปี, ประเภท, ครู(index)]
-    ['101','ภาษาไทย','ภาษาไทย',120,'พื้นฐาน',0],['102','คณิตศาสตร์','คณิตศาสตร์',120,'พื้นฐาน',1],
-    ['103','วิทยาศาสตร์และเทคโนโลยี','วิทยาศาสตร์และเทคโนโลยี',120,'พื้นฐาน',2],['104','สังคมศึกษา ศาสนาและวัฒนธรรม','สังคมศึกษา ศาสนาและวัฒนธรรม',120,'พื้นฐาน',3],
-    ['105','ประวัติศาสตร์','ประวัติศาสตร์',40,'พื้นฐาน',3],['106','สุขศึกษาและพลศึกษา','สุขศึกษาและพลศึกษา',80,'พื้นฐาน',4],
-    ['107','ศิลปะ','ศิลปะ',80,'พื้นฐาน',5],['108','การงานอาชีพ','การงานอาชีพ',80,'พื้นฐาน',6],
-    ['109','ภาษาอังกฤษ','ภาษาต่างประเทศ',120,'พื้นฐาน',7],['201','ภาษาจีน','ภาษาต่างประเทศ',40,'เพิ่มเติม',8]];
-  const AREA_CODE={'ภาษาไทย':'ท','คณิตศาสตร์':'ค','วิทยาศาสตร์และเทคโนโลยี':'ว','สังคมศึกษา ศาสนาและวัฒนธรรม':'ส','ประวัติศาสตร์':'ส','สุขศึกษาและพลศึกษา':'พ','ศิลปะ':'ศ','การงานอาชีพ':'ง','ภาษาต่างประเทศ':'อ'};
-  const TEACHERS=['นางสมศรี ใจสมมติ','นายมานะ ทดลองดี','นางวิไล จำลองสุข','นายประสิทธิ์ ตัวอย่างเรียน','นางสาวสุดา ฝึกหัดงาม','นายอารีย์ ศิลป์สมมติ','นางกมล ช่างทดลอง','นางสาวเจนจิรา อิงลิชสมมติ','นายหลี่ ภาษาจำลอง'];
-  const BOYS=['กล้าหาญ','เก่งกาจ','ขยันเรียน','ใจดี','มานะ','ปิติ','วีระ','ธีรชัย','ภูมิ','รักชาติ'];
-  const GIRLS=['สดใส','นภา','ชลธิชา','พิมพ์ใจ','อารีย์','ศิริ','รักเรียน','มินตรา','วิมลรัตน์','ใสสะอาด'];
-  const SUR=['สมมติ','ตัวอย่าง','ทดลอง','จำลอง','เรียนดี'];
-  DEMO.MAPPING=MAPPING; DEMO.ROOMS=ROOMS;
-  // ตราสมมติของโรงเรียนตัวอย่าง (ออกแบบขึ้นเอง ไม่ใช่ตราโรงเรียนจริง)
-  DEMO.EMBLEM='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 4 L90 18 V50 C90 74 72 90 50 97 C28 90 10 74 10 50 V18 Z" fill="#1c3d5a"/><path d="M50 12 L82 23 V50 C82 69 67 82 50 88 C33 82 18 69 18 50 V23 Z" fill="none" stroke="#b08d3e" stroke-width="3"/><path d="M28 44 Q39 38 50 44 Q61 38 72 44 V66 Q61 60 50 66 Q39 60 28 66 Z" fill="#f7f6f2"/><path d="M50 44 V66" stroke="#1c3d5a" stroke-width="2"/><path d="M50 22 l4 9 9.5 1-7 6.5 2 9.5-8.5-5-8.5 5 2-9.5-7-6.5 9.5-1z" fill="#b08d3e"/></svg>');
 
-  DEMO.build=function(){
-    const R=rng(20261015), today=new Date(), todayISO=isoOf(today);
-    const T={};
-    T.Settings={ schoolName:'โรงเรียนตัวอย่างวิทยา (ข้อมูลสมมติ)', slogan:'ระบบรายงานผลการเรียน หลักสูตรแกนกลางฯ พุทธศักราช 2551', academicYear:'2569', area:'สำนักงานเขตพื้นที่ตัวอย่าง',
-      directorName:'นายใจดี ผู้อำนวยการสมมติ', deputyName:'นายวิชัย วิชาการสมมติ', academicHead:'นายวิชัย วิชาการสมมติ', address:'', remark:'', hoursPerYear:'1200', currentSemester:'1',
-      sem1Start:isoOf(new Date(today.getTime()-120*864e5)), sem1End:isoOf(new Date(today.getTime()+30*864e5)), sem2Start:'', sem2End:'',
-      lookupEnabled:'1', issueEnabled:'0', issueEmail:'', principalApproval:'1', demoEnabled:'1', logoURL:DEMO.EMBLEM, directorSignURL:'', deputySignURL:'', reportDate:'' };
-    T.GradeMapping=clone(MAPPING);
-    // ครู
-    T.Teachers=TEACHERS.map((n,i)=>({ID:'DT'+(i+10),name:n,role:'teacher',homeroomClass:i<3?ROOMS[i]:''}));
-    T.Teachers.push({ID:'DT2',name:DEMO.PERSONAS.director.name,role:'director',homeroomClass:''},{ID:'DT3',name:DEMO.PERSONAS.principal.name,role:'principal',homeroomClass:''});
-    DEMO.PERSONAS.teacher.name=TEACHERS[0];
-    // นักเรียน
-    T.Students=[]; T.StudentProfiles=[]; let sc=0;
-    ROOMS.forEach((rm,ri)=>{ for(let n=1;n<=5;n++){ const boy=n%2===1, fn=(boy?BOYS:GIRLS)[(ri*3+n)%10], ln=SUR[(ri+n)%5];
-      const id='DS'+(++sc), code=String(90000+sc), prefix=boy?'เด็กชาย':'เด็กหญิง';
-      T.Students.push({ID:id,studentCode:code,number:String(n),fullName:prefix+fn+' '+ln,classLevel:rm,dateAdded:todayISO,prefix:prefix,firstName:fn,lastName:ln,status:'',movedDate:'',movedNumber:'',movedReason:''});
-      T.StudentProfiles.push({studentID:id,nickname:fn.slice(0,3),birthDate:(2012-ri)+'-0'+(1+((n+ri)%8))+'-1'+n,religion:'พุทธ',nationality:'ไทย',ethnicity:'ไทย',bloodGroup:['A','B','O','AB','O'][n-1],
-        guardianName:'ผู้ปกครองสมมติ',guardianPhone:'0800000000',address:'ที่อยู่สมมติ',updatedAt:nowStr(),updatedBy:'ระบบทดลอง'}); } });
-    // วิชา + หน่วย + ครู
-    T.Subjects=[]; T.LearningUnits=[]; T.TeacherAssign=[]; let so=0;
-    ['ม.1','ม.2','ม.3'].forEach((lv,li)=>{ SUBJ.forEach(s=>{ const L=li+1, ac=s[1]==='ภาษาจีน'?'จ':AREA_CODE[s[2]];
-      const sid='DSUB'+L+s[0]; T.Subjects.push({ID:sid,code:ac+'2'+L+s[0].slice(0,1)+'0'+(s[0].slice(1)),name:s[1],learningArea:s[2],hours:String(s[3]),type:s[4],classLevel:lv,sortOrder:String(++so)});
-      [['หน่วยที่ 1',20],['หน่วยที่ 2',20],['หน่วยที่ 3',20]].forEach((u,k)=>T.LearningUnits.push({ID:'DU'+L+s[0]+(k+1),subjectID:sid,unitName:u[0],maxScore:String(u[1]),sortOrder:String(k+1),semester:'1'}));
-      T.TeacherAssign.push({ID:gid('TA'),subjectID:sid,room:'ม.'+L+'/1',teacher:TEACHERS[s[5]],updatedAt:nowStr()}); }); });
-    // คะแนน/เกรด
-    T.Scores=[]; T.Grades=[]; const subOf=id=>T.Subjects.find(x=>x.ID===id);
-    T.Students.forEach(st=>{ const strong=0.55+R()*0.4; T.Subjects.forEach(su=>{ if(su.classLevel!==st.classLevel.split('/')[0]) return;
-      const missing=(st.classLevel==='ม.3/1'&&su.name.indexOf('วิทยาศาสตร์')===0&&(st.number==='2'||st.number==='4'));
-      let got=0,max=0;
-      T.LearningUnits.filter(u=>u.subjectID===su.ID).forEach(u=>{ if(missing) return; let p=strong+(R()-0.5)*0.25; if(st.classLevel==='ม.2/1'&&st.number==='5') p=0.3+R()*0.12; p=Math.max(0.2,Math.min(1,p));
-        const v=Math.round(Number(u.maxScore)*p*2)/2; got+=v; max+=Number(u.maxScore); T.Scores.push({ID:gid('SC'),studentID:st.ID,subjectID:su.ID,unitID:u.ID,score:v,semester:'1'}); });
-      if(!missing&&max){ const pc=Math.round(got/max*10000)/100, g=MAPPING.find(m=>pc>=m.minPercent&&pc<=m.maxPercent+0.99)||MAPPING[MAPPING.length-1];
-        T.Grades.push({ID:gid('GR'),studentID:st.ID,subjectID:su.ID,mode:'B',percent:pc,level68:'',grade51:g.grade51,letter51:g.letter51,note:'',semester:'1'}); } }); });
-    // กิจกรรม/คุณลักษณะ
-    T.AbilityDetail=[]; const ACT=['กิจกรรมแนะแนว','ลูกเสือ – เนตรนารี','ชมรม/ชุมนุม','กิจกรรมเพื่อสังคมและสาธารณประโยชน์'];
-    T.Students.forEach(st=>{ ACT.forEach(a=>T.AbilityDetail.push({ID:gid('AD'),studentID:st.ID,group:'activity',item:a,value:(st.classLevel==='ม.2/1'&&st.number==='5'&&a==='ชมรม/ชุมนุม')?'ไม่ผ่าน':'ผ่าน',semester:'1'}));
-      ['ใฝ่เรียนรู้','มีวินัย','อยู่อย่างพอเพียง'].forEach(a=>T.AbilityDetail.push({ID:gid('AD'),studentID:st.ID,group:'characteristic',item:a,value:'ผ่าน',semester:'1'}));
-      ['อ่าน','คิดวิเคราะห์','เขียน'].forEach(a=>T.AbilityDetail.push({ID:gid('AD'),studentID:st.ID,group:'readthink',item:a,value:'ผ่าน',semester:'1'})); });
-    // ตารางสอน
-    T.Schedule=[]; const DAYS=['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์'];
-    ROOMS.forEach((rm,ri)=>{ const L=ri+1, subs=SUBJ.map(s=>s); DAYS.forEach((d,di)=>{ for(let p=1;p<=6;p++){ const s=subs[(di*6+p-1+ri)%subs.length];
-      T.Schedule.push({ID:gid('SCH'),day:d,period:String(p),classLevel:rm,subject:s[1],teacher:TEACHERS[s[5]]}); } }); });
-    // เช็คชื่อ: 5 วันเรียนล่าสุด + วันนี้ (ม.1/1, ม.2/1 เช็คแล้ว; ม.3/1 ยังไม่เช็ค)
-    T.Attendance=[]; const days=[]; for(let k=0;k<12&&days.length<6;k++){ const d=new Date(today.getTime()-k*864e5); if(d.getDay()>=1&&d.getDay()<=5) days.push(isoOf(d)); }
-    days.forEach((iso,di)=>ROOMS.forEach(rm=>{ if(di===0&&rm==='ม.3/1') return; T.Students.filter(s=>s.classLevel===rm).forEach(st=>{
-      let status='มา'; const r=R(); if(r<0.06) status='ขาด'; else if(r<0.1) status='ลา'; else if(r<0.14) status='สาย';
-      T.Attendance.push({ID:gid('AT'),date:iso,classLevel:rm,period:'0',studentID:st.ID,status:status,checkedBy:TEACHERS[0],updatedAt:nowStr(),semester:'1'}); }); }));
-    T.Calendar=[{ID:gid('CA'),date:todayISO,type:'กิจกรรม',title:'กิจกรรมตัวอย่าง (ข้อมูลสมมติ)',note:''},
-      {ID:gid('CA'),date:isoOf(new Date(today.getTime()+7*864e5)),type:'สอบ',title:'สอบกลางภาค (ตัวอย่าง)',note:''}];
-    // ล็อก/อนุมัติ: ม.1/1 ครบ+ผอ.อนุมัติแล้ว • ม.2/1 ครบ รอ ผอ. • ม.3/1 วิทยาศาสตร์ยังไม่ครบ + 2 วิชารอรองผอ.
-    T.Locks=[]; T.SubjectLocks=[]; T.RoomApprovals=[];
-    T.Subjects.forEach(su=>{ const rm='ม.'+su.classLevel.slice(2)+'/1'; if(rm==='ม.3/1'&&(su.name.indexOf('วิทยาศาสตร์')===0||su.name==='ศิลปะ'||su.name==='การงานอาชีพ')) return;   // ม.3/1: วิทยาศาสตร์ยังกรอกไม่ครบ • ศิลปะ/การงานฯ ครบแล้วรอรองผอ.อนุมัติ
-      T.SubjectLocks.push({subjectID:su.ID,room:rm,status:'locked',updatedAt:nowStr(),by:DEMO.PERSONAS.director.name,note:''}); });
-    T.RoomApprovals.push({room:'ม.1/1',status:'approved',by:DEMO.PERSONAS.principal.name,updatedAt:nowStr(),note:''});
-    T.EditLog=[]; T.Remediation=[]; T.Supervisions=[]; T.SDQ=[]; T.HomeVisits=[]; T.Submissions=[]; T.SubmissionTypes=[]; T.ExamSchedule=[]; T.ExamConfig=[]; T.Indicators=[]; T.UnitIndicators=[]; T.SubjectDocs=[]; T.LookupIssues=[]; T.FormTemplates=[];
-    return T;
-  };
-  DEMO.helpers={clone,rng,isoOf,pad,nowStr,gid,TH_DAYS,MAPPING};
-})();
-
-/* ---------- DEMO handlers (เลียนรูปแบบคำตอบของ Code.gs) ---------- */
-(function(){
-  const H=DEMO.helpers, clone=H.clone, isoOf=H.isoOf, nowStr=H.nowStr, gid=H.gid, MAPPING=H.MAPPING;
-  const U=()=>DEMO.PERSONAS[DEMO.persona];
-  const T=()=>DEMO.db;
-  const sub=id=>T().Subjects.find(s=>s.ID===id);
-  const roomOfSub=su=>'ม.'+String(su.classLevel).slice(2)+'/1';
-  const gradeOf=pc=>{ const m=MAPPING.find(x=>pc>=x.minPercent&&pc<=x.maxPercent+0.99)||MAPPING[MAPPING.length-1]; return m; };
-  const err=m=>{ throw new Error(m); };
-  const stuInRoom=r=>T().Students.filter(s=>s.classLevel===r);
-  const lockedSub=(sid,room)=>T().SubjectLocks.some(l=>l.subjectID===sid&&l.room===room&&l.status==='locked');
-  const roomLocked=room=>T().Locks.some(l=>l.classLevel===room&&l.status==='locked');
-  const approved=room=>T().RoomApprovals.some(a=>a.room===room&&a.status==='approved');
-  const log=(action,target,name,detail)=>T().EditLog.unshift({ID:gid('LG'),at:nowStr(),by:U().name,role:U().role,action:action,target:target,targetName:name,detail:detail||''});
-  function pctOf(stuID,subID){ let g=0,m=0; T().LearningUnits.filter(u=>u.subjectID===subID).forEach(u=>{ const sc=T().Scores.find(x=>x.studentID===stuID&&x.unitID===u.ID); if(sc&&sc.score!==''&&sc.score!=null){ g+=Number(sc.score); m+=Number(u.maxScore); } }); return m?Math.round(g/m*10000)/100:null; }
-  function recompute(subID,sem){ T().Students.forEach(st=>{ if(st.classLevel.split('/')[0]!==sub(subID).classLevel) return; const pc=pctOf(st.ID,subID);
-      T().Grades=T().Grades.filter(g=>!(g.studentID===st.ID&&g.subjectID===subID&&g.mode==='A')); if(pc==null) return; T().Grades=T().Grades.filter(g=>!(g.studentID===st.ID&&g.subjectID===subID));
-      const m=gradeOf(pc); T().Grades.push({ID:gid('GR'),studentID:st.ID,subjectID:subID,mode:'A',percent:pc,level68:'',grade51:m.grade51,letter51:m.letter51,note:'',semester:sem||'1'}); }); }
-  function tracker(){ const rows=[]; const rooms=DEMO.ROOMS;
-    T().Subjects.slice().sort((a,b)=>a.classLevel.localeCompare(b.classLevel)||a.name.localeCompare(b.name)).forEach(su=>{ const rm=roomOfSub(su), all=stuInRoom(rm).map(s=>s.ID), exm=T().Grades.filter(g=>g.subjectID===su.ID&&['ร','มส','มผ'].indexOf(String(g.grade51))>=0).map(g=>g.studentID), ids=all.filter(id=>exm.indexOf(id)<0), exp=ids.length, exN=all.length-exp;
-      const us=T().LearningUnits.filter(u=>u.subjectID===su.ID); let cells=0, miss=[];
-      us.forEach(u=>{ const have=ids.filter(id=>T().Scores.some(x=>x.studentID===id&&x.unitID===u.ID&&x.score!==''&&x.score!=null)).length; cells+=have; if(have<exp) miss.push({name:u.unitName,missing:exp-have}); });
-      const g=ids.filter(id=>T().Grades.some(x=>x.studentID===id&&x.subjectID===su.ID)).length, total=us.length*exp, complete=us.length>0&&(exp>0||exN>0)&&!miss.length;
-      const ta=T().TeacherAssign.find(a=>a.subjectID===su.ID&&a.room===rm);
-      rows.push({subjectID:su.ID,classLevel:su.classLevel,room:rm,code:su.code,name:su.name,teacher:ta?ta.teacher:'',expected:exp,units:us.length,cells:cells,total:total,percent:total?Math.round(cells/total*100):0,
-        graded:g,exempt:exN,blankCells:Math.max(0,total-cells),status:complete?'complete':(cells>0?'partial':'none'),missingUnits:miss,ungraded:Math.max(0,exp-g),ready:complete&&g>=exp,lock:roomLocked(rm)?'room':(lockedSub(su.ID,rm)?'subject':'')}); });
-    return {semester:'1',rows:rows}; }
-  function roomsView(){ const tr=tracker().rows; return DEMO.ROOMS.map(rm=>{ const rs=tr.filter(r=>r.room===rm), total=rs.length, done=rs.filter(r=>r.lock).length, ready=total>0&&done===total;
-      const ap=T().RoomApprovals.find(a=>a.room===rm&&a.status==='approved');
-      return {room:rm,students:stuInRoom(rm).length,total:total,done:done,ready:ready,missing:rs.filter(r=>!r.lock).map(r=>({subjectID:r.subjectID,name:r.name,teacher:r.teacher,percent:r.percent,status:r.status})),approved:!!ap,approvedBy:ap?ap.by:'',approvedAt:ap?ap.updatedAt:''}; }); }
-  function revoke(room){ T().RoomApprovals=T().RoomApprovals.filter(a=>a.room!==room); }
-  function needPrincipal(){ const r=U().role; if(r!=='principal'&&r!=='admin') err('ทำรายการนี้ได้เฉพาะผู้อำนวยการ'); }
-  function myTeach(name){ const out=[]; T().TeacherAssign.filter(a=>a.teacher===name).forEach(a=>{ const su=sub(a.subjectID); if(su) out.push({subjectID:su.ID,code:su.code,name:su.name,classLevel:su.classLevel,room:a.room,learningArea:su.learningArea}); }); return out; }
-  function risk(p){ const thG=50; const students=[]; T().Students.forEach(st=>{ const low=[]; T().Subjects.forEach(su=>{ if(su.classLevel!==st.classLevel.split('/')[0]) return; const pc=pctOf(st.ID,su.ID); if(pc!=null&&Math.round(pc)<thG) low.push({subject:su.name,percent:Math.round(pc)}); });
-      if(low.length){ const mn=Math.min.apply(null,low.map(x=>x.percent)); students.push({studentID:st.ID,number:st.number,fullName:st.fullName,classLevel:st.classLevel,level:mn<40?'critical':'grade',minPercent:mn,lowSubjects:low,msSubjects:[]}); } });
-    // ม.3/1: วิทยาศาสตร์ยังไม่มีคะแนน → ไม่นับ
-    return {thresholds:{attMin:80,gradeMin:50,critical:40},semester:'1',counts:{grade:students.length,ms:0,critical:students.filter(s=>s.level==='critical').length,total:students.length},total:students.length,students:students}; }
-  function attFor(date,room){ return T().Attendance.filter(a=>a.date===date&&a.classLevel===room&&String(a.period)==='0'); }
-
-  const R={
-    ping:()=>({pong:true,demo:true}),
-    getPublicInfo:()=>({schoolName:T().Settings.schoolName,area:T().Settings.area,academicYear:T().Settings.academicYear,logoURL:DEMO.EMBLEM,slogan:T().Settings.slogan,currentSemester:'1',lookupEnabled:true,issueEnabled:false,principalApproval:true,demoEnabled:true}),
-    getLoginNames:()=>Object.keys(DEMO.PERSONAS).map(k=>DEMO.PERSONAS[k].name),
-    getBootstrap:()=>({settings:clone(T().Settings),mapping:clone(MAPPING),students:clone(T().Students.filter(s=>s.status!=='moved')),subjects:clone(T().Subjects),calendar:clone(T().Calendar),
-      locks:clone(T().Locks),subjectLocks:clone(T().SubjectLocks),roomApprovals:T().RoomApprovals.filter(a=>a.status==='approved').map(a=>a.room),
-      teachers:T().Teachers.map(t=>({name:t.name,role:t.role,homeroomClass:t.homeroomClass||''})),
-      schedule:clone(T().Schedule.filter(s=>s.teacher===U().name)),myTeach:U().role==='teacher'?myTeach(U().name):undefined}),
-    getSettings:()=>clone(T().Settings), getStudents:()=>clone(T().Students), getSubjects:()=>clone(T().Subjects), getGradeMapping:()=>clone(MAPPING),
-    getTeachers:()=>T().Teachers.map(t=>({ID:t.ID,name:t.name,role:t.role,homeroomClass:t.homeroomClass||''})),
-    getCalendar:()=>clone(T().Calendar), getLocks:()=>clone(T().Locks), getSubjectLocks:()=>clone(T().SubjectLocks),
-    getMovedStudents:()=>[], getEditLog:()=>[], getAssignList:()=>({assign:clone(T().TeacherAssign)}),
-    getSchedule:p=>clone(T().Schedule.filter(s=>!p.teacher||s.teacher===p.teacher)),
-    getMyTeach:p=>myTeach(p.teacher||U().name),
-    getStats:()=>({studentCount:T().Students.length,subjectCount:T().Subjects.length,gradeCount:T().Grades.length,byLevel:DEMO.ROOMS.map(r=>({classLevel:r,count:stuInRoom(r).length}))}),
-    getUnits:p=>clone(T().LearningUnits.filter(u=>u.subjectID===p.subjectID)),
-    getScores:p=>clone(T().Scores.filter(s=>s.subjectID===p.subjectID)),
-    getGrades:()=>clone(T().Grades),
-    getExamConfig:()=>({}), getExams:()=>[], getIndicators:()=>[], getSubjectDocs:()=>[],
-    getAbilityDetailClass:p=>clone(T().AbilityDetail.filter(a=>T().Students.some(s=>s.ID===a.studentID&&s.classLevel===p.classLevel))),
-    getClassProfiles:p=>clone(T().StudentProfiles.filter(pr=>T().Students.some(s=>s.ID===pr.studentID&&(!p.classLevel||s.classLevel===p.classLevel)))),
-    getRemediation:()=>[], getSDQ:()=>[], getHomeVisits:()=>[], getSubmissions:()=>[], getSubmissionTypes:()=>[],
-    getLookupInfo:()=>({enabled:true}),
-    getRiskStudents:p=>{ const r=risk(p||{}); if(p&&p.classLevel){ r.students=r.students.filter(s=>s.classLevel===p.classLevel); r.total=r.students.length; r.counts.total=r.total; } return r; },
-    getExecTracker:()=>tracker(),
-    getAttendanceDashboard:p=>{ const date=(p&&p.date)||isoOf(new Date()); const classes=DEMO.ROOMS.map(rm=>{ const a=attFor(date,rm), n=stuInRoom(rm).length, c=s=>a.filter(x=>x.status===s).length;
-        return {classLevel:rm,total:n,taken:a.length>0,present:c('มา'),absent:c('ขาด'),leave:c('ลา'),late:c('สาย')}; });
-      const t=classes.reduce((o,c)=>({total:o.total+c.total,present:o.present+c.present,absent:o.absent+c.absent,leave:o.leave+c.leave,late:o.late+c.late,classes:o.classes+1,classesTaken:o.classesTaken+(c.taken?1:0)}),{total:0,present:0,absent:0,leave:0,late:0,classes:0,classesTaken:0});
-      return {date:date,classes:classes,totals:t}; },
-    getDirectorOverview:()=>{ const today=isoOf(new Date()); const rk=risk({}); const classes=DEMO.ROOMS.map(rm=>{ const sts=stuInRoom(rm), a=attFor(today,rm); const pcs=[]; sts.forEach(st=>T().Subjects.forEach(su=>{ if(su.classLevel===rm.split('/')[0]){ const pc=pctOf(st.ID,su.ID); if(pc!=null) pcs.push(pc); } }));
-        const hr=T().Teachers.find(t=>t.homeroomClass===rm);
-        return {classLevel:rm,students:sts.length,subjects:T().Subjects.filter(s=>s.classLevel===rm.split('/')[0]).length,gradePct:pcs.length?Math.round(pcs.reduce((x,y)=>x+y,0)/pcs.length):0,atRisk:rk.students.filter(s=>s.classLevel===rm).length,
-          attChecked:a.length>0,attPresent:a.filter(x=>x.status==='มา').length,attTotal:sts.length,homeroom:hr?hr.name:''}; });
-      return {semester:'1',classes:classes,totals:{classes:classes.length,students:T().Students.length,teachers:T().Teachers.filter(t=>t.role==='teacher').length,atRisk:rk.total}}; },
-    getRoomApprovals:()=>{ const r=U().role; if(['admin','director','principal'].indexOf(r)<0) err('ไม่มีสิทธิ์'); return {enabled:true,rooms:roomsView()}; },
-    approveRoom:p=>{ needPrincipal(); const v=roomsView().find(x=>x.room===p.room); if(!v) err('ไม่พบห้อง'); if(!v.ready) err('ห้องนี้ยังไม่ผ่านขั้นที่ 1 (รองผอ.ยังอนุมัติรายวิชาไม่ครบ)');
-      revoke(p.room); T().RoomApprovals.push({room:p.room,status:'approved',by:U().name,updatedAt:nowStr(),note:p.note||''}); log('room.approve',p.room,p.room); return R.getRoomApprovals(); },
-    approveReadyRooms:()=>{ needPrincipal(); let n=0; roomsView().forEach(v=>{ if(v.ready&&!v.approved){ T().RoomApprovals.push({room:v.room,status:'approved',by:U().name,updatedAt:nowStr(),note:''}); n++; } }); const out=R.getRoomApprovals(); out.approvedNow=n; return out; },
-    revokeRoom:p=>{ needPrincipal(); revoke(p.room); log('room.revoke',p.room,p.room); return R.getRoomApprovals(); },
-    setSubjectLocks:p=>{ const r=U().role; if(r!=='admin'&&r!=='director') err('ทำรายการนี้ได้เฉพาะแอดมินหรือรองผอ./หัวหน้าวิชาการ'); const st=String(p.status||'locked'); if(st==='open'&&r!=='admin') err('ปลดล็อกได้เฉพาะแอดมิน');
-      (p.items||[]).forEach(it=>{ T().SubjectLocks=T().SubjectLocks.filter(l=>!(l.subjectID===it.subjectID&&l.room===it.room)); if(st==='locked') T().SubjectLocks.push({subjectID:it.subjectID,room:it.room,status:'locked',updatedAt:nowStr(),by:U().name,note:p.note||''}); else revoke(it.room); });
-      return clone(T().SubjectLocks); },
-    setLock:p=>{ const r=U().role, rm=p.classLevel, st=p.status; if(r==='teacher'){ if(st!=='submitted') err('ครูทำได้เฉพาะส่งตรวจ'); if(roomLocked(rm)) err('ห้องนี้ถูกล็อกแล้ว'); }
-      else if(r==='director'){ if(roomLocked(rm)) err('ห้องนี้ถูกล็อกแล้ว'); if(st==='open') err('รองผอ.ตั้งสถานะ "เปิด" ไม่ได้'); }
-      else if(r!=='admin') err('ไม่มีสิทธิ์');
-      const prev=T().Locks.find(l=>l.classLevel===rm); T().Locks=T().Locks.filter(l=>l.classLevel!==rm); T().Locks.push({classLevel:rm,status:st,updatedAt:nowStr(),by:U().name,note:p.note||''});
-      if(prev&&prev.status==='locked'&&st!=='locked') revoke(rm); return clone(T().Locks); },
-    studentLookup:p=>{ const code=String(p.studentCode||p.code||'').trim(), st=T().Students.find(s=>s.studentCode===code); const pr=st&&T().StudentProfiles.find(x=>x.studentID===st.ID);
-      if(!st||!pr) err('ไม่พบข้อมูล กรุณาตรวจเลขประจำตัวและวันเกิด'); const ok=DEMO.sameBirth(p.birthDate||p.birth,pr.birthDate); if(!ok) err('ข้อมูลไม่ตรงกัน กรุณาตรวจเลขประจำตัวและวันเกิด');
-      if(!approved(st.classLevel)) err('ผลการเรียนของห้อง '+st.classLevel+' อยู่ระหว่างรอการอนุมัติจากผู้อำนวยการ กรุณาตรวจสอบอีกครั้งภายหลัง');
-      return Object.assign({settings:clone(T().Settings)},DEMO.reportOf(st.ID)); },
-    getReportBatch:p=>{ const sts=p.studentID?T().Students.filter(s=>s.ID===p.studentID):stuInRoom(p.classLevel); return {settings:clone(T().Settings),students:sts.map(s=>DEMO.reportOf(s.ID))}; },
-    getClassGradeSummary:p=>{ const sts=stuInRoom(p.classLevel), sus=T().Subjects.filter(s=>s.classLevel===p.classLevel.split('/')[0]);
-      return {classLevel:p.classLevel,semester:'1',subjects:clone(sus),students:sts.map(st=>({studentID:st.ID,number:st.number,fullName:st.fullName,grades:sus.map(su=>{ const g=T().Grades.find(x=>x.studentID===st.ID&&x.subjectID===su.ID); return g?{subjectID:su.ID,percent:g.percent,grade51:g.grade51}:null; })}))}; },
-    getGradeStats:()=>({}),
-    getMyTodo:()=>[],
-    getAttendance:p=>clone(T().Attendance.filter(a=>a.date===p.date&&a.classLevel===p.classLevel&&String(a.period)===String(p.period||0))),
-    getFlagAttendance:p=>clone(attFor(p.date,p.classLevel)),
-    saveAttendance:p=>{ T().Attendance=T().Attendance.filter(a=>!(a.date===p.date&&a.classLevel===p.classLevel&&String(a.period)===String(p.period||0)));
-      (p.records||[]).forEach(r=>T().Attendance.push({ID:gid('AT'),date:p.date,classLevel:p.classLevel,period:String(p.period||0),studentID:r.studentID,status:r.status,checkedBy:U().name,updatedAt:nowStr(),semester:'1'})); return {saved:(p.records||[]).length}; },
-    saveUnits:p=>{ T().LearningUnits=T().LearningUnits.filter(u=>u.subjectID!==p.subjectID); (p.units||[]).forEach((u,i)=>T().LearningUnits.push({ID:u.ID||gid('DU'),subjectID:p.subjectID,unitName:u.unitName,maxScore:String(u.maxScore),sortOrder:String(i+1),semester:'1'})); return clone(T().LearningUnits.filter(u=>u.subjectID===p.subjectID)); },
-    saveScores:p=>{ const su=sub(p.subjectID); if(su){ const rooms=DEMO.ROOMS.filter(r=>'ม.'+r.slice(2,3)===su.classLevel.slice(0,0)+su.classLevel.slice(0)); }
-      const ids=(p.studentIDs||[]).concat((p.scores||[]).map(s=>s.studentID)); const rm=ids.length?(T().Students.find(s=>s.ID===ids[0])||{}).classLevel:'';
-      if(rm&&(lockedSub(p.subjectID,rm)||roomLocked(rm))) err('รายวิชานี้ถูกล็อกแล้ว แก้ไขคะแนนไม่ได้');
-      (p.scores||[]).forEach(s=>{ T().Scores=T().Scores.filter(x=>!(x.studentID===s.studentID&&x.unitID===s.unitID)); if(s.score!==''&&s.score!=null) T().Scores.push({ID:gid('SC'),studentID:s.studentID,subjectID:p.subjectID,unitID:s.unitID,score:s.score,semester:'1'}); });
-      recompute(p.subjectID,'1'); return {grades:clone(T().Grades.filter(g=>g.subjectID===p.subjectID))}; },
-    saveGradesBatch:p=>{ (p.grades||[]).forEach(g=>{ const pc=Number(g.percent), m=gradeOf(pc); T().Grades=T().Grades.filter(x=>!(x.studentID===g.studentID&&x.subjectID===g.subjectID)); T().Grades.push({ID:gid('GR'),studentID:g.studentID,subjectID:g.subjectID,mode:'B',percent:pc,level68:'',grade51:m.grade51,letter51:m.letter51,note:'',semester:'1'}); }); return {saved:(p.grades||[]).length}; },
-    saveAbilityDetailBatch:()=>({saved:0}),
-    login:p=>{ const k=Object.keys(DEMO.PERSONAS).find(x=>DEMO.PERSONAS[x].name===p.name)||'teacher'; DEMO.persona=k; return clone(DEMO.PERSONAS[k]); },
-    logout:()=>({})
-  };
-
-  const ACT_ITEMS=['กิจกรรมแนะแนว','ลูกเสือ – เนตรนารี','ชมรม/ชุมนุม','กิจกรรมเพื่อสังคมและสาธารณประโยชน์'];
-  function scope(p){ let rows=T().Students.slice(); if(p&&p.classLevel) rows=rows.filter(s=>s.classLevel===p.classLevel); else if(p&&p.level) rows=rows.filter(s=>s.classLevel.indexOf(p.level+'/')===0); return rows; }
-  function actOf(id){ const m={}; T().AbilityDetail.filter(a=>a.studentID===id&&a.group==='activity').forEach(a=>{ if(m[a.item]!=='ไม่ผ่าน') m[a.item]=a.value; }); return m; }
-  R.getActivitySummary=p=>{ const rooms={}, issues=[]; scope(p).forEach(st=>{ const r=rooms[st.classLevel]=rooms[st.classLevel]||{room:st.classLevel,total:0,allPass:0,anyFail:0,incomplete:0,items:{}};
-      ACT_ITEMS.forEach(it=>{ r.items[it]=r.items[it]||{pass:0,fail:0,none:0}; }); r.total++; const m=actOf(st.ID), fail=[], none=[];
-      ACT_ITEMS.forEach(it=>{ if(m[it]==='ผ่าน') r.items[it].pass++; else if(m[it]==='ไม่ผ่าน'){ r.items[it].fail++; fail.push(it); } else { r.items[it].none++; none.push(it); } });
-      if(fail.length) r.anyFail++; else if(none.length) r.incomplete++; else r.allPass++;
-      if(fail.length||none.length) issues.push({studentID:st.ID,number:st.number,fullName:st.fullName,room:st.classLevel,fail:fail,none:none}); });
-    return {items:ACT_ITEMS,rooms:Object.keys(rooms).sort().map(k=>rooms[k]),issues:issues,semester:(p&&p.semester)||''}; };
-  R.getPromotionCheck=p=>{ const sts=scope(p), out=[], counts={pass:0,fail:0,pending:0}; sts.forEach(st=>{ const lv=st.classLevel.split('/')[0], fail=[], pend=[], warn=[];
-      T().Subjects.filter(su=>su.classLevel===lv).forEach(su=>{ const g=T().Grades.find(x=>x.studentID===st.ID&&x.subjectID===su.ID); if(!g) pend.push(su.name); else if(Number(g.grade51)<=0) fail.push(su.name+' ('+g.grade51+')'); });
-      const am=actOf(st.ID); ACT_ITEMS.forEach(it=>{ if(am[it]==='ไม่ผ่าน') fail.push(it+' ไม่ผ่าน'); else if(!am[it]) pend.push(it); });
-      const status=fail.length?'fail':(pend.length?'pending':'pass'); counts[status]++; out.push({studentID:st.ID,number:st.number,fullName:st.fullName,room:st.classLevel,status:status,fail:fail,pending:pend,warn:warn}); });
-    const lv=(sts[0]||{classLevel:'ม.1/1'}).classLevel.split('/')[0]; return {kind:lv==='ม.3'?'จบการศึกษา':'เลื่อนชั้น',attMin:(p&&p.attMin)||80,semester:(p&&p.semester)||'',counts:counts,total:out.length,students:out}; };
-  R.getRemediation=p=>({semester:'1',items:[],counts:{pending:0,resolved:0,byMark:{'0':0,'ร':0,'มส':0,'มผ':0}}});
-  R.getGradeStats=p=>{ const GR=['4','3.5','3','2.5','2','1.5','1','0']; const sts=scope(p||{}), ids={}, room={}; sts.forEach(s=>{ ids[s.ID]=1; room[s.ID]=s.classLevel; });
-    const bySub={}, byRoom={}, overall={}; GR.forEach(k=>overall[k]=0);
-    T().Grades.forEach(g=>{ if(!ids[g.studentID]) return; const k=String(g.grade51); if(GR.indexOf(k)<0) return; const su=sub(g.subjectID); if(!su) return;
-      const b=bySub[su.ID]=bySub[su.ID]||{code:su.code,name:su.name,classLevel:su.classLevel,counts:{},sum:0,n:0}; b.counts[k]=(b.counts[k]||0)+1; b.sum+=Number(k); b.n++; overall[k]++;
-      const r=byRoom[room[g.studentID]]=byRoom[room[g.studentID]]||{sum:0,n:0}; r.sum+=Number(k); r.n++; });
-    return {gradeLevels:GR,subjects:Object.keys(bySub).map(id=>{ const b=bySub[id]; return {code:b.code,name:b.name,classLevel:b.classLevel,counts:GR.map(k=>b.counts[k]||0),avg:b.n?Number((b.sum/b.n).toFixed(2)):0,n:b.n}; }),
-      rooms:Object.keys(byRoom).sort().map(rm=>({room:rm,avg:byRoom[rm].n?Number((byRoom[rm].sum/byRoom[rm].n).toFixed(2)):0,n:byRoom[rm].n})),overall:GR.map(k=>overall[k])}; };
-  R.getPeriodCheckedDates=()=>({days:{}});
-  R.getFlagCheckedDates=p=>[...new Set(T().Attendance.filter(a=>a.classLevel===p.classLevel&&String(a.period)==='0'&&String(a.date).slice(0,7)===String(p.month||'').slice(0,7)).map(a=>a.date))];
-  DEMO.sameBirth=function(input,iso){ const a=String(input||'').match(/(\d{1,2})\D+(\d{1,2})\D+(\d{4})/), b=String(iso).match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if(!a||!b) return false;
-    let y=Number(a[3]); if(y>2400) y-=543; return Number(a[1])===Number(b[3])&&Number(a[2])===Number(b[2])&&y===Number(b[1]); };
-  DEMO.birthText=function(iso){ const m=String(iso).match(/(\d{4})-(\d{1,2})-(\d{1,2})/); return m?(Number(m[3])+'/'+Number(m[2])+'/'+(Number(m[1])+543)):iso; };
-  DEMO.reportOf=function(id){ const st=T().Students.find(s=>s.ID===id), lv=st.classLevel.split('/')[0]; const subs=T().Subjects.filter(s=>s.classLevel===lv).map(su=>{ const g=T().Grades.find(x=>x.studentID===id&&x.subjectID===su.ID);
-      return {subjectID:su.ID,code:su.code,name:su.name,learningArea:su.learningArea,hours:su.hours,type:su.type,percent:g?g.percent:'',grade51:g?g.grade51:'',letter51:g?g.letter51:'',g1:g?g.grade51:'',g2:''}; });
-    const gs=subs.filter(s=>s.grade51!==''); const gpa=gs.length?Math.round(gs.reduce((a,s)=>a+Number(s.grade51),0)/gs.length*100)/100:0;
-    const days=T().Attendance.filter(a=>a.studentID===id&&String(a.period)==='0'); const c=s=>days.filter(a=>a.status===s).length;
-    return {student:clone(st),subjects:subs,abilities:T().AbilityDetail.filter(a=>a.studentID===id).map(a=>({itemKey:a.group+'|'+a.item,result:a.value})),abilityGroups:[],gpa1:gpa,gpa2:0,gpaYear:gpa,
-      homeroomTeachers:(T().Teachers.filter(t=>t.homeroomClass===st.classLevel).map(t=>t.name)),attendance:{schoolDays:days.length,present:c('มา'),absent:c('ขาด'),leave:c('ลา'),late:c('สาย'),percent:days.length?Math.round(c('มา')/days.length*100):0}}; };
-  DEMO.handlers=R;
-  DEMO.call=async function(action,payload){
-    payload=payload||{}; DEMO.calls.push(action);
-    const fn=R[action];
-    if(fn) return clone(fn(payload)||{});
-    if(/^(get|list|export|search|find)/.test(action)) return [];
-    return {};   // เขียน/อื่นๆ ที่ไม่รองรับ: ไม่ทำอะไร (ไม่แตะชีตจริง)
-  };
-})();
-
-/* ---------- DEMO: เริ่ม/สลับบทบาท/ออก + แถบเตือน + กันเขียน storage ---------- */
-(function(){
-  const clone=o=>JSON.parse(JSON.stringify(o));
-  function guardStorage(on){
-    try{
-      if(on && !DEMO._origSet){
-        DEMO._origSet=Storage.prototype.setItem; DEMO._origRem=Storage.prototype.removeItem;
-        Storage.prototype.setItem=function(){ DEMO.blockedStorage++; };
-        Storage.prototype.removeItem=function(){ DEMO.blockedStorage++; };
-      } else if(!on && DEMO._origSet){
-        Storage.prototype.setItem=DEMO._origSet; Storage.prototype.removeItem=DEMO._origRem; DEMO._origSet=DEMO._origRem=null;
-      }
-    }catch(e){}
-  }
-  function banner(){
-    let b=document.getElementById('demoBanner');
-    if(!b){ b=document.createElement('div'); b.id='demoBanner'; b.className='noprint';
-      b.style.cssText='position:sticky;top:0;z-index:118;background:#b45309;color:#fff;font-size:12px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center';
-      document.body.insertBefore(b,document.body.firstChild); }
-    b.innerHTML='<b>🧪 โหมดทดลองใช้ ข้อมูลสมมติ</b><span style="opacity:.9">(ไม่บันทึกลงระบบจริง • ปิดหน้า/กดออกแล้วหายหมด)</span>'+
-      '<label style="display:flex;gap:4px;align-items:center">ดูในมุมมอง <select id="demoPersona" onchange="DEMO.switchPersona(this.value)" style="color:#111;border-radius:6px;padding:2px 4px">'+
-      '<option value="teacher">ครู</option><option value="director">รองผอ./หัวหน้าวิชาการ</option><option value="principal">ผู้อำนวยการ</option></select></label>'+
-      '<button id="demoParentBtn" onclick="DEMO.openParent()" style="background:#fff;color:#b45309;border-radius:6px;padding:2px 8px">👨‍👩‍👧 ลองหน้าผู้ปกครอง</button>'+
-      '<button id="demoExitBtn" onclick="DEMO.stop()" style="background:#7c2d12;color:#fff;border-radius:6px;padding:2px 10px">ออกจากโหมดทดลอง</button>';
-    document.getElementById('demoPersona').value=DEMO.persona;
-    document.body.classList.add('demo-on');
-  }
-  async function loadPersona(){
-    state.currentUser=clone(DEMO.PERSONAS[DEMO.persona]);
-    state.trk=null; state.pr=null; state.homeRisk=null;
-    applyRole();
-    await bootstrap();
-    switchTab('home');
-  }
-  DEMO.start=async function(key){
-    if(DEMO.on) return;
-    DEMO._snap=Object.assign({},state);   // สำเนาสถานะก่อนเข้าโหมดทดลอง — ใช้คืนค่าตอนออก
-    DEMO.on=true; DEMO.calls=[]; DEMO.blockedStorage=0; guardStorage(true);
-    DEMO.db=DEMO.build(); DEMO.persona=key||'teacher';
-    state.publicInfo=DEMO.handlers.getPublicInfo();
-    const ls=document.getElementById('loginScreen'); ls.classList.add('hidden'); ls.classList.remove('flex');
-    banner();
-    try{ showLoading(true); await loadPersona(); }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
-  };
-  DEMO.switchPersona=async function(key){
-    if(!DEMO.on||!DEMO.PERSONAS[key]) return;
-    DEMO.persona=key;
-    const lk=document.getElementById('lookupScreen'); if(lk) lk.classList.add('hidden');
-    try{ showLoading(true); await loadPersona(); toast('สลับเป็นมุมมอง '+roleLabel(DEMO.PERSONAS[key].role)+({teacher:' — ลองกรอกคะแนน/เช็คชื่อ (ไม่บันทึกจริง)',director:' — ลองอนุมัติรายวิชา ม.3/1 ศิลปะ/การงานฯ (ขั้นที่ 1)',principal:' — ลองอนุมัติผลรายห้อง ม.2/1 (ขั้นที่ 2) แล้วกด 👨‍👩‍👧 ลองหน้าผู้ปกครอง'})[key],'success'); }catch(e){ toast(e.message,'error'); } finally{ showLoading(false); }
-  };
-  DEMO.openParent=async function(){
-    if(!DEMO.on) return;
-    await openLookup();
-    const st=DEMO.db.Students[0], st2=DEMO.db.Students.find(s=>s.classLevel==='ม.2/1'), pr=id=>DEMO.db.StudentProfiles.find(p=>p.studentID===id);
-    const fmt=s=>{ const b=pr(s.ID).birthDate.split('-'); return s.fullName+' ('+s.classLevel+') เลขประจำตัว '+s.studentCode+' เกิด '+Number(b[2])+'/'+Number(b[1])+'/'+(Number(b[0])+543); };
-    let h=document.getElementById('lk_demoHint');
-    if(!h){ h=document.createElement('div'); h.id='lk_demoHint'; h.className='text-xs bg-amber-50 border border-amber-300 text-amber-800 rounded-lg p-2 mt-2 text-left'; document.getElementById('lk_formCard').appendChild(h); }
-    h.innerHTML='🧪 <b>ตัวอย่างสำหรับทดลอง</b><br>• ห้องที่ ผอ.อนุมัติแล้ว: '+esc(fmt(st))+'<br>• ห้องที่ยังรอ ผอ.: '+esc(fmt(st2))+'<br><button class="underline" onclick="DEMO.fillParent(0)">กรอกตัวอย่างห้องที่อนุมัติแล้ว</button> • <button class="underline" onclick="DEMO.fillParent(1)">กรอกตัวอย่างห้องที่รออนุมัติ</button>';
-    DEMO.fillParent(0);
-  };
-  DEMO.fillParent=function(w){
-    const st=w===1?DEMO.db.Students.find(s=>s.classLevel==='ม.2/1'):DEMO.db.Students[0], b=DEMO.db.StudentProfiles.find(p=>p.studentID===st.ID).birthDate.split('-');
-    document.getElementById('lk_code').value=st.studentCode;
-    document.getElementById('lk_d').value=String(Number(b[2])); document.getElementById('lk_m').value=String(Number(b[1]));
-    const yb=String(Number(b[0])+543), ys=document.getElementById('lk_y'); if(![].some.call(ys.options,o=>o.value===yb||o.text===yb)){ const o=document.createElement('option'); o.text=yb; ys.add(o); } ys.value=yb;
-  };
-  DEMO.reload=function(){ location.reload(); };
-  DEMO.stop=function(noReload){
-    DEMO.on=false; DEMO.db=null; DEMO.calls=[];
-    guardStorage(false);
-    const b=document.getElementById('demoBanner'); if(b) b.remove();
-    document.body.classList.remove('demo-on');
-    if(DEMO._snap){ Object.keys(state).forEach(k=>{ if(!(k in DEMO._snap)) delete state[k]; }); Object.assign(state,DEMO._snap); DEMO._snap=null; }
-    state.currentUser=null;
-    if(noReload===true) return;
-    DEMO.reload();   // ล้างหน้าจอ/หน่วยความจำทั้งหมด — ไม่มีข้อมูลตัวอย่างค้าง
-  };
-})();
-
-/*DEMO_END*/
 
 initApp();
 </script>
