@@ -1994,7 +1994,7 @@ body.demo-on [onclick="openChangePw()"]{display:none!important}
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-16a';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-16b';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -7484,6 +7484,17 @@ function importDMCFile(ev){
       const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
       // เลือกชีต+แถวหัวตารางที่คีย์เวิร์ดตรงมากที่สุด (สแกน 10 แถวแรกของทุกชีต)
       let best=null;
+      // ฟอร์ม DMC มาตรฐาน (มี/ไม่มีหัวตาราง ก็ได้): ตรวจลายเซ็นก่อน ก่อนลองอ่านจากหัวตาราง เลขบัตร 13 หลัก + ชั้น ม./ป. + วันเกิด dd/mm/ปี
+      if(!best){
+        for(const sn of wb.SheetNames){
+          const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:false});
+          const sig=(aoa||[]).findIndex(r=>r && /^\d{13}$/.test(String(r[2]||'').trim())
+            && /^(ม|ป|อ)\.?\s*\d/.test(String(r[3]||'').trim())
+            && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(String(r[10]||'').trim()));
+          if(sig>=0){ best={sn, aoa, ri:sig-1, map:null, hits:0, positional:true}; break; }
+        }
+      }
+      if(!best){
       wb.SheetNames.forEach(sn=>{
         const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1});
         for(let ri=0; ri<Math.min(10,aoa.length); ri++){
@@ -7496,27 +7507,19 @@ function importDMCFile(ev){
           if(hits>=3 && (!best||hits>best.hits)) best={sn,aoa,ri,map,hits};
         }
       });
-      // ฟอร์ม DMC มาตรฐาน (ไม่มีหัวตาราง): ตรวจลายเซ็น เลขบัตร 13 หลัก + ชั้น ม./ป. + วันเกิด dd/mm/ปี
-      if(!best){
-        for(const sn of wb.SheetNames){
-          const aoa=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:false});
-          const sig=(aoa||[]).findIndex(r=>r && /^\d{13}$/.test(String(r[2]||'').trim())
-            && /^(ม|ป)\.?\s*\d/.test(String(r[3]||'').trim())
-            && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(String(r[10]||'').trim()));
-          if(sig>=0){ best={sn, aoa, ri:sig-1, map:null, hits:0, positional:true}; break; }
-        }
       }
       if(!best){ toast('ไม่พบหัวตารางที่รู้จักในไฟล์ (ต้องมีคอลัมน์ เช่น เลขประจำตัวนักเรียน/ชื่อ/วันเกิด) และไม่ตรงฟอร์ม DMC มาตรฐาน','error'); return; }
       if(best.positional){
-        const {aoa}=best; const rows=[];
+        const {aoa}=best; const rows=[]; let skipped=0;
         const cv=x=>{ const t=String(x==null?'':x).trim(); return (t==='-')?'':t; };
         for(const r of aoa){
-          if(!r || !/^\d{13}$/.test(String(r[2]||'').trim())) continue;
+          if(!r || !/^(ม|ป|อ)\.?\s*\d/.test(String(r[3]||'').trim()) || !String(r[2]||'').trim() || !String(r[5]||'').trim() || String(r[2]).trim()==='เลขประจำตัวนักเรียน') continue;
+          if(!/^ม\.?\s*\d/.test(String(r[3]||'').trim())){ skipped++; continue; }
           const addr=['บ้านเลขที่ '+cv(r[18]), cv(r[19])?('หมู่ '+cv(r[19])):'', cv(r[20]),
             cv(r[21])?('ต.'+cv(r[21])):'', cv(r[22])?('อ.'+cv(r[22])):'', cv(r[23])?('จ.'+cv(r[23])):'']
             .filter(Boolean).join(' ');
           rows.push({
-            studentCode:cv(r[5]), citizenId:cv(r[2]).replace(/\D/g,''),
+            studentCode:cv(r[5]), citizenId:/^\d{13}$/.test(cv(r[2]))?cv(r[2]):'',
             fullName:(cv(r[7])+cv(r[8])+' '+cv(r[9])).trim(),
             birthDate:dmcBirth(cv(r[10])),
             weight:cv(r[12]), height:cv(r[13]), bloodGroup:cv(r[14]),
@@ -7529,7 +7532,7 @@ function importDMCFile(ev){
           });
         }
         if(!rows.length){ toast('ไม่พบข้อมูลนักเรียนในไฟล์','error'); return; }
-        if(!confirm('พบข้อมูลฟอร์ม DMC มาตรฐาน '+rows.length+' รายการ (ชีต "'+best.sn+'")\nนำเข้าโดยจับคู่ด้วย รหัสนักเรียน → เลขบัตร → ชื่อ-นามสกุล?')) return;
+        if(!confirm('พบข้อมูลฟอร์ม DMC มาตรฐาน '+rows.length+' รายการ (ชีต "'+best.sn+'")'+(skipped?(' — ข้าม '+skipped+' คนที่ไม่ใช่ ม.'):'')+'\nนำเข้าโดยจับคู่ด้วย รหัสนักเรียน → เลขบัตร → ชื่อ-นามสกุล?')) return;
         showLoading(true);
         const res=await GAS.call('importDMC',{rows});
         showLoading(false);
