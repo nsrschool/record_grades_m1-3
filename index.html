@@ -212,8 +212,10 @@
         </div>
         <div><label class="text-xs text-slate-500">วัน / เดือน / ปี (พ.ศ.) เกิดของนักเรียน *</label>
           <div class="grid grid-cols-3 gap-2 mt-1"><select id="is_d" class="inp"></select><select id="is_m" class="inp"></select><select id="is_y" class="inp"></select></div></div>
-        <div><label class="text-xs text-slate-500">รายละเอียดที่แจ้งปัญหา (ไม่บังคับ)</label>
-          <textarea id="is_detail" maxlength="600" rows="3" class="inp mt-1" placeholder="อธิบายปัญหาที่พบ"></textarea></div>
+        <div><label class="text-xs text-slate-500">ประเภทปัญหา *</label>
+          <select id="is_type" class="inp mt-1" onchange="isTypeChange()"><option value="">เลือกประเภทปัญหา</option><option>เข้าระบบไม่ได้</option><option>ไม่พบผลการเรียน</option><option>ชื่อ-นามสกุลไม่ถูกต้อง</option><option>อื่นๆ</option></select></div>
+        <div id="is_otherWrap" class="hidden"><label class="text-xs text-slate-500">ระบุปัญหา *</label>
+          <input id="is_other" maxlength="100" class="inp mt-1" placeholder="พิมพ์สั้นๆ ว่าพบปัญหาอะไร"></div>
         <div style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden" aria-hidden="true">
           <label>เว็บไซต์ (ห้ามกรอก)</label><input id="is_web" tabindex="-1" autocomplete="off"></div>
       </div>
@@ -2025,7 +2027,7 @@
    ⚙️ ตั้งค่า: วาง Web App URL ของคุณตรงนี้
    ============================================================ */
 const SYSTEM_ID = 'NSR-M';           // ตัวกันสลับระบบ — ต้องตรงกับ SYSTEM_ID ใน Code.gs ของมัธยม
-const FE_VERSION = 'M-2026-10-16g';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
+const FE_VERSION = 'M-2026-10-16h';   // ต้องตรงกับ APP_VERSION ใน Code.gs — ไม่ตรง = ระบบหยุดการบันทึก
 const GAS = {
   URL: (window.WEB_APP_URL || '').trim(),  // ตั้งค่าได้ที่ส่วนบนสุดของไฟล์ (window.WEB_APP_URL) — ใส่ URL ของ GAS /exec หรือ Cloudflare Worker ก็ได้
   async call(action, payload = {}) {
@@ -9213,6 +9215,7 @@ async function copyUnitsRun(){
 const APP_BUILD=FE_VERSION;
 const KPS_LOGO=(()=>{ const l=document.querySelector('link[rel="apple-touch-icon"]')||document.querySelector('link[rel~="icon"]'); return l?l.href:''; })();   // เก็บตั้งแต่โหลดหน้า ก่อนถูกแทนด้วยโลโก้โรงเรียน
 const DEV_CHANGELOG=[
+  ['2026-10-16h','📝 แจ้งปัญหา: บังคับกรอกทุกช่อง (ยกเว้นเลขประจำตัว) • ประเภทปัญหาเลือกจากรายการ + ช่อง “ระบุปัญหา” เมื่อเลือกอื่นๆ • ตัดช่องรายละเอียด'],
   ['2026-10-16g','👪 หน้าตรวจผล: ปุ่มโหลดมีวงกลมหมุน • ช่องเลขประจำตัวรับเฉพาะตัวเลข/ตั้งจำนวนหลักได้ • ข้อความผิดพลาดเดียว • 📨 แจ้งปัญหามีเลขติดตามเรื่อง + หน้าติดตามเรื่อง + แอดมินตอบกลับ • 📧 เมนูอนุญาตสิทธิ์ส่งอีเมล'],
   ['2026-10-15h','🎯 สรุปกิจกรรม • 🎓 เงื่อนไขเลื่อนชั้น/จบ • คัดลอกหน่วยภาค 1→2 • แสดงหน่วยกิต'],
   ['2026-10-15g','🚀 เช็กลิสต์ปีใหม่ • 📜 ประวัติการแก้ไข • 🩺 ตรวจสุขภาพระบบ • ปลดล็อกต้องระบุเหตุผล • ป้ายแดง/แจ้งเตือนครู LINE'],
@@ -9308,7 +9311,8 @@ async function toggleLookup(on){
 /* ---------- แจ้งปัญหาข้อมูลนักเรียน (ผู้ปกครอง) ---------- */
 function openIssue(){
   fillLookupDateSelects();
-  ['is_reporter','is_name','is_code','is_detail','is_web'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['is_reporter','is_name','is_code','is_type','is_other','is_web'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  isTypeChange();
   ['is_d','is_m','is_y'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const rooms=((state.publicInfo||{}).rooms||[]); const list=rooms.length?rooms:['ม.1','ม.2','ม.3'];
   document.getElementById('is_room').innerHTML='<option value="">เลือกห้อง/ชั้น</option>'+list.map(r=>`<option>${esc(r)}</option>`).join('');
@@ -9319,17 +9323,20 @@ function openIssue(){
   openModal('issueModal');
 }
 function closeIssue(){ closeModal('issueModal'); }
+function isTypeChange(){ const o=document.getElementById('is_type').value==='อื่นๆ'; document.getElementById('is_otherWrap').classList.toggle('hidden',!o); if(!o) document.getElementById('is_other').value=''; }
 async function submitIssue(){
   const btn=document.getElementById('is_btn'); if(btn&&btn.disabled) return;
   const v=id=>document.getElementById(id).value.trim();
-  const reporter=v('is_reporter'), name=v('is_name'), room=v('is_room'), code=lkCodeNorm(v('is_code')), detail=v('is_detail');
+  const reporter=v('is_reporter'), name=v('is_name'), room=v('is_room'), code=lkCodeNorm(v('is_code')), type=v('is_type'), detail=type==='อื่นๆ'?v('is_other'):'';
   const d=v('is_d'), m=v('is_m'), y=v('is_y');
   if(!reporter||!name||!room){ toast('กรุณากรอกชื่อผู้แจ้ง ชื่อ-นามสกุลนักเรียน และห้อง/ชั้นให้ครบ','error'); return; }
   if(!d||!m||!y){ toast('กรุณาเลือกวัน เดือน ปีเกิดของนักเรียนให้ครบ','error'); return; }
+  if(!type){ toast('กรุณาเลือกประเภทปัญหา','error'); return; }
+  if(type==='อื่นๆ'&&!detail){ toast('กรุณาระบุปัญหา','error'); return; }
   const n=lkCodeLen(); if(code&&n&&code.length!==n){ toast('เลขประจำตัวต้องมี '+n+' หลัก (ถ้าไม่ทราบให้เว้นว่าง)','error'); return; }
   if(btn){ btn.disabled=true; btn.textContent='กำลังส่ง…'; }
   try{
-    const r=await GAS.call('reportLookupIssue',{reporter, studentName:name, room, studentCode:code, birthDate:d+'/'+m+'/'+y, detail, website:v('is_web')});
+    const r=await GAS.call('reportLookupIssue',{reporter, studentName:name, room, studentCode:code, birthDate:d+'/'+m+'/'+y, type, detail, website:v('is_web')});
     if(r&&r.duplicate){
       closeIssue(); toast('เรื่องของนักเรียนคนนี้แจ้งไว้แล้วและโรงเรียนกำลังดำเนินการ — กรุณาเข้า “ติดตามเรื่องที่แจ้งไว้”');
       openTrack({code:r.studentCode||code}); return;
@@ -9411,7 +9418,8 @@ function renderIssueList(r){
           <div class="text-[11px] text-slate-400">${esc(x.createdAt)} • ผู้แจ้ง: ${esc(x.reporter)}</div></div>
         <span class="text-[11px] whitespace-nowrap px-2 py-0.5 rounded-full ${done?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'}">${done?'จัดการแล้ว':'ใหม่'}</span></div>
       <div class="mt-1 text-xs flex flex-wrap gap-1"><span class="px-1.5 py-0.5 rounded bg-white border text-slate-600">เลขติดตาม <b class="tracking-widest">${esc(x.ticket||'-')}</b></span>${x.birthDate?`<span class="px-1.5 py-0.5 rounded bg-white border text-slate-600">เกิด ${esc(x.birthDate)}</span>`:''}</div>
-      ${x.detail&&x.detail!=='-'?`<div class="mt-1 text-slate-700 whitespace-pre-wrap break-words">${esc(x.detail)}</div>`:''}
+      <div class="mt-1 text-xs"><span class="px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200 text-sky-700">${esc(x.type||'-')}</span></div>
+      ${x.detail&&x.detail!=='-'?`<div class="mt-1 text-slate-700 whitespace-pre-wrap break-words"><b>ระบุ:</b> ${esc(x.detail)}</div>`:''}
       ${x.reply?`<div class="mt-1 text-xs bg-white border rounded p-2 text-slate-600"><b>ตอบกลับ:</b> ${esc(x.reply)}</div>`:''}
       <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
         <span class="text-[11px] ${mailOk?'text-emerald-600':'text-rose-600'}">${x.emailStatus?(mailOk?'✉️ ส่งอีเมลแจ้งแอดมินแล้ว':'⚠️ '+esc(x.emailStatus)):'✉️ กำลังส่ง/ไม่มีสถานะ'}</span>
